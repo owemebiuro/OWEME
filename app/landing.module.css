@@ -80,6 +80,11 @@
   color: #fff !important;
 }
 
+.navActive {
+  color: var(--orange) !important;
+  font-weight: 600;
+}
+
 /* HERO */
 .hero {
   width: 100%;

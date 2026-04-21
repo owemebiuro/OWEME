@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import FlightChecker from "@/components/FlightChecker";
 import PlanesDeco from "@/components/PlanesDeco";
+import SiteNav from "@/components/SiteNav";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
@@ -26,27 +28,9 @@ export default function Home() {
   return (
     <>
       {/* NAV */}
-      <nav className={styles.nav}>
-        <div className={styles.logo}>
-          <div className={styles.logoMark}>
-            <svg viewBox="0 0 20 20" fill="none">
-              <path d="M3 11.5L10 2.5l7 9H13V18H7v-6.5H3z" fill="white" />
-            </svg>
-          </div>
-          <div>
-            <div className={styles.logoName}>ClaimAir</div>
-            <div className={styles.logoSub}>legaltech</div>
-          </div>
-        </div>
-        <div className={styles.navLinks}>
-          <a href="#jak-dziala">Jak działa</a>
-          <a href="#oferty">Odszkodowania</a>
-          <a href="#">FAQ</a>
-          <a href="#checker" className={styles.navCta}>
-            Sprawdź lot
-          </a>
-        </div>
-      </nav>
+      <Suspense fallback={null}>
+        <SiteNav />
+      </Suspense>
 
       {/* HERO */}
       <section className={styles.hero} id="checker">
@@ -116,9 +100,9 @@ export default function Home() {
               Opóźnienie powyżej 3 godzin przy przylocie do miejsca docelowego.
               Przysługuje bez względu na przyczynę ze strony linii.
             </div>
-            <a href="/?reason=delay#checker" className={styles.cardBtn}>
+            <Link href="/?reason=delay#checker" className={styles.cardBtn}>
               Oferta <ArrowIcon />
-            </a>
+            </Link>
           </div>
 
           <div className={styles.claimCard}>
@@ -138,9 +122,9 @@ export default function Home() {
               Nie wpuszczono Cię na pokład mimo ważnego biletu — z powodu
               przepełnienia lub innej decyzji przewoźnika.
             </div>
-            <a href="/?reason=denied#checker" className={styles.cardBtn}>
+            <Link href="/?reason=denied#checker" className={styles.cardBtn}>
               Oferta <ArrowIcon />
-            </a>
+            </Link>
           </div>
 
           <div className={styles.claimCard}>
@@ -157,9 +141,9 @@ export default function Home() {
               Linia lotnicza zgubiła, uszkodziła lub opóźniła dostarczenie
               Twojego bagażu. Rekompensata z Konwencji Montrealskiej.
             </div>
-            <a href="/?reason=baggage#checker" className={styles.cardBtn}>
+            <Link href="/?reason=baggage#checker" className={styles.cardBtn}>
               Oferta <ArrowIcon />
-            </a>
+            </Link>
           </div>
 
           <div className={styles.claimCard}>
@@ -181,9 +165,9 @@ export default function Home() {
               Lot odwołany bez odpowiedniego wyprzedzenia lub bez zaproponowania
               rozsądnej alternatywnej trasy przez przewoźnika.
             </div>
-            <a href="/?reason=cancelled#checker" className={styles.cardBtn}>
+            <Link href="/?reason=cancelled#checker" className={styles.cardBtn}>
               Oferta <ArrowIcon />
-            </a>
+            </Link>
           </div>
         </div>
       </section>

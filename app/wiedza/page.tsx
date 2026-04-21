@@ -1,0 +1,227 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+import SiteNav from "@/components/SiteNav";
+import TagFilter from "@/components/TagFilter";
+import NewsletterForm from "@/components/NewsletterForm";
+import { ARTICLES, POPULAR } from "@/lib/articles";
+import styles from "./wiedza.module.css";
+import navStyles from "@/app/landing.module.css";
+
+export const metadata: Metadata = {
+  title: "Wiedza – ClaimAir",
+  description:
+    "Prawa pasażerów, przepisy lotnicze i porady ekspertów — wszystko czego potrzebujesz, żeby skutecznie dochodzić swoich praw.",
+};
+
+const featured = ARTICLES.find((a) => a.featured)!;
+const rest = ARTICLES.filter((a) => !a.featured);
+
+const TAGS_CLOUD = [
+  "Opóźnienia", "Overbooking", "Bagaż", "WE 261/2004",
+  "Konwencja Montrealska", "Ryanair", "Wizz Air", "LOT",
+  "Odwołania", "Zwroty", "Prawo UE",
+];
+
+const THUMB_COLORS: Record<string, string> = {
+  "Bagaż": "#fdf0e6",
+  "Overbooking": "#fef7f0",
+  "Prawo UE": "#fdf0e6",
+  "Case study": "#fef7f0",
+  "Porady": "#fdf0e6",
+  "Opóźnienia": "#fef7f0",
+};
+
+function ClockIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
+      <path d="M6 3.5v3l2 1" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M4 2l4 4-4 4" stroke="#9e8e7e" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export default function WiedzaPage() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <SiteNav />
+      </Suspense>
+
+      {/* Header */}
+      <div className={styles.blogHeader}>
+        <div className={styles.blogBreadcrumb}>
+          <Link href="/">ClaimAir</Link>
+          <ChevronIcon />
+          Wiedza
+        </div>
+        <h1 className={styles.blogH1}>
+          Wiedza, która<br />
+          <span className={styles.blogH1Accent}>się wypłaca</span>
+        </h1>
+        <p className={styles.blogDesc}>
+          Prawa pasażerów, przepisy lotnicze i porady ekspertów — wszystko czego
+          potrzebujesz, żeby skutecznie dochodzić swoich praw.
+        </p>
+      </div>
+
+      {/* Tag filter */}
+      <TagFilter />
+
+      {/* Main grid */}
+      <div className={styles.blogMain}>
+        <div>
+          {/* Featured article */}
+          <Link href={`/wiedza/${featured.slug}`} className={styles.articleFeatured}>
+            <div className={styles.featVisual}>
+              <div className={styles.featVisualBg} />
+              <div className={styles.featVisualInner}>
+                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" opacity="0.3">
+                  <circle cx="70" cy="70" r="60" stroke="#c96a2a" strokeWidth="1.5" strokeDasharray="6 8" />
+                  <path d="M20 70L70 10l50 60H100v50H40V70H20z" fill="#c96a2a" opacity="0.5" />
+                  <path d="M50 90h40M60 70h20" stroke="#c96a2a" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span className={styles.featLabel}>Wyróżniony artykuł</span>
+              </div>
+            </div>
+            <div className={styles.featBody}>
+              <div className={styles.featTag}>{featured.category}</div>
+              <div className={styles.featTitle}>{featured.title}</div>
+              <div className={styles.featExcerpt}>{featured.excerpt}</div>
+              <div className={styles.featMeta}>
+                <div className={styles.featAuthor}>
+                  <div className={styles.authorAv}>{featured.author.initials}</div>
+                  <span className={styles.authorName}>{featured.author.name}</span>
+                </div>
+                <span className={styles.dotSep}>·</span>
+                <span className={styles.featDate}>{featured.date}</span>
+                <span className={styles.dotSep}>·</span>
+                <span className={styles.featRead}>
+                  <ClockIcon />
+                  {featured.readTime} min
+                </span>
+              </div>
+              <span className={styles.readMoreLink}>Czytaj artykuł →</span>
+            </div>
+          </Link>
+
+          {/* Article grid */}
+          <div className={styles.articleGrid}>
+            {rest.map((article) => (
+              <Link
+                key={article.slug}
+                href={`/wiedza/${article.slug}`}
+                className={styles.articleCard}
+              >
+                <div
+                  className={styles.cardThumb}
+                  style={{ background: THUMB_COLORS[article.category] ?? "#fdf0e6" }}
+                >
+                  <div className={styles.thumbBg} />
+                  <div className={styles.thumbIcon}>
+                    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" opacity="0.35">
+                      <circle cx="28" cy="28" r="18" stroke="#c96a2a" strokeWidth="2" />
+                      <path d="M28 20v8.5l5 3" stroke="#c96a2a" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+                <div className={styles.cardBody}>
+                  <div className={styles.cardTag}>{article.category}</div>
+                  <div className={styles.cardTitle}>{article.title}</div>
+                  <div className={styles.cardExcerpt}>{article.excerpt}</div>
+                  <div className={styles.cardFooter}>
+                    <div className={styles.cardAuthorSm}>
+                      <div
+                        className={styles.avSm}
+                        style={article.author.color ? { background: article.author.color } : undefined}
+                      >
+                        {article.author.initials}
+                      </div>
+                      <span className={styles.cardByline}>{article.author.name}</span>
+                    </div>
+                    <span className={styles.cardReadTime}>{article.readTime} min</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className={styles.pagination}>
+            <button className={`${styles.pgBtn} ${styles.pgBtnActive}`}>1</button>
+            <button className={styles.pgBtn}>2</button>
+            <button className={styles.pgBtn}>3</button>
+            <span className={styles.pgDots}>…</span>
+            <button className={styles.pgBtn}>12</button>
+            <button className={`${styles.pgBtn} ${styles.pgBtnWide}`}>Dalej →</button>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          {/* CTA */}
+          <div className={styles.sidebarCta}>
+            <h3>Sprawdź swój lot w 30 sekund</h3>
+            <p>Bezpłatna analiza. Wynagrodzenie tylko po wygranej.</p>
+            <Link href="/#checker" className={styles.sidebarCtaBtn}>
+              Sprawdź teraz →
+            </Link>
+          </div>
+
+          {/* Popular */}
+          <div className={styles.sidebarSection}>
+            <div className={styles.sidebarLabel}>Najpopularniejsze</div>
+            {POPULAR.map((article, i) => (
+              <Link key={article.slug} href={`/wiedza/${article.slug}`} className={styles.popItem}>
+                <div className={styles.popNum}>{String(i + 1).padStart(2, "0")}</div>
+                <div>
+                  <div className={styles.popTitle}>{article.title}</div>
+                  <div className={styles.popMeta}>
+                    {article.readTime} min · {article.views} wyświetleń
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Newsletter */}
+          <div className={styles.sidebarSection}>
+            <div className={styles.sidebarLabel}>Newsletter</div>
+            <p className={styles.nlDesc}>
+              Nowe artykuły i aktualizacje prawa co dwa tygodnie.
+            </p>
+            <NewsletterForm />
+          </div>
+
+          {/* Tag cloud */}
+          <div className={styles.sidebarSection}>
+            <div className={styles.sidebarLabel}>Tematy</div>
+            <div className={styles.tagCloud}>
+              {TAGS_CLOUD.map((tag) => (
+                <span key={tag} className={styles.cloudTag}>{tag}</span>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* Footer */}
+      <footer className={navStyles.footer}>
+        <p className={navStyles.footerCopy}>© 2025 ClaimAir sp. z o.o. · Wszelkie prawa zastrzeżone</p>
+        <div className={navStyles.footerLinks}>
+          <a href="#">Polityka prywatności</a>
+          <a href="#">Regulamin</a>
+          <a href="#">Kontakt</a>
+        </div>
+      </footer>
+    </>
+  );
+}
