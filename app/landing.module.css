@@ -623,3 +623,206 @@
   display: inline-block;
   vertical-align: middle;
 }
+
+/* ── RESPONSIVE ── */
+
+/* Tablet: 641px – 1024px */
+@media (max-width: 1024px) {
+  .nav {
+    padding: 0 1.5rem;
+  }
+
+  .navLinks {
+    gap: 16px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .heroLeft {
+    padding: 3rem 1.5rem 2rem;
+    border-right: none;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .heroH1 {
+    font-size: 40px;
+    letter-spacing: -1.5px;
+  }
+
+  .heroRight {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .planesDeco {
+    display: none;
+  }
+
+  .checkerWrap {
+    max-width: 100%;
+  }
+
+  .cardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cardsSection {
+    padding: 3rem 1.5rem;
+  }
+
+  .howSection {
+    padding: 3rem 1.5rem;
+  }
+
+  .trustSection {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .footer {
+    padding: 1.5rem;
+  }
+}
+
+/* Mobile: ≤ 640px */
+@media (max-width: 640px) {
+  /* Nav — ukryj linki tekstowe, zostaw tylko logo + CTA */
+  .nav {
+    padding: 0 1rem;
+  }
+
+  .navLinks a:not(.navCta) {
+    display: none;
+  }
+
+  .navLinks {
+    gap: 12px;
+  }
+
+  /* Hero */
+  .heroLeft {
+    padding: 2rem 1rem 1.75rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .heroH1 {
+    font-size: 34px;
+    letter-spacing: -1px;
+  }
+
+  .heroDesc {
+    max-width: 100%;
+    font-size: 14px;
+  }
+
+  .heroStats {
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .heroRight {
+    padding: 1.75rem 1rem 2rem;
+  }
+
+  .checkerInput {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .checkerInput::placeholder {
+    font-size: 14px;
+  }
+
+  .checkerBtn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .checkerSub {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Cards */
+  .cardsSection {
+    padding: 2rem 1rem;
+  }
+
+  .cardsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cardsHeaderP {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* How it works */
+  .howSection {
+    padding: 2rem 1rem;
+  }
+
+  .howH2 {
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    margin-bottom: 2rem;
+  }
+
+  .stepsRow {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  /* Ukryj poziomą linię łączącą kroki — nie pasuje do pionowego układu */
+  .stepsRow::before {
+    display: none;
+  }
+
+  .step {
+    padding: 0;
+  }
+
+  /* Trust */
+  .trustSection {
+    grid-template-columns: 1fr;
+    padding: 2rem 1rem;
+    gap: 1.5rem;
+  }
+
+  .trustItem {
+    border-right: none;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.2);
+    padding: 0 0 1.5rem;
+  }
+
+  .trustItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .trustNum {
+    font-size: 28px;
+  }
+
+  /* Footer */
+  .footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 1.25rem 1rem;
+  }
+
+  .footerLinks {
+    gap: 16px;
+  }
+}
