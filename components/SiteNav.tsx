@@ -29,9 +29,9 @@ export default function SiteNav() {
           Wiedza
         </Link>
         <Link href="/#jak-dziala">Jak działa</Link>
-        <Link href="/#oferty">Odszkodowania</Link>
+        <Link href="/#kwoty">Odszkodowania</Link>
         <Link href="/#faq">FAQ</Link>
-        <Link href="/#checker" className={styles.navCta}>
+        <Link href="/sprawdz" className={styles.navCta}>
           Sprawdź lot
         </Link>
       </div>
