@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "@/app/landing.module.css";
 
@@ -33,13 +33,11 @@ export default function FlightChecker() {
   const [flightNum, setFlightNum] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
-  const [pendingReason, setPendingReason] = useState<string>("delay");
+  const pendingReason = searchParams.get("reason") ?? "delay";
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const reason = searchParams.get("reason");
-    if (reason) {
-      setPendingReason(reason);
+    if (searchParams.get("reason")) {
       inputRef.current?.focus();
     }
   }, [searchParams]);

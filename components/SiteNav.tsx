@@ -28,12 +28,12 @@ export default function SiteNav() {
         >
           Wiedza
         </Link>
-        <a href="/#jak-dziala">Jak działa</a>
-        <a href="/#oferty">Odszkodowania</a>
-        <a href="/#faq">FAQ</a>
-        <a href="/#checker" className={styles.navCta}>
+        <Link href="/#jak-dziala">Jak działa</Link>
+        <Link href="/#oferty">Odszkodowania</Link>
+        <Link href="/#faq">FAQ</Link>
+        <Link href="/#checker" className={styles.navCta}>
           Sprawdź lot
-        </a>
+        </Link>
       </div>
     </nav>
   );

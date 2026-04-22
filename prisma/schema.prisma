@@ -1,0 +1,434 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Supabase Auth remains the authentication source.
+// This User model represents the CRM application user and can later be mapped
+// to Supabase Auth with an authUserId field when the auth-domain bridge is added.
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+  LAWYER
+  MARKETING
+  READ_ONLY
+}
+
+enum ClaimStatus {
+  NEW
+  AWAITING_VERIFICATION
+  MISSING_DATA
+  QUALIFIED
+  DOCUMENTS_GENERATED
+  ASSIGNMENT_SIGNED
+  DEMAND_LETTER_PREPARED
+  DEMAND_LETTER_SENT
+  AWAITING_AIRLINE_RESPONSE
+  NEGATIVE_RESPONSE
+  COURT_DECISION_PENDING
+  COURT_STAGE
+  WON
+  SETTLEMENT
+  CLOSED_PAID
+  REJECTED
+  DISMISSED
+}
+
+enum ClaimType {
+  DELAY
+  CANCELLATION
+  DENIED_BOARDING
+}
+
+enum ClaimSource {
+  WEBSITE_FORM
+  CHECKER_FORM
+  MANUAL
+  IMPORT
+}
+
+enum CommissionModel {
+  STANDARD_30
+  COURT_40
+}
+
+enum FlightStatus {
+  SCHEDULED
+  ACTIVE
+  LANDED
+  CANCELLED
+  DIVERTED
+  UNKNOWN
+}
+
+enum ClaimAmountCategory {
+  EUR_250
+  EUR_400
+  EUR_600
+}
+
+enum DocumentType {
+  ASSIGNMENT_AGREEMENT
+  POWER_OF_ATTORNEY
+  DEMAND_LETTER
+  NEGATIVE_RESPONSE_REPLY
+  LAWSUIT
+  SETTLEMENT_CONFIRMATION
+  CLIENT_CONFIRMATION
+}
+
+enum DocumentStatus {
+  DRAFT
+  GENERATED
+  SIGNED
+  ARCHIVED
+}
+
+enum AttachmentType {
+  BOARDING_PASS
+  BOOKING_CONFIRMATION
+  ID_DOCUMENT
+  CORRESPONDENCE
+  COURT_DOCUMENT
+  OTHER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum NoteType {
+  INTERNAL
+  OUTGOING_CORRESPONDENCE
+  INCOMING_CORRESPONDENCE
+  PHONE_CALL
+  ESCALATION
+}
+
+enum SettlementStatus {
+  PENDING
+  RECEIVED
+  CLIENT_PAID
+  COMPLETED
+}
+
+enum ApiDataSource {
+  AVIATION_STACK
+  AERO_DATA_BOX
+  MANUAL
+  CACHE
+}
+
+model User {
+  id          String    @id @default(cuid())
+  authUserId  String?   @unique
+  email       String    @unique
+  name        String
+  role        UserRole  @default(OPERATOR)
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  ownedClaims        Claim[]              @relation("ClaimOwner")
+  createdClaims      Claim[]              @relation("ClaimCreator")
+  notes              Note[]
+  tasks              Task[]               @relation("TaskAssignee")
+  createdTasks       Task[]               @relation("TaskCreator")
+  statusHistory      ClaimStatusHistory[]
+  assignmentHistory  AssignmentHistory[]  @relation("ChangedBy")
+  generatedDocuments Document[]
+
+  @@index([email])
+  @@index([authUserId])
+  @@index([role, isActive])
+}
+
+model Client {
+  id               String   @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String
+  phone            String?
+  nationality      String?
+  address          String?
+  postalCode       String?
+  city             String?
+  country          String   @default("PL")
+  idDocumentNumber String?
+  status           String   @default("ACTIVE")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  claims     Claim[]
+  passengers Passenger[]
+
+  @@index([email])
+  @@index([lastName, firstName])
+}
+
+model Airline {
+  id               String   @id @default(cuid())
+  name             String
+  iataCode         String   @unique
+  country          String?
+  carrierType      String?
+  contactInfo      String?
+  operationalNotes String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  flights Flight[]
+  claims  Claim[]
+
+  @@index([iataCode])
+}
+
+model Flight {
+  id                   String               @id @default(cuid())
+  flightNumber         String
+  flightDate           DateTime
+  departureAirportCode String
+  arrivalAirportCode   String
+  departureCountry     String?
+  arrivalCountry       String?
+  scheduledDeparture   DateTime?
+  actualDeparture      DateTime?
+  scheduledArrival     DateTime?
+  actualArrival        DateTime?
+  delayMinutes         Int?
+  flightStatus         FlightStatus         @default(UNKNOWN)
+  distanceKm           Int?
+  amountCategory       ClaimAmountCategory?
+  dataSource           ApiDataSource        @default(MANUAL)
+  externalApiId        String?
+  rawApiResponse       Json?
+  lastApiRefreshAt     DateTime?
+  airlineId            String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  airline Airline @relation(fields: [airlineId], references: [id])
+  claims  Claim[]
+
+  @@unique([flightNumber, flightDate])
+  @@index([flightNumber])
+  @@index([flightDate])
+  @@index([airlineId])
+}
+
+model Claim {
+  id                   String          @id @default(cuid())
+  claimNumber          String          @unique
+  type                 ClaimType
+  source               ClaimSource     @default(WEBSITE_FORM)
+  status               ClaimStatus     @default(NEW)
+  subStatus            String?
+  ownerId              String?
+  creatorId            String
+  clientId             String
+  flightId             String?
+  airlineId            String?
+  potentialAmount      Decimal?        @db.Decimal(10, 2)
+  estimatedFee         Decimal?        @db.Decimal(10, 2)
+  commissionModel      CommissionModel @default(STANDARD_30)
+  isCourtStage         Boolean         @default(false)
+  isPolishJurisdiction Boolean         @default(true)
+  dataCompleteness     Int             @default(0)
+  qualifiedAt          DateTime?
+  closedAt             DateTime?
+  closeReason          String?
+  deletedAt            DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  owner   User?    @relation("ClaimOwner", fields: [ownerId], references: [id])
+  creator User     @relation("ClaimCreator", fields: [creatorId], references: [id])
+  client  Client   @relation(fields: [clientId], references: [id])
+  flight  Flight?  @relation(fields: [flightId], references: [id])
+  airline Airline? @relation(fields: [airlineId], references: [id])
+
+  passengers        Passenger[]
+  documents         Document[]
+  attachments       Attachment[]
+  notes             Note[]
+  tasks             Task[]
+  statusHistory     ClaimStatusHistory[]
+  assignmentHistory AssignmentHistory[]
+  payouts           Payout[]
+
+  @@index([claimNumber])
+  @@index([status])
+  @@index([ownerId])
+  @@index([clientId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([status, ownerId])
+}
+
+model Passenger {
+  id               String    @id @default(cuid())
+  claimId          String
+  clientId         String?
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime?
+  relationToClient String?
+  isPrimary        Boolean   @default(false)
+  hasSignedDocs    Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  claim  Claim   @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id])
+
+  @@index([claimId])
+}
+
+model Document {
+  id            String         @id @default(cuid())
+  claimId       String
+  generatedById String
+  type          DocumentType
+  fileName      String
+  version       Int            @default(1)
+  status        DocumentStatus @default(GENERATED)
+  storageKey    String
+  isSigned      Boolean        @default(false)
+  signedAt      DateTime?
+  generatedAt   DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  claim       Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  generatedBy User  @relation(fields: [generatedById], references: [id])
+
+  @@index([claimId])
+  @@index([type])
+}
+
+model Attachment {
+  id                 String         @id @default(cuid())
+  claimId            String
+  uploadedById       String
+  type               AttachmentType @default(OTHER)
+  fileName           String
+  mimeType           String
+  sizeBytes          Int
+  storageKey         String
+  verificationStatus String         @default("PENDING")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@index([uploadedById])
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  claimId    String
+  authorId   String
+  content    String   @db.Text
+  type       NoteType @default(INTERNAL)
+  visibility String   @default("TEAM")
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  claim  Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id])
+
+  @@index([claimId])
+  @@index([claimId, type])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  claimId     String
+  assigneeId  String?
+  creatorId   String
+  title       String
+  description String?      @db.Text
+  dueDate     DateTime?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(OPEN)
+  closedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  claim    Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  assignee User? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator  User  @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  @@index([claimId])
+  @@index([assigneeId, status])
+  @@index([dueDate, status])
+}
+
+model ClaimStatusHistory {
+  id          String      @id @default(cuid())
+  claimId     String
+  changedById String
+  oldStatus   ClaimStatus
+  newStatus   ClaimStatus
+  comment     String?
+  createdAt   DateTime    @default(now())
+
+  claim     Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  changedBy User  @relation(fields: [changedById], references: [id])
+
+  @@index([claimId])
+  @@index([createdAt])
+}
+
+model AssignmentHistory {
+  id              String   @id @default(cuid())
+  claimId         String
+  changedById     String
+  previousOwnerId String?
+  newOwnerId      String?
+  createdAt       DateTime @default(now())
+
+  claim     Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  changedBy User  @relation("ChangedBy", fields: [changedById], references: [id])
+
+  @@index([claimId])
+}
+
+model Payout {
+  id              String           @id @default(cuid())
+  claimId         String
+  amountRecovered Decimal          @db.Decimal(10, 2)
+  currency        String           @default("EUR")
+  receivedAt      DateTime
+  owemeFee        Decimal          @db.Decimal(10, 2)
+  commissionModel CommissionModel
+  clientAmount    Decimal          @db.Decimal(10, 2)
+  clientPaidAt    DateTime?
+  status          SettlementStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  claim Claim @relation(fields: [claimId], references: [id])
+
+  @@index([claimId])
+  @@index([status])
+}
