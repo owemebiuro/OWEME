@@ -432,3 +432,14 @@ model Payout {
   @@index([claimId])
   @@index([status])
 }
+
+model CheckerEvent {
+  id           String    @id @default(cuid())
+  flightNumber String
+  flightDate   DateTime?
+  result       String
+  ip           String?
+  createdAt    DateTime  @default(now())
+
+  @@index([createdAt])
+}
