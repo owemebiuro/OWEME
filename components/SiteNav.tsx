@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "@/app/landing.module.css";
@@ -10,17 +11,16 @@ export default function SiteNav() {
 
   return (
     <nav className={styles.nav}>
-      <div className={styles.logo}>
-        <div className={styles.logoMark}>
-          <svg viewBox="0 0 20 20" fill="none">
-            <path d="M3 11.5L10 2.5l7 9H13V18H7v-6.5H3z" fill="white" />
-          </svg>
-        </div>
-        <div>
-          <div className={styles.logoName}>ClaimAir</div>
-          <div className={styles.logoSub}>legaltech</div>
-        </div>
-      </div>
+      <Link href="/" className={styles.logo} aria-label="OWEME - strona główna">
+        <Image
+          src="/oweme-logo-cropped.png"
+          alt="OWEME"
+          width={968}
+          height={169}
+          className={styles.logoImage}
+          priority
+        />
+      </Link>
       <div className={styles.navLinks}>
         <Link
           href="/wiedza"

@@ -2,6 +2,7 @@ import { type User as SupabaseUser } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
+import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { AppUser, PermissionAction } from "@/types/auth";
 import { type UserRole } from "@/types/auth";
@@ -11,20 +12,14 @@ type CurrentUser = {
   appUser: AppUser | null;
 };
 
-const rolePermissions: Record<UserRole, readonly PermissionAction[]> = {
-  ADMIN: [
-    "crm:read",
-    "crm:write",
-    "admin:read",
-    "admin:write",
-    "claims:assign",
-    "documents:generate",
-  ],
-  OPERATOR: ["crm:read", "crm:write", "claims:assign", "documents:generate"],
-  LAWYER: ["crm:read", "crm:write", "documents:generate"],
-  MARKETING: ["crm:read"],
-  READ_ONLY: ["crm:read"],
-};
+const legacyPermissionMap = {
+  "crm:read": PERMISSIONS.CLAIM_READ_ALL,
+  "crm:write": PERMISSIONS.CLAIM_EDIT,
+  "admin:read": PERMISSIONS.ADMIN_USERS,
+  "admin:write": PERMISSIONS.ADMIN_USERS,
+  "claims:assign": PERMISSIONS.CLAIM_ASSIGN_OWNER,
+  "documents:generate": PERMISSIONS.DOCUMENT_GENERATE,
+} as const satisfies Record<PermissionAction, (typeof PERMISSIONS)[keyof typeof PERMISSIONS]>;
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient();
@@ -93,5 +88,5 @@ export function hasPermission(
     return false;
   }
 
-  return rolePermissions[user.role].includes(action);
+  return hasRolePermission(user.role, legacyPermissionMap[action]);
 }

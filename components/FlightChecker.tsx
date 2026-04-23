@@ -47,6 +47,7 @@ export default function FlightChecker() {
       inputRef.current?.focus();
       return;
     }
+
     setLoading(true);
     setResult(null);
 
@@ -54,9 +55,16 @@ export default function FlightChecker() {
       const res = await fetch("/api/check-flight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ flightNum: flightNum.trim().toUpperCase(), reason: pendingReason }),
+        body: JSON.stringify({
+          flightNum: flightNum.trim().toUpperCase(),
+          reason: pendingReason,
+        }),
       });
-      if (!res.ok) throw new Error();
+
+      if (!res.ok) {
+        throw new Error("Flight check failed.");
+      }
+
       const data: Result = await res.json();
       setResult(data);
     } catch {
@@ -78,13 +86,14 @@ export default function FlightChecker() {
           maxLength={10}
           autoComplete="off"
           value={flightNum}
-          onChange={(e) => setFlightNum(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleCheck()}
+          onChange={(event) => setFlightNum(event.target.value)}
+          onKeyDown={(event) => event.key === "Enter" && handleCheck()}
         />
         <button
           className={styles.checkerBtn}
           onClick={handleCheck}
           disabled={loading}
+          type="button"
         >
           {loading && <span className={styles.spinner} />}
           {loading ? "Analizuję..." : "Sprawdź"}
@@ -95,54 +104,100 @@ export default function FlightChecker() {
         <span className={styles.checkerSubItem}>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
             <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
-            <path d="M6 5v3.5M6 3.5v.5" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" />
+            <path
+              d="M6 5v3.5M6 3.5v.5"
+              stroke="#9e8e7e"
+              strokeWidth="1"
+              strokeLinecap="round"
+            />
           </svg>
           Bezpłatna analiza
         </span>
         <span className={styles.checkerSubItem}>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-            <rect x="2" y="4" width="8" height="6" rx="1" stroke="#9e8e7e" strokeWidth="1" />
-            <path d="M4 4V3a2 2 0 014 0v1" stroke="#9e8e7e" strokeWidth="1" />
+            <rect
+              x="2"
+              y="4"
+              width="8"
+              height="6"
+              rx="1"
+              stroke="#9e8e7e"
+              strokeWidth="1"
+            />
+            <path
+              d="M4 4V3a2 2 0 014 0v1"
+              stroke="#9e8e7e"
+              strokeWidth="1"
+            />
           </svg>
           Dane szyfrowane
         </span>
         <span className={styles.checkerSubItem}>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
             <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
-            <path d="M4 6l1.5 1.5L8 4" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M4 6l1.5 1.5L8 4"
+              stroke="#9e8e7e"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           Wynik natychmiast
         </span>
       </div>
 
       {result && (
-        <div className={`${styles.resultBubble} ${result.eligible ? styles.resultBubbleEligible : ""}`}>
+        <div
+          className={`${styles.resultBubble} ${
+            result.eligible ? styles.resultBubbleEligible : ""
+          }`}
+        >
           <div className={styles.resultRow}>
             <div
               className={styles.resultDot}
-              style={{ background: result.eligible ? "var(--orange-mid)" : "#c8bdb5" }}
+              style={{
+                background: result.eligible ? "var(--orange-mid)" : "#c8bdb5",
+              }}
             >
               {result.eligible ? (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8l4 4 6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M3 8l4 4 6-6"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               ) : (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M5 5l6 6M11 5l-6 6" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                  <path
+                    d="M5 5l6 6M11 5l-6 6"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               )}
             </div>
             <div className={styles.resultContent}>
-              <div className={`${styles.resultTitle} ${!result.eligible ? styles.resultTitleNone : ""}`}>
+              <div
+                className={`${styles.resultTitle} ${
+                  !result.eligible ? styles.resultTitleNone : ""
+                }`}
+              >
                 {result.title}
               </div>
               <div className={styles.resultDesc}>{result.explanation}</div>
               {result.eligible && result.compensation_eur && (
-                <div className={styles.resultAmount}>do {result.compensation_eur} €</div>
+                <div className={styles.resultAmount}>
+                  do {result.compensation_eur} EUR
+                </div>
               )}
               {result.eligible && (
                 <a href="#oferty" className={styles.resultCta}>
-                  Przejdź do oferty →
+                  Przejdź do oferty
                 </a>
               )}
             </div>

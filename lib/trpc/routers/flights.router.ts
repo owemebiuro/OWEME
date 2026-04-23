@@ -1,75 +1,116 @@
-import { FlightStatus, ClaimAmountCategory } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { publicProcedure, router } from "@/lib/trpc/trpc";
+import { fetchFlightData } from "@/lib/services/flight-api.service";
+import { protectedProcedure, publicProcedure, router } from "@/lib/trpc/trpc";
 
-const AMOUNT_MAP: Record<ClaimAmountCategory, number> = {
-  EUR_250: 250,
-  EUR_400: 400,
-  EUR_600: 600,
-};
+const flightNumberSchema = z
+  .string()
+  .trim()
+  .min(2)
+  .transform((value) => value.replace(/\s+/g, "").toUpperCase());
+
+const flightDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+  message: "Data lotu musi mieć format YYYY-MM-DD.",
+});
+
+const searchInputSchema = z.object({
+  flightNumber: flightNumberSchema,
+  date: flightDateSchema,
+});
+
+const refreshInputSchema = z.object({
+  flightId: z.string().min(1),
+});
+
+const getByIdInputSchema = z.object({
+  id: z.string().min(1),
+});
+
+function formatFlightDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
 
 export const flightsRouter = router({
-  search: publicProcedure
-    .input(
-      z.object({
-        flightNumber: z.string().min(2).max(10),
-        flightDate: z.coerce.date(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const fn = input.flightNumber.trim().toUpperCase().replace(/\s+/g, "");
-      const date = input.flightDate;
-      const dayStart = new Date(
-        Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-      );
-      const dayEnd = new Date(
-        Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1),
-      );
+  search: publicProcedure.input(searchInputSchema).query(async ({ input }) => {
+    return fetchFlightData(input.flightNumber, input.date);
+  }),
 
-      const flight = await ctx.prisma.flight.findFirst({
-        where: {
-          flightNumber: fn,
-          flightDate: { gte: dayStart, lt: dayEnd },
-        },
-        include: { airline: true },
-      });
-
-      if (!flight) return null;
-
-      const amountPerPassenger = flight.amountCategory
-        ? AMOUNT_MAP[flight.amountCategory]
-        : null;
-
-      const isEligible =
-        amountPerPassenger !== null &&
-        ((flight.delayMinutes !== null && flight.delayMinutes >= 180) ||
-          flight.flightStatus === FlightStatus.CANCELLED);
-
-      let ineligibilityReason: string | null = null;
-      if (!isEligible) {
-        if (flight.delayMinutes !== null && flight.delayMinutes < 180) {
-          ineligibilityReason = `Opóźnienie wynosiło ${flight.delayMinutes} min, minimalne to 180 min (3h).`;
-        } else if (flight.flightStatus === FlightStatus.CANCELLED) {
-          ineligibilityReason = "Lot odwołany — warunki nie spełniają kryteriów EU 261/2004.";
-        } else {
-          ineligibilityReason = "Lot nie spełnia kryteriów odszkodowania EU 261/2004.";
-        }
+  refresh: protectedProcedure
+    .input(refreshInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.appUser) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Brak aktywnego użytkownika aplikacyjnego OWEME.",
+        });
       }
 
-      return {
-        id: flight.id,
-        flightNumber: flight.flightNumber,
-        route: `${flight.departureAirportCode} → ${flight.arrivalAirportCode}`,
-        departureAirport: flight.departureAirportCode,
-        arrivalAirport: flight.arrivalAirportCode,
-        delayMinutes: flight.delayMinutes,
-        flightStatus: flight.flightStatus,
-        amountCategory: flight.amountCategory,
-        amountPerPassenger,
-        isEligible,
-        ineligibilityReason,
-        airlineName: flight.airline.name,
-      };
+      const flight = await ctx.prisma.flight.findUnique({
+        where: {
+          id: input.flightId,
+        },
+        select: {
+          flightNumber: true,
+          flightDate: true,
+        },
+      });
+
+      if (!flight) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nie znaleziono lotu.",
+        });
+      }
+
+      return fetchFlightData(flight.flightNumber, formatFlightDate(flight.flightDate), {
+        forceRefresh: true,
+      });
+    }),
+
+  getById: protectedProcedure
+    .input(getByIdInputSchema)
+    .query(async ({ ctx, input }) => {
+      if (!ctx.appUser) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Brak aktywnego użytkownika aplikacyjnego OWEME.",
+        });
+      }
+
+      const flight = await ctx.prisma.flight.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          airline: true,
+          claims: {
+            select: {
+              id: true,
+              claimNumber: true,
+              status: true,
+              client: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+      });
+
+      if (!flight) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nie znaleziono lotu.",
+        });
+      }
+
+      return flight;
     }),
 });

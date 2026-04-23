@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OWEME CRM
 
-## Getting Started
+OWEME is a single-repo Next.js App Router application for the marketing site, CRM, and admin panel.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- Supabase Auth and Supabase Postgres
+- Prisma in the repository root
+- tRPC in the repository root
+- Cloudflare R2 for documents and attachments
+- Inngest for automations
+- Resend for transactional email
+- Vercel deployment
+
+This project is not a monorepo. Do not add `apps/web`, `packages/*`, Turbo, or pnpm workspaces unless a future architecture change is explicitly approved.
+
+## Local Development
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` to `.env.local` and fill the local values. Real secrets must stay out of git.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quality Checks
 
-## Learn More
+```bash
+npm run lint
+npm run test:unit
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+E2E tests:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run test:e2e
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Authenticated E2E scenarios require:
 
-## Deploy on Vercel
+- `E2E_DATABASE_URL`
+- `OWEME_E2E_EMAIL`
+- `OWEME_E2E_PASSWORD`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Production setup is documented in [docs/deployment.md](docs/deployment.md).
+
+For Vercel, keep the root directory set to the repository root and use the standard Next.js framework preset. Do not set root directory to `apps/web`.

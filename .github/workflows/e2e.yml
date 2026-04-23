@@ -1,0 +1,74 @@
+name: E2E
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/oweme_e2e_smoke
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/oweme_e2e_smoke
+  E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+  OWEME_E2E_EMAIL: ${{ secrets.OWEME_E2E_EMAIL }}
+  OWEME_E2E_PASSWORD: ${{ secrets.OWEME_E2E_PASSWORD }}
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'e2e-publishable-key' }}
+  NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+jobs:
+  playwright:
+    name: Playwright smoke and E2E
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Prepare E2E database when configured
+        run: |
+          if [ -n "$E2E_DATABASE_URL" ]; then
+            DATABASE_URL="$E2E_DATABASE_URL" DIRECT_URL="$E2E_DATABASE_URL" npx prisma db push --skip-generate
+          else
+            echo "E2E_DATABASE_URL is not configured; authenticated E2E tests will be skipped."
+          fi
+
+      - name: Seed E2E database when explicitly enabled
+        run: |
+          if [ -n "$E2E_DATABASE_URL" ] && [ "${{ vars.E2E_RUN_SEED }}" = "true" ]; then
+            DATABASE_URL="$E2E_DATABASE_URL" DIRECT_URL="$E2E_DATABASE_URL" npm run prisma:seed
+          else
+            echo "Skipping seed. Set repository variable E2E_RUN_SEED=true to enable the current idempotent Prisma seed."
+          fi
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run Playwright tests
+        run: npm run test:e2e -- --reporter=html,line
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

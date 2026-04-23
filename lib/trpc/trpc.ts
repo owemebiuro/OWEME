@@ -49,6 +49,7 @@ const requireAdminMiddleware = t.middleware(({ ctx, next }) => {
 });
 
 export const createCallerFactory = t.createCallerFactory;
+export const middleware = t.middleware;
 export const router = t.router;
 export const publicProcedure = t.procedure.use(timingMiddleware);
 export const protectedProcedure = publicProcedure.use(requireAuthMiddleware);

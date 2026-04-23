@@ -1,5 +1,4 @@
 import {
-  ClaimAmountCategory,
   ClaimSource,
   ClaimStatus,
   ClaimType,
@@ -13,9 +12,13 @@ import {
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { sendClaimRegisteredEmail } from "@/lib/email/claim-emails";
 import { hasPermission } from "@/lib/auth-helpers";
+import { claimCardInclude, createClaimWithHistory } from "@/lib/claims/create-claim";
+import { sendInngestEvent } from "@/lib/inngest/events";
 import type { Context } from "@/lib/trpc/context";
-import { adminProcedure, protectedProcedure, router } from "@/lib/trpc/trpc";
+import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
+import { router } from "@/lib/trpc/trpc";
 import type { AppUser } from "@/types/auth";
 
 const claimListInclude = {
@@ -23,60 +26,6 @@ const claimListInclude = {
   flight: true,
   airline: true,
   owner: true,
-} satisfies Prisma.ClaimInclude;
-
-const claimCardInclude = {
-  client: true,
-  flight: true,
-  airline: true,
-  owner: true,
-  creator: true,
-  passengers: {
-    orderBy: {
-      isPrimary: "desc",
-    },
-  },
-  documents: {
-    orderBy: {
-      generatedAt: "desc",
-    },
-  },
-  attachments: {
-    orderBy: {
-      createdAt: "desc",
-    },
-  },
-  notes: {
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      author: true,
-    },
-  },
-  tasks: {
-    where: {
-      status: {
-        not: TaskStatus.DONE,
-      },
-    },
-    orderBy: {
-      dueDate: "asc",
-    },
-    include: {
-      assignee: true,
-    },
-  },
-  statusHistory: {
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 50,
-    include: {
-      changedBy: true,
-    },
-  },
-  payouts: true,
 } satisfies Prisma.ClaimInclude;
 
 const claimStatusSchema = z.enum(ClaimStatus);
@@ -245,54 +194,6 @@ function buildListWhere(
   return where;
 }
 
-function calculateClaimAmounts(
-  amountCategory: ClaimAmountCategory | null,
-  commissionModel: CommissionModel,
-) {
-  const amountByCategory: Record<ClaimAmountCategory, number> = {
-    EUR_250: 250,
-    EUR_400: 400,
-    EUR_600: 600,
-  };
-
-  if (!amountCategory) {
-    return {
-      potentialAmount: null,
-      estimatedFee: null,
-    };
-  }
-
-  const potentialAmount = amountByCategory[amountCategory];
-  const feeRate = commissionModel === CommissionModel.COURT_40 ? 0.4 : 0.3;
-
-  return {
-    potentialAmount: new Prisma.Decimal(potentialAmount),
-    estimatedFee: new Prisma.Decimal(potentialAmount * feeRate),
-  };
-}
-
-async function generateClaimNumber(tx: Prisma.TransactionClient) {
-  const year = new Date().getFullYear();
-  const prefix = `OW-${year}-`;
-  const lastClaim = await tx.claim.findFirst({
-    where: {
-      claimNumber: {
-        startsWith: prefix,
-      },
-    },
-    orderBy: {
-      claimNumber: "desc",
-    },
-    select: {
-      claimNumber: true,
-    },
-  });
-  const lastNumber = lastClaim?.claimNumber.split("-").at(-1);
-  const nextNumber = (lastNumber ? Number.parseInt(lastNumber, 10) : 0) + 1;
-
-  return `${prefix}${String(nextNumber).padStart(5, "0")}`;
-}
-
 async function validateStatusTransition(
   ctx: Context,
   claim: Prisma.ClaimGetPayload<{
@@ -360,7 +261,7 @@ function getClosedAtPatch(status: ClaimStatus) {
 }
 
 export const claimsRouter = router({
-  list: protectedProcedure.input(listInputSchema).query(async ({ ctx, input }) => {
+  list: permissionProcedure(PERMISSIONS.CLAIM_READ_ALL).input(listInputSchema).query(async ({ ctx, input }) => {
     requireAppUser(ctx);
 
     const page = input.page;
@@ -388,7 +289,7 @@ export const claimsRouter = router({
     };
   }),
 
-  getById: protectedProcedure
+  getById: permissionProcedure(PERMISSIONS.CLAIM_READ_ALL)
     .input(getByIdInputSchema)
     .query(async ({ ctx, input }) => {
       requireAppUser(ctx);
@@ -411,63 +312,43 @@ export const claimsRouter = router({
       return claim;
     }),
 
-  create: protectedProcedure
+  create: permissionProcedure(PERMISSIONS.CLAIM_CREATE)
     .input(createInputSchema)
     .mutation(async ({ ctx, input }) => {
       const appUser = requireAppUser(ctx);
 
-      const claim = await ctx.prisma.$transaction(async (tx) => {
-        const flight = input.flightId
-          ? await tx.flight.findUnique({
-              where: { id: input.flightId },
-              select: {
-                amountCategory: true,
-                airlineId: true,
-              },
-            })
-          : null;
-
-        const { potentialAmount, estimatedFee } = calculateClaimAmounts(
-          flight?.amountCategory ?? null,
-          CommissionModel.STANDARD_30,
-        );
-        const claimNumber = await generateClaimNumber(tx);
-
-        const createdClaim = await tx.claim.create({
-          data: {
-            claimNumber,
-            type: input.type,
-            source: input.source,
-            status: ClaimStatus.NEW,
-            creatorId: appUser.id,
-            clientId: input.clientId,
-            flightId: input.flightId,
-            airlineId: input.airlineId ?? flight?.airlineId,
-            potentialAmount,
-            estimatedFee,
-            commissionModel: CommissionModel.STANDARD_30,
-            isPolishJurisdiction: input.isPolishJurisdiction,
-          },
-          include: claimCardInclude,
-        });
-
-        await tx.claimStatusHistory.create({
-          data: {
-            claimId: createdClaim.id,
-            changedById: appUser.id,
-            oldStatus: ClaimStatus.NEW,
-            newStatus: ClaimStatus.NEW,
-            comment: "Utworzono sprawę.",
-          },
-        });
-
-        return createdClaim;
+      const claim = await createClaimWithHistory(ctx.prisma, {
+        type: input.type,
+        source: input.source,
+        clientId: input.clientId,
+        creatorId: appUser.id,
+        flightId: input.flightId,
+        airlineId: input.airlineId,
+        isPolishJurisdiction: input.isPolishJurisdiction,
       });
+
+      await Promise.all([
+        sendInngestEvent({
+          name: "claim/created",
+          data: {
+            claimId: claim.id,
+          },
+        }),
+        sendClaimRegisteredEmail(claim.id).catch((error) => {
+          console.error(
+            "[Email] Nie udało się wysłać potwierdzenia przyjęcia sprawy.",
+            {
+              claimId: claim.id,
+              error,
+            },
+          );
+        }),
+      ]);
 
       return claim;
     }),
 
-  updateStatus: protectedProcedure
+  updateStatus: permissionProcedure(PERMISSIONS.CLAIM_CHANGE_STATUS)
     .input(updateStatusInputSchema)
     .mutation(async ({ ctx, input }) => {
       const appUser = requireAppUser(ctx);
@@ -492,7 +373,7 @@ export const claimsRouter = router({
 
       await validateStatusTransition(ctx, claim, input.status);
 
-      return ctx.prisma.$transaction(async (tx) => {
+      const updatedClaim = await ctx.prisma.$transaction(async (tx) => {
         const updatedClaim = await tx.claim.update({
           where: { id: input.id },
           data: {
@@ -517,9 +398,20 @@ export const claimsRouter = router({
 
         return updatedClaim;
       });
+
+      await sendInngestEvent({
+        name: "claim/status-changed",
+        data: {
+          claimId: input.id,
+          oldStatus: claim.status,
+          newStatus: input.status,
+        },
+      });
+
+      return updatedClaim;
     }),
 
-  assignOwner: protectedProcedure
+  assignOwner: permissionProcedure(PERMISSIONS.CLAIM_ASSIGN_OWNER)
     .input(assignOwnerInputSchema)
     .mutation(async ({ ctx, input }) => {
       const appUser = requireAppUser(ctx);
@@ -599,7 +491,7 @@ export const claimsRouter = router({
       });
     }),
 
-  update: protectedProcedure
+  update: permissionProcedure(PERMISSIONS.CLAIM_EDIT)
     .input(updateInputSchema)
     .mutation(async ({ ctx, input }) => {
       const appUser = requireAppUser(ctx);
@@ -660,7 +552,7 @@ export const claimsRouter = router({
       });
     }),
 
-  delete: adminProcedure.input(deleteInputSchema).mutation(async ({ ctx, input }) => {
+  delete: permissionProcedure(PERMISSIONS.CLAIM_DELETE).input(deleteInputSchema).mutation(async ({ ctx, input }) => {
     const claim = await ctx.prisma.claim.findFirst({
       where: {
         id: input.id,

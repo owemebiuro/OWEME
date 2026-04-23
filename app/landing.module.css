@@ -16,37 +16,16 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
 }
 
-.logoMark {
-  width: 34px;
-  height: 34px;
-  background: var(--orange);
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logoMark svg {
-  width: 20px;
-  height: 20px;
-}
-
-.logoName {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  color: var(--text);
-}
-
-.logoSub {
-  font-size: 10px;
-  color: var(--orange);
-  font-weight: 500;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
+.logoImage {
+  display: block;
+  width: auto;
+  height: 24px;
+  max-width: 143px;
+  object-fit: contain;
 }
 
 .navLinks {
@@ -140,8 +119,52 @@
   font-size: 15px;
   color: var(--text-2);
   line-height: 1.7;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   max-width: 380px;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.primaryCta,
+.secondaryCta {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: var(--r);
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.primaryCta {
+  background: var(--orange);
+  color: #fff;
+}
+
+.primaryCta:hover {
+  background: var(--orange-dark);
+  color: #fff;
+}
+
+.secondaryCta {
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text-2);
+}
+
+.secondaryCta:hover {
+  border-color: rgba(201, 106, 42, 0.45);
+  color: var(--text);
 }
 
 .heroStats {
@@ -385,6 +408,12 @@
   gap: 16px;
 }
 
+.amountGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
 .claimCard {
   background: var(--card);
   border: 0.5px solid var(--border);
@@ -477,6 +506,50 @@
 .cardBtn:hover {
   background: var(--orange);
   color: #fff;
+}
+
+/* WHY */
+.whySection {
+  width: 100%;
+  padding: 4rem 3rem;
+}
+
+.whyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.whyCard {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.75rem 1.5rem;
+}
+
+.whyKicker {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--orange-light);
+  color: var(--orange-deep);
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.whyCard h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.whyCard p {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
 }
 
 /* HOW */
@@ -580,6 +653,672 @@
   margin-top: 2px;
 }
 
+/* FAQ */
+.faqSection {
+  width: 100%;
+  padding: 4rem 3rem;
+}
+
+.faqList {
+  display: grid;
+  gap: 10px;
+  max-width: 920px;
+}
+
+.faqItem {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 0;
+  overflow: hidden;
+}
+
+.faqItem summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 1rem 1.25rem;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary::after {
+  content: "+";
+  float: right;
+  color: var(--orange);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.faqItem[open] summary::after {
+  content: "-";
+}
+
+.faqItem p {
+  padding: 0 1.25rem 1.1rem;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+/* CHECK PAGE */
+.checkPage {
+  width: 100%;
+  padding: 4rem 3rem;
+}
+
+.checkPanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  padding: 3rem;
+  overflow: hidden;
+}
+
+.checkIntro h1 {
+  font-size: 40px;
+  line-height: 1.08;
+  letter-spacing: -1.4px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.checkIntro p {
+  max-width: 420px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.checkBox {
+  position: relative;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.funnelCard {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 460px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.1);
+  padding: 1.35rem;
+}
+
+.funnelSteps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.funnelSteps span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-3);
+  background: #fff;
+}
+
+.funnelSteps .funnelStepActive {
+  border-color: rgba(201, 106, 42, 0.35);
+  background: var(--orange-light);
+  color: var(--orange-deep);
+}
+
+.funnelForm,
+.funnelResult {
+  display: grid;
+  gap: 12px;
+}
+
+.funnelField {
+  display: grid;
+  gap: 7px;
+}
+
+.funnelField span {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-3);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.funnelField input,
+.funnelField select {
+  width: 100%;
+  height: 46px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  padding: 0 14px;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.funnelField select {
+  appearance: none;
+}
+
+.funnelField input:focus,
+.funnelField select:focus {
+  border-color: rgba(201, 106, 42, 0.55);
+  box-shadow: 0 0 0 3px rgba(201, 106, 42, 0.11);
+}
+
+.funnelButton {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r);
+  background: var(--orange);
+  color: #fff;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.funnelButton:hover:not(:disabled) {
+  background: var(--orange-dark);
+  color: #fff;
+}
+
+.funnelButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.funnelError {
+  border: 1px solid #f0c6bd;
+  border-radius: var(--r);
+  background: #fff4f1;
+  color: #9d2d16;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.funnelBack {
+  width: fit-content;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.funnelBack:hover {
+  color: var(--orange);
+}
+
+.funnelResultBanner {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1rem;
+}
+
+.funnelResultBanner h2 {
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.funnelResultBanner p {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.funnelResultGood {
+  border-color: rgba(62, 142, 91, 0.2);
+  background: #f0fbf4;
+}
+
+.funnelResultManual {
+  border-color: rgba(201, 106, 42, 0.25);
+  background: var(--orange-light);
+}
+
+.funnelResultMuted {
+  background: #f6f3ef;
+}
+
+.funnelSummary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.funnelSummary div,
+.totalBox {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  padding: 11px 12px;
+}
+
+.funnelSummary dt,
+.totalBox span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.funnelSummary dd,
+.totalBox strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.manualGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.totalBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--orange-light);
+}
+
+.totalBox strong {
+  margin-top: 0;
+  color: var(--orange-deep);
+  font-size: 20px;
+}
+
+.funnelHint {
+  border-radius: var(--r);
+  background: #f6f3ef;
+  color: var(--text-2);
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* APPLICATION FORM */
+.applicationPage,
+.successPage {
+  width: 100%;
+  padding: 4rem 3rem;
+}
+
+.applicationPanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.78fr) minmax(420px, 1.18fr);
+  gap: 2.5rem;
+  align-items: start;
+  max-width: 1180px;
+  margin: 0 auto;
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  padding: 3rem;
+  overflow: hidden;
+}
+
+.applicationIntro {
+  position: sticky;
+  top: 92px;
+}
+
+.applicationIntro h1,
+.successPanel h1 {
+  font-size: 40px;
+  line-height: 1.08;
+  letter-spacing: -1.4px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.applicationIntro p,
+.successPanel > p {
+  max-width: 430px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.applicationBenefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1.5rem;
+}
+
+.applicationBenefits span {
+  border: 1px solid rgba(201, 106, 42, 0.22);
+  border-radius: 999px;
+  background: var(--orange-light);
+  color: var(--orange-deep);
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.applicationBox {
+  position: relative;
+  min-height: 520px;
+}
+
+.applicationCard {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.1);
+  padding: 1.5rem;
+}
+
+.applicationProgress {
+  display: grid;
+  gap: 8px;
+}
+
+.applicationProgress span {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--orange-deep);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.applicationProgressBar {
+  height: 8px;
+  border-radius: 999px;
+  background: #eee6de;
+  overflow: hidden;
+}
+
+.applicationProgressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--orange);
+  transition: width 0.2s ease;
+}
+
+.applicationStepLabels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.applicationStepLabels span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-3);
+  padding: 7px 8px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.applicationStepLabels .applicationStepActive {
+  border-color: rgba(201, 106, 42, 0.35);
+  background: var(--orange-light);
+  color: var(--orange-deep);
+}
+
+.applicationFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.applicationWide {
+  grid-column: 1 / -1;
+}
+
+.readonlyInput {
+  background: #f7f2ed !important;
+  color: var(--text-2) !important;
+}
+
+.applicationPassengers {
+  display: grid;
+  gap: 12px;
+}
+
+.applicationNotice {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  color: var(--text-2);
+  padding: 1rem;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.passengerRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  padding: 1rem;
+}
+
+.passengerRowHeader {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--orange-deep);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.applicationConfirm {
+  display: grid;
+  gap: 1rem;
+}
+
+.applicationSummaryBox {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: #fff;
+  padding: 1rem;
+}
+
+.applicationSummaryBox h2 {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.consentList {
+  display: grid;
+  gap: 10px;
+}
+
+.consentList label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  padding: 12px;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.consentList input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--orange);
+  margin-top: 2px;
+}
+
+.applicationActions,
+.successActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.applicationSecondaryButton {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  color: var(--text-2);
+  padding: 0 18px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.applicationSecondaryButton:hover:not(:disabled) {
+  border-color: rgba(201, 106, 42, 0.45);
+  color: var(--text);
+}
+
+.applicationSecondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.successPanel {
+  max-width: 940px;
+  margin: 0 auto;
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  padding: 3rem;
+  text-align: center;
+}
+
+.successPanel > p {
+  margin: 0 auto;
+}
+
+.successMark {
+  width: 64px;
+  height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: #f0fbf4;
+  color: #247747;
+  margin-bottom: 1rem;
+}
+
+.successMark svg {
+  width: 34px;
+  height: 34px;
+}
+
+.successPanel .heroBadge {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.successSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.successSteps article {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  padding: 1.25rem;
+}
+
+.successSteps span {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--orange-light);
+  color: var(--orange);
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+
+.successSteps h2 {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.successSteps p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
 /* FOOTER */
 .footer {
   width: 100%;
@@ -673,8 +1412,35 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .amountGrid,
+  .whyGrid {
+    grid-template-columns: 1fr;
+  }
+
   .cardsSection {
     padding: 3rem 1.5rem;
+  }
+
+  .whySection,
+  .faqSection,
+  .checkPage,
+  .applicationPage,
+  .successPage {
+    padding: 3rem 1.5rem;
+  }
+
+  .checkPanel,
+  .applicationPanel {
+    grid-template-columns: 1fr;
+    padding: 2.25rem 1.5rem;
+  }
+
+  .applicationIntro {
+    position: static;
+  }
+
+  .successSteps {
+    grid-template-columns: 1fr;
   }
 
   .howSection {
@@ -695,6 +1461,11 @@
   /* Nav — ukryj linki tekstowe, zostaw tylko logo + CTA */
   .nav {
     padding: 0 1rem;
+  }
+
+  .logoImage {
+    height: 17px;
+    max-width: 98px;
   }
 
   .navLinks a:not(.navCta) {
@@ -720,6 +1491,15 @@
   .heroDesc {
     max-width: 100%;
     font-size: 14px;
+  }
+
+  .heroActions {
+    justify-content: center;
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    width: 100%;
   }
 
   .heroStats {
@@ -770,6 +1550,78 @@
 
   .cardsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .amountGrid,
+  .whyGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .whySection,
+  .faqSection,
+  .checkPage,
+  .applicationPage,
+  .successPage {
+    padding: 2rem 1rem;
+  }
+
+  .checkPanel,
+  .applicationPanel,
+  .successPanel {
+    padding: 1.5rem 1rem;
+  }
+
+  .checkIntro,
+  .applicationIntro {
+    text-align: center;
+  }
+
+  .checkIntro .heroBadge,
+  .applicationIntro .heroBadge {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .checkIntro h1,
+  .applicationIntro h1,
+  .successPanel h1 {
+    font-size: 32px;
+    letter-spacing: -0.8px;
+  }
+
+  .checkBox {
+    min-height: 220px;
+  }
+
+  .funnelCard {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .funnelSummary,
+  .manualGrid,
+  .applicationFormGrid,
+  .passengerRow {
+    grid-template-columns: 1fr;
+  }
+
+  .applicationStepLabels {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .applicationActions,
+  .successActions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .applicationBenefits {
+    justify-content: center;
+  }
+
+  .totalBox {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   /* How it works */
