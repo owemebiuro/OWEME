@@ -1,78 +1,167 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useMemo, useRef, useState } from "react";
+
 import styles from "@/app/landing.module.css";
+import type { FlightDataLookupResult } from "@/lib/flightaware/aeroapi.types";
 
-type Result = {
-  eligible: boolean;
-  title: string;
-  explanation: string;
-  compensation_eur: number | null;
-};
+function toDateInputValue(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
 
-const FALLBACK: Record<string, Result> = {
-  baggage: {
-    eligible: true,
-    title: "Kwalifikujesz się do odszkodowania",
-    explanation:
-      "Konwencja Montrealska daje Ci prawo do rekompensaty za uszkodzenie lub utratę bagażu.",
-    compensation_eur: 1300,
-  },
-  default: {
-    eligible: true,
-    title: "Kwalifikujesz się do odszkodowania",
-    explanation:
-      "Rozporządzenie WE 261/2004 gwarantuje Ci prawo do odszkodowania od linii lotniczej.",
-    compensation_eur: 600,
-  },
-};
+function getDateBounds() {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const minDate = new Date(today);
+  minDate.setFullYear(today.getFullYear() - 3);
+
+  return {
+    min: toDateInputValue(minDate),
+    max: toDateInputValue(yesterday),
+  };
+}
+
+function normalizeFlightNumber(value: string) {
+  return value.trim().replace(/\s+/g, "").toUpperCase();
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "Brak danych";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Brak danych";
+  }
+
+  return new Intl.DateTimeFormat("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function buildManualFormUrl(input: {
+  flightNumber: string;
+  flightDate: string;
+}) {
+  const params = new URLSearchParams({
+    manual: "1",
+    passengers: "1",
+    flightNumber: normalizeFlightNumber(input.flightNumber),
+    flightDate: input.flightDate,
+  });
+
+  return `/formularz?${params.toString()}`;
+}
+
+function buildSuccessFormUrl(result: FlightDataLookupResult) {
+  const params = new URLSearchParams({
+    passengers: "1",
+  });
+
+  if (result.flight?.id) {
+    params.set("flightId", result.flight.id);
+    return `/formularz?${params.toString()}`;
+  }
+
+  return buildManualFormUrl({
+    flightNumber: result.flight?.flightNumber ?? "",
+    flightDate: result.flight?.flightDate ?? "",
+  });
+}
+
+function isFlightProviderConfigurationIssue(
+  result: FlightDataLookupResult | null,
+) {
+  return Boolean(
+    result?.error?.includes(
+      "Integracja lotnicza nie jest jeszcze skonfigurowana",
+    ),
+  );
+}
 
 export default function FlightChecker() {
-  const searchParams = useSearchParams();
-  const [flightNum, setFlightNum] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Result | null>(null);
-  const pendingReason = searchParams.get("reason") ?? "delay";
+  const bounds = useMemo(() => getDateBounds(), []);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [flightNumber, setFlightNumber] = useState("");
+  const [flightDate, setFlightDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [result, setResult] = useState<FlightDataLookupResult | null>(null);
 
-  useEffect(() => {
-    if (searchParams.get("reason")) {
-      inputRef.current?.focus();
+  function validate() {
+    if (!/^[A-Z0-9]{2,3}\s?\d{1,4}[A-Z]?$/i.test(flightNumber.trim())) {
+      return "Wpisz poprawny numer lotu, np. LO123.";
     }
-  }, [searchParams]);
+
+    if (!flightDate) {
+      return "Wybierz datę lotu.";
+    }
+
+    if (flightDate < bounds.min || flightDate > bounds.max) {
+      return "Data lotu musi być z przeszłości i maksymalnie 3 lata wstecz.";
+    }
+
+    return null;
+  }
 
   async function handleCheck() {
-    if (!flightNum.trim()) {
+    const error = validate();
+    setFieldError(error);
+    setResult(null);
+
+    if (error) {
       inputRef.current?.focus();
       return;
     }
 
     setLoading(true);
-    setResult(null);
 
     try {
-      const res = await fetch("/api/check-flight", {
+      const response = await fetch("/api/check-flight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          flightNum: flightNum.trim().toUpperCase(),
-          reason: pendingReason,
+          flightNumber: normalizeFlightNumber(flightNumber),
+          date: flightDate,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Flight check failed.");
-      }
-
-      const data: Result = await res.json();
+      const data = (await response.json()) as FlightDataLookupResult;
       setResult(data);
     } catch {
-      setResult(FALLBACK[pendingReason] ?? FALLBACK.default);
+      setResult({
+        found: false,
+        flight: null,
+        compensation: {
+          amountEur: null,
+          category: null,
+          reason:
+            "Nie udało się pobrać danych lotu. Spróbuj ponownie albo wybierz ręczne uzupełnienie danych.",
+        },
+        error:
+          "Nie udało się pobrać danych lotu. Spróbuj ponownie albo wybierz ręczne uzupełnienie danych.",
+        warnings: [],
+        cacheHit: false,
+        persistedFlightId: null,
+      });
     } finally {
       setLoading(false);
     }
   }
+
+  const manualFormUrl = buildManualFormUrl({
+    flightNumber,
+    flightDate,
+  });
+  const configurationIssue = isFlightProviderConfigurationIssue(result);
 
   return (
     <div className={styles.checkerWrap}>
@@ -82,23 +171,39 @@ export default function FlightChecker() {
           ref={inputRef}
           className={styles.checkerInput}
           type="text"
-          placeholder="np. LO 231"
+          placeholder="np. LO123"
           maxLength={10}
           autoComplete="off"
-          value={flightNum}
-          onChange={(event) => setFlightNum(event.target.value)}
+          value={flightNumber}
+          onChange={(event) => setFlightNumber(event.target.value)}
           onKeyDown={(event) => event.key === "Enter" && handleCheck()}
         />
-        <button
-          className={styles.checkerBtn}
-          onClick={handleCheck}
-          disabled={loading}
-          type="button"
-        >
-          {loading && <span className={styles.spinner} />}
-          {loading ? "Analizuję..." : "Sprawdź"}
-        </button>
       </div>
+
+      <div className={styles.checkerDateWrap}>
+        <div className={styles.checkerLabel}>Data lotu</div>
+        <div className={styles.checkerDatePill}>
+          <input
+            className={styles.checkerDateInput}
+            type="date"
+            min={bounds.min}
+            max={bounds.max}
+            value={flightDate}
+            onChange={(event) => setFlightDate(event.target.value)}
+          />
+          <button
+            className={styles.checkerBtn}
+            onClick={handleCheck}
+            disabled={loading}
+            type="button"
+          >
+            {loading && <span className={styles.spinner} />}
+            {loading ? "Analizuję..." : "Sprawdź"}
+          </button>
+        </div>
+      </div>
+
+      {fieldError ? <p className={styles.checkerError}>{fieldError}</p> : null}
 
       <div className={styles.checkerSub}>
         <span className={styles.checkerSubItem}>
@@ -147,20 +252,20 @@ export default function FlightChecker() {
         </span>
       </div>
 
-      {result && (
+      {result ? (
         <div
           className={`${styles.resultBubble} ${
-            result.eligible ? styles.resultBubbleEligible : ""
+            result.found ? styles.resultBubbleEligible : ""
           }`}
         >
           <div className={styles.resultRow}>
             <div
               className={styles.resultDot}
               style={{
-                background: result.eligible ? "var(--orange-mid)" : "#c8bdb5",
+                background: result.found ? "var(--orange-mid)" : "#c8bdb5",
               }}
             >
-              {result.eligible ? (
+              {result.found ? (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
                     d="M3 8l4 4 6-6"
@@ -184,26 +289,103 @@ export default function FlightChecker() {
             <div className={styles.resultContent}>
               <div
                 className={`${styles.resultTitle} ${
-                  !result.eligible ? styles.resultTitleNone : ""
+                  !result.found ? styles.resultTitleNone : ""
                 }`}
               >
-                {result.title}
+                {result.found
+                  ? "Znaleziono lot"
+                  : configurationIssue
+                    ? "Brakuje konfiguracji lotów"
+                    : "Nie znaleźliśmy lotu"}
               </div>
-              <div className={styles.resultDesc}>{result.explanation}</div>
-              {result.eligible && result.compensation_eur && (
+              <div className={styles.resultDesc}>
+                {result.error ?? result.compensation.reason}
+              </div>
+              {result.warnings.length ? (
+                <div className={styles.resultInlineNote}>{result.warnings[0]}</div>
+              ) : null}
+
+              {result.flight ? (
+                <dl className={styles.resultMetaGrid}>
+                  <div>
+                    <dt>Numer</dt>
+                    <dd>{result.flight.flightNumber}</dd>
+                  </div>
+                  <div>
+                    <dt>Linia</dt>
+                    <dd>{result.flight.airlineName ?? "Brak danych"}</dd>
+                  </div>
+                  <div>
+                    <dt>Wylot</dt>
+                    <dd>
+                      {result.flight.departureAirportCode ?? "?"}
+                      {result.flight.departureAirportName
+                        ? ` - ${result.flight.departureAirportName}`
+                        : ""}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Przylot</dt>
+                    <dd>
+                      {result.flight.arrivalAirportCode ?? "?"}
+                      {result.flight.arrivalAirportName
+                        ? ` - ${result.flight.arrivalAirportName}`
+                        : ""}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Start</dt>
+                    <dd>{formatDateTime(result.flight.actualDeparture ?? result.flight.scheduledDeparture)}</dd>
+                  </div>
+                  <div>
+                    <dt>Lądowanie</dt>
+                    <dd>{formatDateTime(result.flight.actualArrival ?? result.flight.scheduledArrival)}</dd>
+                  </div>
+                  <div>
+                    <dt>Trasa</dt>
+                    <dd>
+                      {result.flight.distanceKm
+                        ? `${result.flight.distanceKm} km`
+                        : "Do weryfikacji"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Opóźnienie</dt>
+                    <dd>
+                      {result.flight.delayMinutes !== null
+                        ? `${result.flight.delayMinutes} min`
+                        : "Brak danych"}
+                    </dd>
+                  </div>
+                </dl>
+              ) : null}
+
+              {result.compensation.amountEur ? (
                 <div className={styles.resultAmount}>
-                  do {result.compensation_eur} EUR
+                  {result.compensation.amountEur} EUR
+                </div>
+              ) : (
+                <div className={styles.resultInlineNote}>
+                  Nie możemy automatycznie wyliczyć kwoty, ale możesz złożyć
+                  wniosek do ręcznej weryfikacji.
                 </div>
               )}
-              {result.eligible && (
-                <a href="#oferty" className={styles.resultCta}>
-                  Przejdź do oferty
-                </a>
-              )}
+
+              <div className={styles.resultActions}>
+                <Link
+                  href={result.found ? buildSuccessFormUrl(result) : manualFormUrl}
+                  className={styles.resultCta}
+                >
+                  {result.found ? "Złóż wniosek" : "Uzupełnij dane ręcznie"}
+                </Link>
+                <Link href="/sprawdz" className={styles.resultGhostCta}>
+                  Otwórz pełny checker
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

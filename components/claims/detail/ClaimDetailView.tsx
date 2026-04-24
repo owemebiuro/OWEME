@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ClaimAttachments } from "@/components/claims/detail/ClaimAttachments";
+import { ClaimBilling } from "@/components/claims/detail/ClaimBilling";
 import { ClaimDetailsTab } from "@/components/claims/detail/ClaimDetailsTab";
 import { ClaimDocuments } from "@/components/claims/detail/ClaimDocuments";
 import { ClaimHeader } from "@/components/claims/detail/ClaimHeader";
@@ -30,7 +31,8 @@ type TabId =
   | "attachments"
   | "notes"
   | "tasks"
-  | "history";
+  | "history"
+  | "billing";
 
 const tabs: Array<{ id: TabId; label: string }> = [
   { id: "details", label: "Szczegóły" },
@@ -39,6 +41,7 @@ const tabs: Array<{ id: TabId; label: string }> = [
   { id: "notes", label: "Notatki" },
   { id: "tasks", label: "Zadania" },
   { id: "history", label: "Historia" },
+  { id: "billing", label: "Rozliczenia" },
 ];
 
 export function ClaimDetailView({
@@ -78,6 +81,14 @@ export function ClaimDetailView({
         );
       case "history":
         return <ClaimHistory claim={claim} owners={owners} />;
+      case "billing":
+        return (
+          <ClaimBilling
+            claim={claim}
+            currentUser={currentUser}
+            onChanged={refreshClaim}
+          />
+        );
     }
   }
 
@@ -94,7 +105,7 @@ export function ClaimDetailView({
       />
 
       <div className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(260px,0.32fr)_1fr] lg:px-8">
-        <ClaimSidebar claim={claim} />
+        <ClaimSidebar claim={claim} onChanged={refreshClaim} />
 
         <section className="min-w-0 space-y-4">
           <nav className="overflow-x-auto rounded-lg border border-neutral-200 bg-white p-1 shadow-sm">

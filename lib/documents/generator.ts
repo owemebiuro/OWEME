@@ -57,6 +57,20 @@ export class DocumentTemplateError extends Error {
   }
 }
 
+export class DocumentTemplateLoadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DocumentTemplateLoadError";
+  }
+}
+
+export class DocumentRenderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DocumentRenderError";
+  }
+}
+
 const requiredFieldsByDocumentType: Record<DocumentType, Array<keyof TemplateData>> = {
   ASSIGNMENT_AGREEMENT: ["imie", "nazwisko", "numer_sprawy"],
   POWER_OF_ATTORNEY: ["imie", "nazwisko", "numer_sprawy"],
@@ -187,8 +201,17 @@ async function loadTemplateBuffer(documentType: DocumentType) {
 
   try {
     return await readFile(templatePath);
-  } catch {
-    return createFallbackTemplateBuffer(documentType);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
+      console.warn(
+        `[Documents] Nie znaleziono szablonu ${documentType}.docx. Używam wbudowanego fallbacku DOCX.`,
+      );
+      return createFallbackTemplateBuffer(documentType);
+    }
+
+    throw new DocumentTemplateLoadError(
+      `Nie udało się wczytać szablonu DOCX dla typu ${documentType}.`,
+    );
   }
 }
 
@@ -213,7 +236,7 @@ export async function generateDocument(
       compression: "DEFLATE",
     }) as Buffer;
   } catch (error) {
-    throw new DocumentTemplateError(
+    throw new DocumentRenderError(
       error instanceof Error
         ? error.message
         : "Nie udało się wyrenderować szablonu DOCX.",
@@ -250,11 +273,12 @@ export async function generateAndStore(
   const storageKey = getDocumentStorageKey(claim.id, documentType, version);
   const fileName = `${claim.claimNumber}-${documentType}-v${version}.docx`;
 
-  await uploadObject({
+  const uploadResult = await uploadObject({
     key: storageKey,
     body: buffer,
     contentType:
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    allowDevelopmentLocalFallback: true,
   });
 
   const [document] = await prisma.$transaction([
@@ -265,7 +289,7 @@ export async function generateAndStore(
         type: documentType,
         fileName,
         version,
-        storageKey,
+        storageKey: uploadResult.storageKey,
       },
     }),
     prisma.note.create({
@@ -273,7 +297,10 @@ export async function generateAndStore(
         claimId: claim.id,
         authorId: generatedById,
         type: NoteType.INTERNAL,
-        content: `Wygenerowano dokument: ${documentType} v${version}`,
+        content:
+          uploadResult.backend === "local-dev"
+            ? `Wygenerowano dokument lokalnie (dev fallback): ${documentType} v${version}`
+            : `Wygenerowano dokument: ${documentType} v${version}`,
       },
     }),
   ]);

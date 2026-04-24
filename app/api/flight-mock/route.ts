@@ -2,79 +2,61 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   return Response.json({
-    mapped: {
-      flightNumber: "LO123",
-      flightDate: "2024-03-15",
-      departureAirportCode: "WAW",
-      arrivalAirportCode: "LHR",
-      scheduledDeparture: "2024-03-15T10:00:00.000Z",
-      actualDeparture: "2024-03-15T10:35:00.000Z",
-      scheduledArrival: "2024-03-15T12:45:00.000Z",
-      actualArrival: "2024-03-15T16:50:00.000Z",
-      delayMinutes: 245,
-      flightStatus: "LANDED",
-      airlineIata: "LO",
-      airlineName: "LOT Polish Airlines",
-      dataSource: "MANUAL",
+    examples: {
+      shortHaul250: {
+        flightNumber: "LO123",
+        date: "2024-03-15",
+        expectedAmount: 250,
+        expectedDistanceKm: 1450,
+      },
+      mediumHaul400: {
+        flightNumber: "FR456",
+        date: "2024-04-02",
+        expectedAmount: 400,
+        expectedDistanceKm: 1675,
+      },
+      longHaul600: {
+        flightNumber: "EK204",
+        date: "2024-05-10",
+        expectedAmount: 600,
+        expectedDistanceKm: 11020,
+      },
+      notFound: {
+        flightNumber: "ZZ9999",
+        date: "2024-03-15",
+        expectedFound: false,
+      },
     },
-    aviationStackLike: {
-      data: [
+    flightAwareLike: {
+      flights: [
         {
-          flight_date: "2024-03-15",
-          flight_status: "landed",
-          departure: {
-            iata: "WAW",
-            scheduled: "2024-03-15T10:00:00+00:00",
-            actual: "2024-03-15T10:35:00+00:00",
-            delay: 35,
+          fa_flight_id: "lot-1710496800-airline-0123",
+          ident: "LOT123",
+          ident_iata: "LO123",
+          operator_iata: "LO",
+          operator_name: "LOT Polish Airlines",
+          origin: {
+            code_iata: "WAW",
+            name: "Warsaw Chopin Airport",
+            latitude: 52.1657,
+            longitude: 20.9671,
           },
-          arrival: {
-            iata: "LHR",
-            scheduled: "2024-03-15T12:45:00+00:00",
-            actual: "2024-03-15T16:50:00+00:00",
-            delay: 245,
+          destination: {
+            code_iata: "LHR",
+            name: "London Heathrow Airport",
+            latitude: 51.47,
+            longitude: -0.4543,
           },
-          airline: {
-            name: "LOT Polish Airlines",
-            iata: "LO",
-          },
-          flight: {
-            iata: "LO123",
-          },
+          scheduled_out: "2024-03-15T10:00:00Z",
+          actual_out: "2024-03-15T10:20:00Z",
+          scheduled_in: "2024-03-15T12:20:00Z",
+          actual_in: "2024-03-15T13:10:00Z",
+          status: "Arrived",
+          route_distance_km: 1450,
+          cancelled: false,
+          diverted: false,
         },
       ],
     },
-    aeroDataBoxLike: [
-      {
-        number: "LO123",
-        status: "Arrived",
-        airline: {
-          name: "LOT Polish Airlines",
-          iata: "LO",
-        },
-        departure: {
-          airport: {
-            iata: "WAW",
-          },
-          scheduledTime: {
-            utc: "2024-03-15T10:00:00.000Z",
-          },
-          actualTime: {
-            utc: "2024-03-15T10:35:00.000Z",
-          },
-        },
-        arrival: {
-          airport: {
-            iata: "LHR",
-          },
-          scheduledTime: {
-            utc: "2024-03-15T12:45:00.000Z",
-          },
-          actualTime: {
-            utc: "2024-03-15T16:50:00.000Z",
-          },
-        },
-      },
-    ],
   });
 }

@@ -26,7 +26,7 @@ export const flightStatusLabels: Record<FlightStatus, string> = {
 };
 
 export const apiDataSourceLabels: Record<ApiDataSource, string> = {
-  AVIATION_STACK: "Aviationstack",
+  AVIATION_STACK: "AeroAPI",
   AERO_DATA_BOX: "AeroDataBox",
   MANUAL: "Ręcznie",
   CACHE: "Cache",

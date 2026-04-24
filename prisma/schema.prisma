@@ -136,6 +136,12 @@ enum ApiDataSource {
   CACHE
 }
 
+enum BlogPostStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+}
+
 model User {
   id          String    @id @default(cuid())
   authUserId  String?   @unique
@@ -155,6 +161,7 @@ model User {
   statusHistory      ClaimStatusHistory[]
   assignmentHistory  AssignmentHistory[]  @relation("ChangedBy")
   generatedDocuments Document[]
+  blogPosts          BlogPost[]
 
   @@index([email])
   @@index([authUserId])
@@ -255,6 +262,13 @@ model Claim {
   qualifiedAt          DateTime?
   closedAt             DateTime?
   closeReason          String?
+  airlinePaid          Boolean   @default(false)
+  airlinePaidAt        DateTime?
+  clientPaid           Boolean   @default(false)
+  clientPaidAt         DateTime?
+  clientIban           String?
+  transferTitle        String?
+  clientSettled        Boolean   @default(false)
   deletedAt            DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
@@ -444,4 +458,37 @@ model CheckerEvent {
   createdAt    DateTime  @default(now())
 
   @@index([createdAt])
+}
+
+model BlogPost {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  title           String
+  content         String         @db.Text
+  excerpt         String         @default("") @db.Text
+  category        String
+  tags            String         @default("")
+  authorName      String
+  authorRole      String         @default("Redakcja OWEME")
+  authorBio       String         @default("") @db.Text
+  imageAlt        String         @default("")
+  focusKeyword    String         @default("")
+  metaTitle       String         @default("")
+  metaDescription String         @default("")
+  ogTitle         String         @default("")
+  ogDescription   String         @default("")
+  canonicalUrl    String         @default("")
+  noindex         Boolean        @default(false)
+  readTime        Int            @default(0)
+  status          BlogPostStatus @default(DRAFT)
+  publishedAt     DateTime?
+  createdById     String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
 }

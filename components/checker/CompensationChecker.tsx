@@ -2,30 +2,18 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { ApiDataSource, ClaimAmountCategory, FlightStatus } from "@prisma/client";
 
 import styles from "@/app/landing.module.css";
+import {
+  isLikelyEligibleFlight,
+} from "@/lib/flightaware/flight-eligibility";
+import type { FlightDataLookupResult } from "@/lib/flightaware/aeroapi.types";
 import { api } from "@/lib/trpc/hooks";
 
 type ManualFlightData = {
   departureAirportCode: string;
   arrivalAirportCode: string;
   delayMinutes: string;
-};
-
-type FlightSearchResult = {
-  data: {
-    flightNumber: string;
-    flightDate: string;
-    departureAirportCode: string;
-    arrivalAirportCode: string;
-    delayMinutes: number | null;
-    flightStatus: FlightStatus;
-    amountCategory?: ClaimAmountCategory | null;
-    dataSource: ApiDataSource;
-  };
-  warnings: string[];
-  persistedFlightId: string | null;
 };
 
 const flightNumberPattern = /^[A-Z0-9]{2,3}\s?\d{1,4}[A-Z]?$/i;
@@ -52,81 +40,27 @@ function normalizeFlightNumber(value: string) {
   return value.trim().replace(/\s+/g, "").toUpperCase();
 }
 
-function formatRoute(result: FlightSearchResult | null) {
-  const departure = result?.data.departureAirportCode;
-  const arrival = result?.data.arrivalAirportCode;
-
-  if (!departure || !arrival) {
-    return "Dane trasy do uzupełnienia";
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "Brak danych";
   }
 
-  return `${departure} → ${arrival}`;
-}
+  const date = new Date(value);
 
-function amountFromCategory(category: ClaimAmountCategory | null | undefined) {
-  if (category === "EUR_250") {
-    return 250;
+  if (Number.isNaN(date.getTime())) {
+    return "Brak danych";
   }
 
-  if (category === "EUR_400") {
-    return 400;
-  }
-
-  if (category === "EUR_600") {
-    return 600;
-  }
-
-  return null;
-}
-
-function estimateAmountPerPassenger(result: FlightSearchResult | null) {
-  if (!result) {
-    return 0;
-  }
-
-  const categoryAmount = amountFromCategory(result.data.amountCategory);
-
-  if (categoryAmount) {
-    return categoryAmount;
-  }
-
-  if (result.data.flightStatus === "CANCELLED") {
-    return 600;
-  }
-
-  if ((result.data.delayMinutes ?? 0) >= 180) {
-    return 600;
-  }
-
-  return 0;
-}
-
-function isManualResult(result: FlightSearchResult | null) {
-  if (!result) {
-    return false;
-  }
-
-  return (
-    result.data.dataSource === "MANUAL" ||
-    !result.data.departureAirportCode ||
-    !result.data.arrivalAirportCode ||
-    result.data.delayMinutes === null
-  );
-}
-
-function isLikelyEligible(result: FlightSearchResult | null) {
-  if (!result || isManualResult(result)) {
-    return false;
-  }
-
-  return (
-    result.data.flightStatus === "CANCELLED" ||
-    (result.data.delayMinutes ?? 0) >= 180
-  );
+  return new Intl.DateTimeFormat("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function buildFormUrl(input: {
-  result: FlightSearchResult | null;
+  result: FlightDataLookupResult | null;
   passengers: number;
   flightNumber: string;
   flightDate: string;
@@ -134,37 +68,50 @@ function buildFormUrl(input: {
 }) {
   const params = new URLSearchParams();
   const manualDelay = Number(input.manual.delayMinutes);
-  const manualMode = isManualResult(input.result);
+  const manualMode = !input.result?.found || !input.result.flight?.id;
 
   params.set("passengers", String(input.passengers));
 
-  if (!manualMode && input.result?.persistedFlightId) {
-    params.set("flightId", input.result.persistedFlightId);
+  if (!manualMode && input.result?.flight?.id) {
+    params.set("flightId", input.result.flight.id);
     return `/formularz?${params.toString()}`;
   }
 
   params.set("manual", "1");
   params.set(
     "flightNumber",
-    input.result?.data.flightNumber ?? normalizeFlightNumber(input.flightNumber),
+    input.result?.flight?.flightNumber ?? normalizeFlightNumber(input.flightNumber),
   );
-  params.set("flightDate", input.result?.data.flightDate ?? input.flightDate);
+  params.set(
+    "flightDate",
+    input.result?.flight?.flightDate ?? input.flightDate,
+  );
   params.set(
     "departureAirportCode",
-    input.result?.data.departureAirportCode || input.manual.departureAirportCode,
+    input.result?.flight?.departureAirportCode || input.manual.departureAirportCode,
   );
   params.set(
     "arrivalAirportCode",
-    input.result?.data.arrivalAirportCode || input.manual.arrivalAirportCode,
+    input.result?.flight?.arrivalAirportCode || input.manual.arrivalAirportCode,
   );
 
   if (Number.isFinite(manualDelay)) {
     params.set("delayMinutes", String(manualDelay));
-  } else if (input.result?.data.delayMinutes !== null) {
-    params.set("delayMinutes", String(input.result?.data.delayMinutes));
+  } else if (input.result?.flight?.delayMinutes !== null && input.result?.flight?.delayMinutes !== undefined) {
+    params.set("delayMinutes", String(input.result.flight.delayMinutes));
   }
 
   return `/formularz?${params.toString()}`;
+}
+
+function isFlightProviderConfigurationIssue(
+  result: FlightDataLookupResult | null,
+) {
+  return Boolean(
+    result?.error?.includes(
+      "Integracja lotnicza nie jest jeszcze skonfigurowana",
+    ),
+  );
 }
 
 export function CompensationChecker() {
@@ -179,13 +126,20 @@ export function CompensationChecker() {
   });
   const [step, setStep] = useState<1 | 2>(1);
   const [fieldError, setFieldError] = useState<string | null>(null);
-  const [searchError, setSearchError] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
-  const [result, setResult] = useState<FlightSearchResult | null>(null);
+  const [result, setResult] = useState<FlightDataLookupResult | null>(null);
   const utils = api.useUtils();
-  const manualMode = isManualResult(result);
-  const eligible = isLikelyEligible(result);
-  const amountPerPassenger = estimateAmountPerPassenger(result);
+  const manualMode = !result?.found;
+  const configurationIssue = isFlightProviderConfigurationIssue(result);
+  const likelyEligible =
+    result?.found && result.flight
+      ? isLikelyEligibleFlight({
+          delayMinutes: result.flight.delayMinutes,
+          flightStatus: result.flight.flightStatus,
+        })
+      : false;
+  const amountPerPassenger = result?.compensation.amountEur ?? 0;
   const totalAmount = amountPerPassenger * passengers;
   const formUrl = buildFormUrl({
     result,
@@ -196,7 +150,7 @@ export function CompensationChecker() {
   });
 
   function validateStepOne() {
-    const normalizedFlightNumber = normalizeFlightNumber(flightNumber);
+    const normalized = normalizeFlightNumber(flightNumber);
 
     if (!flightNumberPattern.test(flightNumber.trim())) {
       return "Wpisz numer lotu, np. LO123 albo W6 789.";
@@ -210,7 +164,7 @@ export function CompensationChecker() {
       return "Data lotu musi być z przeszłości i maksymalnie 3 lata wstecz.";
     }
 
-    if (normalizedFlightNumber.length < 3) {
+    if (normalized.length < 3) {
       return "Numer lotu jest zbyt krótki.";
     }
 
@@ -221,7 +175,7 @@ export function CompensationChecker() {
     const error = validateStepOne();
 
     setFieldError(error);
-    setSearchError(false);
+    setSearchError(null);
 
     if (error) {
       return;
@@ -230,21 +184,25 @@ export function CompensationChecker() {
     setIsChecking(true);
 
     try {
-      const data = await utils.flights.search.fetch({
+      const data = await utils.flights.searchPublic.fetch({
         flightNumber: normalizeFlightNumber(flightNumber),
         date: flightDate,
       });
 
-      setResult(data as FlightSearchResult);
+      setResult(data);
       setManual({
-        departureAirportCode: data.data.departureAirportCode,
-        arrivalAirportCode: data.data.arrivalAirportCode,
+        departureAirportCode: data.flight?.departureAirportCode ?? "",
+        arrivalAirportCode: data.flight?.arrivalAirportCode ?? "",
         delayMinutes:
-          data.data.delayMinutes === null ? "" : String(data.data.delayMinutes),
+          data.flight?.delayMinutes === null || data.flight?.delayMinutes === undefined
+            ? ""
+            : String(data.flight.delayMinutes),
       });
       setStep(2);
     } catch {
-      setSearchError(true);
+      setSearchError(
+        "Nie udało się sprawdzić lotu. Spróbuj ponownie albo wybierz ręczne uzupełnienie danych.",
+      );
     } finally {
       setIsChecking(false);
     }
@@ -287,9 +245,7 @@ export function CompensationChecker() {
           {fieldError ? <p className={styles.funnelError}>{fieldError}</p> : null}
 
           {searchError ? (
-            <p className={styles.funnelError}>
-              Nie możemy znaleźć danych tego lotu. Sprawdź numer i datę.
-            </p>
+            <p className={styles.funnelError}>{searchError}</p>
           ) : null}
 
           <button
@@ -317,49 +273,90 @@ export function CompensationChecker() {
             className={`${styles.funnelResultBanner} ${
               manualMode
                 ? styles.funnelResultManual
-                : eligible
+                : likelyEligible
                   ? styles.funnelResultGood
                   : styles.funnelResultMuted
             }`}
           >
             <h2>
-              {manualMode
-                ? "Uzupełnij dane ręcznie"
-                : eligible
-                  ? "Lot może kwalifikować się do odszkodowania"
-                  : "Ten lot może nie spełniać podstawowych warunków"}
+              {!result.found
+                ? configurationIssue
+                  ? "Brakuje konfiguracji integracji lotniczej"
+                  : "Nie znaleźliśmy lotu"
+                : likelyEligible
+                  ? "Znaleziono lot i możliwe roszczenie"
+                  : "Znaleziono lot"}
             </h2>
             <p>
-              {manualMode
-                ? "Nie mamy pełnych danych tego lotu, ale możesz przejść dalej i dopisać brakujące informacje we wniosku."
-                : eligible
-                  ? "Opóźnienie lub status lotu wskazuje na możliwe roszczenie według WE 261/2004."
-                  : "Wstępne dane wskazują na zbyt krótkie opóźnienie. Nadal możesz złożyć wniosek, jeśli masz dodatkowe informacje."}
+              {!result.found
+                ? result.error ??
+                  "Nie znaleźliśmy lotu o podanym numerze i dacie. Sprawdź numer lotu albo wybierz ręczne uzupełnienie danych."
+                : result.compensation.reason}
             </p>
           </div>
 
-          <dl className={styles.funnelSummary}>
-            <div>
-              <dt>Numer lotu</dt>
-              <dd>{result.data.flightNumber}</dd>
-            </div>
-            <div>
-              <dt>Trasa</dt>
-              <dd>{formatRoute(result)}</dd>
-            </div>
-            <div>
-              <dt>Opóźnienie</dt>
-              <dd>
-                {result.data.delayMinutes === null
-                  ? "Do uzupełnienia"
-                  : `${result.data.delayMinutes} min`}
-              </dd>
-            </div>
-            <div>
-              <dt>Odszkodowanie / pasażer</dt>
-              <dd>{amountPerPassenger ? `${amountPerPassenger} EUR` : "Do oceny"}</dd>
-            </div>
-          </dl>
+          {result.flight ? (
+            <dl className={styles.funnelSummary}>
+              <div>
+                <dt>Numer lotu</dt>
+                <dd>{result.flight.flightNumber}</dd>
+              </div>
+              <div>
+                <dt>Linia lotnicza</dt>
+                <dd>{result.flight.airlineName ?? "Brak danych"}</dd>
+              </div>
+              <div>
+                <dt>Wylot</dt>
+                <dd>
+                  {result.flight.departureAirportCode ?? "?"}
+                  {result.flight.departureAirportName
+                    ? ` - ${result.flight.departureAirportName}`
+                    : ""}
+                </dd>
+              </div>
+              <div>
+                <dt>Przylot</dt>
+                <dd>
+                  {result.flight.arrivalAirportCode ?? "?"}
+                  {result.flight.arrivalAirportName
+                    ? ` - ${result.flight.arrivalAirportName}`
+                    : ""}
+                </dd>
+              </div>
+              <div>
+                <dt>Start</dt>
+                <dd>
+                  {formatDateTime(
+                    result.flight.actualDeparture ?? result.flight.scheduledDeparture,
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Lądowanie</dt>
+                <dd>
+                  {formatDateTime(
+                    result.flight.actualArrival ?? result.flight.scheduledArrival,
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Długość trasy</dt>
+                <dd>
+                  {result.flight.distanceKm
+                    ? `${result.flight.distanceKm} km`
+                    : "Do weryfikacji"}
+                </dd>
+              </div>
+              <div>
+                <dt>Opóźnienie</dt>
+                <dd>
+                  {result.flight.delayMinutes !== null
+                    ? `${result.flight.delayMinutes} min`
+                    : "Brak danych"}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
 
           {manualMode ? (
             <div className={styles.manualGrid}>
@@ -426,8 +423,7 @@ export function CompensationChecker() {
 
           {result.warnings.length ? (
             <p className={styles.funnelHint}>
-              Część danych wymaga potwierdzenia przez OWEME. To nie blokuje
-              złożenia wniosku.
+              {result.warnings[0]}
             </p>
           ) : null}
 

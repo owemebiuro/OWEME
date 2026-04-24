@@ -12,12 +12,37 @@ import {
   type BlogPostStatus,
   type SeoInput,
 } from "@/lib/blog/editor";
+import { api } from "@/lib/trpc/hooks";
 
 type EditorTab = "content" | "author" | "schema";
 type EditorMode = "edit" | "preview";
 
+export type InitialPost = {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  tags: string;
+  authorName: string;
+  authorRole: string;
+  authorBio: string;
+  imageAlt: string;
+  focusKeyword: string;
+  metaTitle: string;
+  metaDescription: string;
+  ogTitle: string;
+  ogDescription: string;
+  canonicalUrl: string;
+  noindex: boolean;
+  status: "DRAFT" | "REVIEW" | "PUBLISHED";
+  publishedAt: string | null;
+};
+
 type BlogEditorFormProps = {
   currentUserName: string;
+  initialPost?: InitialPost;
 };
 
 type BlogEditorState = {
@@ -41,10 +66,22 @@ type BlogEditorState = {
   status: BlogPostStatus;
 };
 
-const statusLabels: Record<BlogPostStatus, string> = {
+const STATUS_LABELS: Record<BlogPostStatus, string> = {
   draft: "Szkic",
   review: "Do weryfikacji",
   published: "Opublikowany",
+};
+
+const STATUS_TO_LOCAL: Record<"DRAFT" | "REVIEW" | "PUBLISHED", BlogPostStatus> = {
+  DRAFT: "draft",
+  REVIEW: "review",
+  PUBLISHED: "published",
+};
+
+const STATUS_TO_API: Record<BlogPostStatus, "DRAFT" | "REVIEW" | "PUBLISHED"> = {
+  draft: "DRAFT",
+  review: "REVIEW",
+  published: "PUBLISHED",
 };
 
 const tabs: { id: EditorTab; label: string }[] = [
@@ -211,34 +248,67 @@ function ArticlePreview({
   );
 }
 
-export function BlogEditorForm({ currentUserName }: BlogEditorFormProps) {
+export function BlogEditorForm({ currentUserName, initialPost }: BlogEditorFormProps) {
   const [activeTab, setActiveTab] = useState<EditorTab>("content");
   const [mode, setMode] = useState<EditorMode>("edit");
   const [touchedAutoFields, setTouchedAutoFields] = useState({
-    slug: false,
-    metaTitle: false,
-    ogTitle: false,
+    slug: !!initialPost,
+    metaTitle: !!initialPost,
+    ogTitle: !!initialPost,
   });
-  const [state, setState] = useState<BlogEditorState>({
-    title: "",
-    slug: "",
-    content: starterContent,
-    focusKeyword: "",
-    metaTitle: "",
-    metaDescription: "",
-    ogTitle: "",
-    ogDescription: "",
-    canonicalUrl: "",
-    noindex: false,
-    category: categories[0],
-    tags: "",
-    authorName: currentUserName,
-    authorRole: "Redakcja OWEME",
-    authorBio: "",
-    imageAlt: "",
-    publishDate: formatToday(),
-    status: "draft",
+  const [savedId, setSavedId] = useState<string | undefined>(initialPost?.id);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState("");
+
+  const [state, setState] = useState<BlogEditorState>(() => {
+    if (initialPost) {
+      return {
+        title: initialPost.title,
+        slug: initialPost.slug,
+        content: initialPost.content,
+        focusKeyword: initialPost.focusKeyword,
+        metaTitle: initialPost.metaTitle,
+        metaDescription: initialPost.metaDescription || initialPost.excerpt,
+        ogTitle: initialPost.ogTitle,
+        ogDescription: initialPost.ogDescription,
+        canonicalUrl: initialPost.canonicalUrl,
+        noindex: initialPost.noindex,
+        category: initialPost.category || categories[0],
+        tags: initialPost.tags,
+        authorName: initialPost.authorName,
+        authorRole: initialPost.authorRole,
+        authorBio: initialPost.authorBio,
+        imageAlt: initialPost.imageAlt,
+        publishDate: initialPost.publishedAt
+          ? initialPost.publishedAt.slice(0, 10)
+          : formatToday(),
+        status: STATUS_TO_LOCAL[initialPost.status],
+      };
+    }
+    return {
+      title: "",
+      slug: "",
+      content: starterContent,
+      focusKeyword: "",
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      noindex: false,
+      category: categories[0],
+      tags: "",
+      authorName: currentUserName,
+      authorRole: "Redakcja OWEME",
+      authorBio: "",
+      imageAlt: "",
+      publishDate: formatToday(),
+      status: "draft",
+    };
   });
+
+  const upsert = api.blog.upsert.useMutation();
+
   const seoInput = useMemo(() => buildSeoInput(state), [state]);
   const checklist = useMemo(() => buildBlogChecklist(seoInput), [seoInput]);
   const seoScore = useMemo(() => calculateSeoScore(seoInput), [seoInput]);
@@ -273,20 +343,67 @@ export function BlogEditorForm({ currentUserName }: BlogEditorFormProps) {
     }));
   }
 
+  async function handleSave(publishNow = false) {
+    setSaveStatus("saving");
+    setSaveError("");
+    try {
+      const result = await upsert.mutateAsync({
+        id: savedId,
+        slug: state.slug,
+        title: state.title,
+        content: state.content,
+        excerpt: state.metaDescription,
+        category: state.category,
+        tags: state.tags,
+        authorName: state.authorName,
+        authorRole: state.authorRole,
+        authorBio: state.authorBio,
+        imageAlt: state.imageAlt,
+        focusKeyword: state.focusKeyword,
+        metaTitle: state.metaTitle,
+        metaDescription: state.metaDescription,
+        ogTitle: state.ogTitle,
+        ogDescription: state.ogDescription,
+        canonicalUrl: state.canonicalUrl,
+        noindex: state.noindex,
+        status: publishNow ? "PUBLISHED" : STATUS_TO_API[state.status],
+        publishedAt: state.publishDate ? new Date(state.publishDate) : null,
+      });
+      setSavedId(result.id);
+      if (publishNow) updateField("status", "published");
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Wystąpił błąd podczas zapisu.",
+      );
+      setSaveStatus("error");
+    }
+  }
+
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-semibold text-neutral-500">OWEME CRM</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
-            Edytor artykułu
+            {savedId ? "Edycja artykułu" : "Nowy artykuł"}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
-            Rozbudowany formularz redakcyjny dla wpisów w module Wiedza. Widok
-            korzysta z obecnego layoutu CRM i nie zmienia publicznej strony bloga.
-          </p>
+          {savedId && (
+            <p className="mt-1 font-mono text-xs text-neutral-400">ID: {savedId}</p>
+          )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {saveStatus === "saved" && (
+            <span className="flex h-10 items-center text-sm font-semibold text-green-600">
+              Zapisano
+            </span>
+          )}
+          {saveStatus === "error" && (
+            <span className="flex h-10 max-w-xs items-center truncate text-sm text-red-600">
+              {saveError}
+            </span>
+          )}
           <select
             value={state.status}
             onChange={(event) =>
@@ -294,7 +411,7 @@ export function BlogEditorForm({ currentUserName }: BlogEditorFormProps) {
             }
             className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-800 outline-none focus:border-neutral-950"
           >
-            {Object.entries(statusLabels).map(([value, label]) => (
+            {Object.entries(STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -302,10 +419,26 @@ export function BlogEditorForm({ currentUserName }: BlogEditorFormProps) {
           </select>
           <button
             type="button"
+            onClick={() => handleSave(false)}
+            disabled={saveStatus === "saving"}
+            className="h-10 rounded-md border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-700 transition hover:border-neutral-950 disabled:opacity-50"
+          >
+            {saveStatus === "saving" ? "Zapisywanie…" : "Zapisz"}
+          </button>
+          <button
+            type="button"
             onClick={() => setMode(mode === "edit" ? "preview" : "edit")}
             className="h-10 rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800"
           >
             {mode === "edit" ? "Podgląd artykułu" : "Wróć do edycji"}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
+            disabled={saveStatus === "saving"}
+            className="h-10 rounded-md bg-green-700 px-4 text-sm font-semibold text-white transition hover:bg-green-600 disabled:opacity-50"
+          >
+            Opublikuj
           </button>
         </div>
       </header>
@@ -634,7 +767,7 @@ export function BlogEditorForm({ currentUserName }: BlogEditorFormProps) {
                   Status
                 </dt>
                 <dd className="mt-1 text-sm font-semibold text-neutral-950">
-                  {statusLabels[state.status]}
+                  {STATUS_LABELS[state.status]}
                 </dd>
               </div>
               <div className="rounded-md bg-neutral-50 p-3">
@@ -651,12 +784,6 @@ export function BlogEditorForm({ currentUserName }: BlogEditorFormProps) {
           <GooglePreview state={state} />
         </aside>
       </section>
-
-      <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-        Ten ekran jest podłączony jako bezpieczny MVP edytora. Obecny moduł
-        Wiedza jest statyczny, więc zapis do bazy/CMS wymaga osobnego modelu lub
-        endpointu publikacji.
-      </p>
     </div>
   );
 }

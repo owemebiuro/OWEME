@@ -1,5 +1,6 @@
 import {
   ApiDataSource,
+  BlogPostStatus,
   ClaimAmountCategory,
   ClaimSource,
   ClaimStatus,
@@ -448,6 +449,117 @@ async function seedPayouts() {
   });
 }
 
+async function seedBlogPosts() {
+  const posts = [
+    {
+      id: "seed-blog-we261",
+      slug: "we-261-2004-odszkodowanie-za-opozniony-lot",
+      title: "WE 261/2004: Jak uzyskać odszkodowanie za opóźniony lot?",
+      content: `Rozporządzenie WE 261/2004 to jedna z najważniejszych regulacji chroniących prawa pasażerów lotniczych w Unii Europejskiej. Jeśli Twój lot był opóźniony o co najmniej 3 godziny, odwołany lub zostałeś pozbawiony miejsca na pokładzie, możesz ubiegać się o odszkodowanie w wysokości od 250 do 600 euro.
+
+Kiedy przysługuje odszkodowanie?
+
+Masz prawo do odszkodowania, jeśli spełniony jest co najmniej jeden z poniższych warunków:
+- Twój lot wyleciał z lotniska na terenie UE
+- Twój lot przyleciał do UE i był obsługiwany przez europejskiego przewoźnika
+
+Opóźnienie musi wynosić co najmniej 3 godziny przy przylecie do celu.
+
+Ile wynosi odszkodowanie?
+
+Wysokość odszkodowania zależy od długości trasy:
+- Do 1500 km: 250 euro
+- 1500–3500 km: 400 euro
+- Powyżej 3500 km: 600 euro
+
+Jak złożyć wniosek?
+
+Możesz samodzielnie napisać do linii lotniczej lub skorzystać z pomocy profesjonalnej firmy, która zajmie się całą procedurą za Ciebie. OWEME działa na zasadzie success fee — płacisz tylko wtedy, gdy wygramy.`,
+      excerpt:
+        "Rozporządzenie unijne daje Ci prawo do nawet 600 euro za opóźniony lub odwołany lot. Wyjaśniamy kiedy, jak i od kogo możesz to odzyskać.",
+      category: "Prawa pasażera",
+      tags: "WE 261/2004, odszkodowanie, opóźnienie, prawa pasażera",
+      authorName: "Redakcja OWEME",
+      authorRole: "Eksperci ds. praw pasażerów",
+      authorBio:
+        "Zespół OWEME specjalizuje się w dochodzeniu odszkodowań lotniczych od 2020 roku. Wygraliśmy tysiące spraw dla polskich pasażerów.",
+      imageAlt: "Samolot na tle zachodzącego słońca — symbol opóźnionego lotu",
+      focusKeyword: "odszkodowanie za opóźniony lot",
+      metaTitle: "Odszkodowanie za opóźniony lot WE 261/2004 | OWEME",
+      metaDescription:
+        "Dowiedz się, kiedy i jak uzyskać do 600 euro odszkodowania za opóźniony lub odwołany lot zgodnie z rozporządzeniem WE 261/2004.",
+      ogTitle: "Odszkodowanie za opóźniony lot — kompletny poradnik",
+      ogDescription:
+        "WE 261/2004 gwarantuje Ci odszkodowanie. Sprawdź, czy kwalifikujesz się w 30 sekund.",
+      canonicalUrl: "https://oweme.pl/wiedza/we-261-2004-odszkodowanie-za-opozniony-lot",
+      noindex: false,
+      readTime: 4,
+      status: BlogPostStatus.PUBLISHED,
+      publishedAt: new Date("2025-01-15T10:00:00.000Z"),
+      createdById: ids.users.admin,
+    },
+    {
+      id: "seed-blog-overbooking",
+      slug: "overbooking-odmowa-boardingu-odszkodowanie",
+      title: "Overbooking i odmowa boardingu — co Ci się należy?",
+      content: `Overbooking (nadsprzedaż miejsc) to praktyka powszechnie stosowana przez linie lotnicze. Gdy na pokładzie zabraknie miejsca, pasażer może zostać poproszony o dobrowolne lub przymusowe opuszczenie lotu. W obu przypadkach przysługują Ci określone prawa.
+
+Dobrowolna odmowa boardingu
+
+Jeśli zgadzasz się na późniejszy lot, możesz negocjować rekompensatę z linią lotniczą. Nie podlega ona przepisom WE 261/2004, więc linia może zaproponować vouchery lub gotówkę.
+
+Przymusowa odmowa boardingu
+
+Jeśli zostałeś usunięty z lotu bez zgody, masz prawo do:
+- Odszkodowania 250–600 euro (w zależności od długości trasy)
+- Zwrotu pełnej ceny biletu lub alternatywnego połączenia
+- Opieki: posiłki, napoje, dostęp do komunikacji, nocleg jeśli konieczny
+
+Jak postąpić na lotnisku?
+
+Nie podpisuj żadnych dokumentów ograniczających Twoje prawa. Poproś o pisemne potwierdzenie przyczyny odmowy boardingu. Zachowaj wszystkie dokumenty — kartę pokładową, potwierdzenie rezerwacji i rachunki za ewentualne dodatkowe koszty.`,
+      excerpt:
+        "Linia nie wpuściła Cię na pokład? Masz prawo do odszkodowania nawet 600 euro plus zwrot biletu. Wyjaśniamy krok po kroku.",
+      category: "Overbooking",
+      tags: "overbooking, odmowa boardingu, WE 261/2004, odszkodowanie",
+      authorName: "Redakcja OWEME",
+      authorRole: "Eksperci ds. praw pasażerów",
+      authorBio:
+        "Zespół OWEME specjalizuje się w dochodzeniu odszkodowań lotniczych od 2020 roku. Wygraliśmy tysiące spraw dla polskich pasażerów.",
+      imageAlt: "Pasażer przy bramce lotniskowej — overbooking",
+      focusKeyword: "odmowa boardingu odszkodowanie",
+      metaTitle: "Overbooking — odmowa boardingu i odszkodowanie | OWEME",
+      metaDescription:
+        "Usunięto Cię z lotu z powodu overbookingu? Sprawdź, jakie prawa Ci przysługują i jak ubiegać się o odszkodowanie do 600 euro.",
+      ogTitle: "Overbooking — Twoje prawa i odszkodowanie",
+      ogDescription:
+        "Odmowa boardingu daje Ci prawo do odszkodowania. Sprawdź bezpłatnie, ile możesz dostać.",
+      canonicalUrl: "https://oweme.pl/wiedza/overbooking-odmowa-boardingu-odszkodowanie",
+      noindex: false,
+      readTime: 3,
+      status: BlogPostStatus.PUBLISHED,
+      publishedAt: new Date("2025-02-03T10:00:00.000Z"),
+      createdById: ids.users.admin,
+    },
+  ];
+
+  await Promise.all(
+    posts.map((post) =>
+      prisma.blogPost.upsert({
+        where: { slug: post.slug },
+        update: {
+          title: post.title,
+          content: post.content,
+          excerpt: post.excerpt,
+          status: post.status,
+          publishedAt: post.publishedAt,
+        },
+        create: post,
+      }),
+    ),
+  );
+}
+
 async function main() {
   await seedUsers();
   await seedAirlines();
@@ -455,6 +567,7 @@ async function main() {
   await seedFlights();
   await seedClaims();
   await seedPayouts();
+  await seedBlogPosts();
 }
 
 main()

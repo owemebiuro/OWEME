@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ClaimDetailView } from "@/components/claims/detail/ClaimDetailView";
+import { SchemaMismatchState } from "@/components/crm/SchemaMismatchState";
 import { requireAuth } from "@/lib/auth-helpers";
 import type {
   ClaimDetailData,
   ClaimUserSummary,
 } from "@/lib/claims/detail-types";
+import { isSchemaOutdatedError } from "@/lib/prisma-errors";
 import { createTRPCCaller } from "@/lib/trpc/server";
 
 type ClaimPageProps = {
@@ -68,6 +70,13 @@ function serializeClaim(claim: ClaimByIdResult): ClaimDetailData {
     qualifiedAt: serializeDate(claim.qualifiedAt),
     closedAt: serializeDate(claim.closedAt),
     closeReason: claim.closeReason,
+    airlinePaid: claim.airlinePaid,
+    airlinePaidAt: serializeDate(claim.airlinePaidAt),
+    clientPaid: claim.clientPaid,
+    clientPaidAt: serializeDate(claim.clientPaidAt),
+    clientIban: claim.clientIban,
+    transferTitle: claim.transferTitle,
+    clientSettled: claim.clientSettled,
     createdAt: serializeDate(claim.createdAt) ?? new Date().toISOString(),
     updatedAt: serializeDate(claim.updatedAt) ?? new Date().toISOString(),
     client: {
@@ -227,6 +236,10 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
   } catch (error) {
     if (error instanceof TRPCError && error.code === "NOT_FOUND") {
       notFound();
+    }
+
+    if (isSchemaOutdatedError(error)) {
+      return <SchemaMismatchState area="karty sprawy" />;
     }
 
     throw error;

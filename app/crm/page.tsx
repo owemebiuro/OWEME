@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { DashboardMetricCard } from "@/components/dashboard/DashboardMetricCard";
 import { MyTasksPanel } from "@/components/dashboard/MyTasksPanel";
 import { RecentActivityPanel } from "@/components/dashboard/RecentActivityPanel";
 import { requireAuth } from "@/lib/auth-helpers";
 import { formatCurrency } from "@/lib/claims/format";
-import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions";
 import { createTRPCCaller } from "@/lib/trpc/server";
 
 export const metadata: Metadata = {
@@ -58,41 +56,14 @@ export default async function CrmPage() {
   return (
     <main className="min-h-screen bg-neutral-50 px-4 py-6 text-neutral-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-7">
-        <header className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-neutral-500">OWEME CRM</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Witaj, {getFirstName(currentUser.appUser.name)}!
-            </h1>
-            <p className="mt-2 text-sm text-neutral-600">
-              {dateFormatter.format(new Date())}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/crm/claims"
-              prefetch={false}
-              className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-200 bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800"
-            >
-              Sprawy
-            </Link>
-            <Link
-              href="/crm/reports"
-              prefetch={false}
-              className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-800 transition hover:border-neutral-400"
-            >
-              Raporty
-            </Link>
-            {hasRolePermission(currentUser.appUser.role, PERMISSIONS.BLOG_MANAGE) && (
-              <Link
-                href="/crm/admin/blog/editor"
-                prefetch={false}
-                className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-200 bg-white px-4 text-sm font-semibold text-neutral-800 transition hover:border-neutral-400"
-              >
-                Blog
-              </Link>
-            )}
-          </div>
+        <header className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+          <p className="text-sm font-semibold text-neutral-500">OWEME CRM</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            Witaj, {getFirstName(currentUser.appUser.name)}!
+          </h1>
+          <p className="mt-2 text-sm text-neutral-600">
+            {dateFormatter.format(new Date())}
+          </p>
         </header>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

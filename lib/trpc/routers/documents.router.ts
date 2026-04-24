@@ -4,11 +4,18 @@ import { z } from "zod";
 
 import { hasPermission } from "@/lib/auth-helpers";
 import {
+  DocumentRenderError,
+  DocumentTemplateLoadError,
   DocumentValidationError,
   documentClaimInclude,
   generateAndStore,
 } from "@/lib/documents/generator";
-import { generateDownloadUrl } from "@/lib/storage/r2";
+import {
+  StorageConfigurationError,
+  StorageDownloadError,
+  StorageUploadError,
+  generateDownloadUrl,
+} from "@/lib/storage/r2";
 import type { Context } from "@/lib/trpc/context";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
 import { router } from "@/lib/trpc/trpc";
@@ -111,6 +118,23 @@ async function getDocumentForAccess(ctx: Context, documentId: string) {
   return document;
 }
 
+function toStorageTrpcError(error: unknown) {
+  if (
+    error instanceof StorageConfigurationError ||
+    error instanceof StorageUploadError ||
+    error instanceof StorageDownloadError
+  ) {
+    console.error("[Documents] Błąd warstwy storage.", error);
+
+    return new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.publicMessage,
+    });
+  }
+
+  return null;
+}
+
 export const documentsRouter = router({
   generate: permissionProcedure(PERMISSIONS.DOCUMENT_GENERATE)
     .input(generateInputSchema)
@@ -166,6 +190,30 @@ export const documentsRouter = router({
           });
         }
 
+        if (error instanceof DocumentTemplateLoadError) {
+          console.error("[Documents] Nie udało się wczytać szablonu DOCX.", error);
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Nie udało się wczytać szablonu dokumentu.",
+          });
+        }
+
+        if (error instanceof DocumentRenderError) {
+          console.error("[Documents] Nie udało się wyrenderować dokumentu DOCX.", error);
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Nie udało się wygenerować pliku DOCX z szablonu.",
+          });
+        }
+
+        const storageError = toStorageTrpcError(error);
+
+        if (storageError) {
+          throw storageError;
+        }
+
         throw error;
       }
     }),
@@ -183,9 +231,19 @@ export const documentsRouter = router({
         });
       }
 
-      return {
-        downloadUrl: await generateDownloadUrl(document.storageKey, 3600),
-      };
+      try {
+        return {
+          downloadUrl: await generateDownloadUrl(document.storageKey, 3600),
+        };
+      } catch (error) {
+        const storageError = toStorageTrpcError(error);
+
+        if (storageError) {
+          throw storageError;
+        }
+
+        throw error;
+      }
     }),
 
   markSigned: permissionProcedure(PERMISSIONS.DOCUMENT_GENERATE)

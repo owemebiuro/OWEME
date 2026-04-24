@@ -235,6 +235,21 @@
   gap: 10px;
 }
 
+.checkerDateWrap {
+  margin-top: 10px;
+}
+
+.checkerDatePill {
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 60px;
+  padding: 6px;
+  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.08);
+  gap: 10px;
+}
+
 .checkerInput {
   flex: 1;
   border: none;
@@ -246,6 +261,19 @@
   outline: none;
   font-family: inherit;
   min-width: 0;
+}
+
+.checkerDateInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+  padding: 0 12px;
 }
 
 .checkerInput::placeholder {
@@ -280,6 +308,13 @@
 .checkerBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.checkerError {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #b24c2c;
+  text-align: center;
 }
 
 .checkerSub {
@@ -348,6 +383,29 @@
   line-height: 1.55;
 }
 
+.resultMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  margin-top: 12px;
+}
+
+.resultMetaGrid dt {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-3);
+  margin-bottom: 3px;
+}
+
+.resultMetaGrid dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
 .resultAmount {
   font-size: 24px;
   font-weight: 800;
@@ -356,9 +414,22 @@
   letter-spacing: -0.5px;
 }
 
+.resultInlineNote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.resultActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .resultCta {
   display: inline-block;
-  margin-top: 12px;
   background: var(--orange);
   color: #fff;
   padding: 10px 20px;
@@ -374,6 +445,25 @@
 .resultCta:hover {
   background: var(--orange-dark);
   color: #fff;
+}
+
+.resultGhostCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.resultGhostCta:hover {
+  border-color: rgba(201, 106, 42, 0.35);
+  color: var(--text);
 }
 
 /* CARDS */
@@ -1408,6 +1498,18 @@
     max-width: 100%;
   }
 
+  .checkerDatePill {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 28px;
+    padding: 10px;
+  }
+
+  .checkerDateInput {
+    min-height: 40px;
+    padding: 0 8px;
+  }
+
   .cardsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1526,6 +1628,10 @@
     font-size: 13px;
   }
 
+  .resultMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
   .checkerSub {
     gap: 0.75rem;
     flex-wrap: wrap;
@@ -1598,6 +1704,7 @@
     padding: 1rem;
   }
 
+  .resultMetaGrid,
   .funnelSummary,
   .manualGrid,
   .applicationFormGrid,

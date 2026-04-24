@@ -5,6 +5,7 @@ import SiteNav from "@/components/SiteNav";
 import TagFilter from "@/components/TagFilter";
 import NewsletterForm from "@/components/NewsletterForm";
 import { ARTICLES, POPULAR } from "@/lib/articles";
+import { createTRPCCaller } from "@/lib/trpc/server";
 import styles from "./wiedza.module.css";
 import navStyles from "@/app/landing.module.css";
 
@@ -14,8 +15,7 @@ export const metadata: Metadata = {
     "Prawa pasażerów, przepisy lotnicze i porady ekspertów — wszystko czego potrzebujesz, żeby skutecznie dochodzić swoich praw.",
 };
 
-const featured = ARTICLES.find((a) => a.featured)!;
-const rest = ARTICLES.filter((a) => !a.featured);
+export const revalidate = 60;
 
 const TAGS_CLOUD = [
   "Opóźnienia", "Overbooking", "Bagaż", "WE 261/2004",
@@ -31,6 +31,29 @@ const THUMB_COLORS: Record<string, string> = {
   "Porady": "#fdf0e6",
   "Opóźnienia": "#fef7f0",
 };
+
+type ArticleCard = {
+  slug: string;
+  category: string;
+  title: string;
+  excerpt: string;
+  authorInitials: string;
+  authorName: string;
+  authorColor?: string;
+  date: string;
+  readTime: number;
+  views?: string;
+  featured: boolean;
+};
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 function ClockIcon() {
   return (
@@ -49,7 +72,55 @@ function ChevronIcon() {
   );
 }
 
-export default function WiedzaPage() {
+export default async function WiedzaPage() {
+  let articles: ArticleCard[] = [];
+
+  try {
+    const trpc = await createTRPCCaller();
+    const dbPosts = await trpc.blog.listPublished();
+    if (dbPosts.length > 0) {
+      articles = dbPosts.map((post, i) => ({
+        slug: post.slug,
+        category: post.category,
+        title: post.title,
+        excerpt: post.excerpt || post.tags,
+        authorInitials: initials(post.authorName),
+        authorName: post.authorName,
+        date: post.publishedAt
+          ? new Date(post.publishedAt).toLocaleDateString("pl-PL", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "",
+        readTime: post.readTime,
+        featured: i === 0,
+      }));
+    }
+  } catch {
+    // Fall through to static articles
+  }
+
+  // Fall back to static articles when DB has nothing published yet
+  if (articles.length === 0) {
+    articles = ARTICLES.map((a) => ({
+      slug: a.slug,
+      category: a.category,
+      title: a.title,
+      excerpt: a.excerpt,
+      authorInitials: a.author.initials,
+      authorName: a.author.name,
+      authorColor: a.author.color,
+      date: a.date,
+      readTime: a.readTime,
+      views: a.views,
+      featured: !!a.featured,
+    }));
+  }
+
+  const featured = articles.find((a) => a.featured) ?? articles[0];
+  const rest = articles.filter((a) => a !== featured);
+
   return (
     <>
       <Suspense fallback={null}>
@@ -80,38 +151,40 @@ export default function WiedzaPage() {
       <div className={styles.blogMain}>
         <div>
           {/* Featured article */}
-          <Link href={`/wiedza/${featured.slug}`} className={styles.articleFeatured}>
-            <div className={styles.featVisual}>
-              <div className={styles.featVisualBg} />
-              <div className={styles.featVisualInner}>
-                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" opacity="0.3">
-                  <circle cx="70" cy="70" r="60" stroke="#c96a2a" strokeWidth="1.5" strokeDasharray="6 8" />
-                  <path d="M20 70L70 10l50 60H100v50H40V70H20z" fill="#c96a2a" opacity="0.5" />
-                  <path d="M50 90h40M60 70h20" stroke="#c96a2a" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span className={styles.featLabel}>Wyróżniony artykuł</span>
-              </div>
-            </div>
-            <div className={styles.featBody}>
-              <div className={styles.featTag}>{featured.category}</div>
-              <div className={styles.featTitle}>{featured.title}</div>
-              <div className={styles.featExcerpt}>{featured.excerpt}</div>
-              <div className={styles.featMeta}>
-                <div className={styles.featAuthor}>
-                  <div className={styles.authorAv}>{featured.author.initials}</div>
-                  <span className={styles.authorName}>{featured.author.name}</span>
+          {featured && (
+            <Link href={`/wiedza/${featured.slug}`} className={styles.articleFeatured}>
+              <div className={styles.featVisual}>
+                <div className={styles.featVisualBg} />
+                <div className={styles.featVisualInner}>
+                  <svg width="140" height="140" viewBox="0 0 140 140" fill="none" opacity="0.3">
+                    <circle cx="70" cy="70" r="60" stroke="#c96a2a" strokeWidth="1.5" strokeDasharray="6 8" />
+                    <path d="M20 70L70 10l50 60H100v50H40V70H20z" fill="#c96a2a" opacity="0.5" />
+                    <path d="M50 90h40M60 70h20" stroke="#c96a2a" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  <span className={styles.featLabel}>Wyróżniony artykuł</span>
                 </div>
-                <span className={styles.dotSep}>·</span>
-                <span className={styles.featDate}>{featured.date}</span>
-                <span className={styles.dotSep}>·</span>
-                <span className={styles.featRead}>
-                  <ClockIcon />
-                  {featured.readTime} min
-                </span>
               </div>
-              <span className={styles.readMoreLink}>Czytaj artykuł →</span>
-            </div>
-          </Link>
+              <div className={styles.featBody}>
+                <div className={styles.featTag}>{featured.category}</div>
+                <div className={styles.featTitle}>{featured.title}</div>
+                <div className={styles.featExcerpt}>{featured.excerpt}</div>
+                <div className={styles.featMeta}>
+                  <div className={styles.featAuthor}>
+                    <div className={styles.authorAv}>{featured.authorInitials}</div>
+                    <span className={styles.authorName}>{featured.authorName}</span>
+                  </div>
+                  <span className={styles.dotSep}>·</span>
+                  <span className={styles.featDate}>{featured.date}</span>
+                  <span className={styles.dotSep}>·</span>
+                  <span className={styles.featRead}>
+                    <ClockIcon />
+                    {featured.readTime} min
+                  </span>
+                </div>
+                <span className={styles.readMoreLink}>Czytaj artykuł →</span>
+              </div>
+            </Link>
+          )}
 
           {/* Article grid */}
           <div className={styles.articleGrid}>
@@ -141,11 +214,11 @@ export default function WiedzaPage() {
                     <div className={styles.cardAuthorSm}>
                       <div
                         className={styles.avSm}
-                        style={article.author.color ? { background: article.author.color } : undefined}
+                        style={article.authorColor ? { background: article.authorColor } : undefined}
                       >
-                        {article.author.initials}
+                        {article.authorInitials}
                       </div>
-                      <span className={styles.cardByline}>{article.author.name}</span>
+                      <span className={styles.cardByline}>{article.authorName}</span>
                     </div>
                     <span className={styles.cardReadTime}>{article.readTime} min</span>
                   </div>

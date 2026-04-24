@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 import type { ClaimDetailData } from "@/lib/claims/detail-types";
 import {
@@ -11,9 +14,11 @@ import {
   formatDate,
   formatDateTime,
 } from "@/lib/claims/format";
+import { api } from "@/lib/trpc/hooks";
 
 type ClaimSidebarProps = {
   claim: ClaimDetailData;
+  onChanged?: () => void;
 };
 
 function SidebarSection({
@@ -44,7 +49,7 @@ function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function ClaimSidebar({ claim }: ClaimSidebarProps) {
+export function ClaimSidebar({ claim, onChanged }: ClaimSidebarProps) {
   const previousClaims = Math.max(0, claim.client.claimsCount - 1);
   const payout = claim.payouts[0];
   const address = [
@@ -54,6 +59,33 @@ export function ClaimSidebar({ claim }: ClaimSidebarProps) {
   ]
     .filter(Boolean)
     .join(", ");
+  const [refreshFeedback, setRefreshFeedback] = useState<string | null>(null);
+  const refreshFlight = api.flights.refresh.useMutation({
+    onSuccess: (result) => {
+      setRefreshFeedback(
+        result.error ??
+          result.warnings[0] ??
+          "Dane lotu zostały odświeżone.",
+      );
+      onChanged?.();
+    },
+    onError: (error) => {
+      setRefreshFeedback(
+        error.message || "Nie udało się odświeżyć danych lotu.",
+      );
+    },
+  });
+
+  function handleFlightRefresh() {
+    if (!claim.flight || refreshFlight.isPending) {
+      return;
+    }
+
+    setRefreshFeedback(null);
+    refreshFlight.mutate({
+      flightId: claim.flight.id,
+    });
+  }
 
   return (
     <aside className="space-y-4">
@@ -150,11 +182,17 @@ export function ClaimSidebar({ claim }: ClaimSidebarProps) {
             />
             <button
               type="button"
-              disabled
-              className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 text-sm font-semibold text-neutral-400"
+              onClick={handleFlightRefresh}
+              disabled={refreshFlight.isPending}
+              className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-400"
             >
-              Odśwież dane lotu
+              {refreshFlight.isPending
+                ? "Odświeżam dane lotu..."
+                : "Odśwież dane lotu"}
             </button>
+            {refreshFeedback ? (
+              <p className="text-xs text-neutral-500">{refreshFeedback}</p>
+            ) : null}
           </>
         ) : (
           <p className="text-sm text-neutral-500">Brak przypisanego lotu.</p>

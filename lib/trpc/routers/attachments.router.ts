@@ -9,6 +9,10 @@ import {
   validateAttachmentFile,
 } from "@/lib/storage/file-validation";
 import {
+  StorageConfigurationError,
+  StorageDeleteError,
+  StorageDownloadError,
+  StorageUploadError,
   deleteObject,
   generateDownloadUrl,
   generateUploadUrl,
@@ -128,6 +132,24 @@ async function getAttachmentForAccess(ctx: Context, attachmentId: string) {
   return attachment;
 }
 
+function toAttachmentStorageTrpcError(error: unknown) {
+  if (
+    error instanceof StorageConfigurationError ||
+    error instanceof StorageUploadError ||
+    error instanceof StorageDownloadError ||
+    error instanceof StorageDeleteError
+  ) {
+    console.error("[Attachments] Błąd warstwy storage.", error);
+
+    return new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.publicMessage,
+    });
+  }
+
+  return null;
+}
+
 export const attachmentsRouter = router({
   getUploadUrl: permissionProcedure(PERMISSIONS.ATTACHMENT_UPLOAD)
     .input(getUploadUrlInputSchema)
@@ -155,7 +177,20 @@ export const attachmentsRouter = router({
       }
 
       const storageKey = getStorageKey(input.claimId, input.fileName);
-      const uploadUrl = await generateUploadUrl(storageKey, input.contentType, 300);
+      let uploadUrl: string;
+
+      try {
+        uploadUrl = await generateUploadUrl(storageKey, input.contentType, 300);
+      } catch (error) {
+        const storageError = toAttachmentStorageTrpcError(error);
+
+        if (storageError) {
+          throw storageError;
+        }
+
+        throw error;
+      }
+
       const attachment = await ctx.prisma.attachment.create({
         data: {
           claimId: input.claimId,
@@ -215,7 +250,19 @@ export const attachmentsRouter = router({
         });
       }
 
-      const downloadUrl = await generateDownloadUrl(attachment.storageKey, 3600);
+      let downloadUrl: string;
+
+      try {
+        downloadUrl = await generateDownloadUrl(attachment.storageKey, 3600);
+      } catch (error) {
+        const storageError = toAttachmentStorageTrpcError(error);
+
+        if (storageError) {
+          throw storageError;
+        }
+
+        throw error;
+      }
 
       await ctx.prisma.note.create({
         data: {
@@ -244,7 +291,17 @@ export const attachmentsRouter = router({
         });
       }
 
-      await deleteObject(attachment.storageKey);
+      try {
+        await deleteObject(attachment.storageKey);
+      } catch (error) {
+        const storageError = toAttachmentStorageTrpcError(error);
+
+        if (storageError) {
+          throw storageError;
+        }
+
+        throw error;
+      }
 
       await ctx.prisma.$transaction([
         ctx.prisma.attachment.delete({

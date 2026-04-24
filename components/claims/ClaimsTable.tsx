@@ -21,6 +21,7 @@ type ClaimsTableProps = {
   data: ClaimsListData;
   owners: ClaimsOwnerOption[];
   currentUser: ClaimsCurrentUser;
+  archived?: boolean;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("pl-PL", {
@@ -60,17 +61,19 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function ClaimsTable({ data, owners, currentUser }: ClaimsTableProps) {
+export function ClaimsTable({ data, owners, currentUser, archived = false }: ClaimsTableProps) {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold text-neutral-500">OWEME CRM</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
-            Sprawy
+            {archived ? "Archiwum spraw" : "Sprawy"}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
-            Szybka lista operacyjna do weryfikacji, przypisań i zmian statusów.
+            {archived
+              ? "Sprawy zakończone — wygrania, ugody, odrzucenia i zamknięcia."
+              : "Szybka lista operacyjna do weryfikacji, przypisań i zmian statusów."}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-600">
@@ -79,7 +82,7 @@ export function ClaimsTable({ data, owners, currentUser }: ClaimsTableProps) {
         </div>
       </header>
 
-      <ClaimsSavedViews currentUserId={currentUser.id} />
+      {!archived && <ClaimsSavedViews currentUserId={currentUser.id} />}
       <ClaimsFilters owners={owners} />
 
       <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">

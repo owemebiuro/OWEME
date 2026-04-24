@@ -38,8 +38,11 @@ Current `prisma/schema.prisma` uses `DATABASE_URL` plus `directUrl = env("DIRECT
 - `R2_ACCESS_KEY_ID`
 - `R2_SECRET_ACCESS_KEY`
 - `R2_BUCKET_NAME` - suggested bucket: `oweme-documents`
-- `R2_ENDPOINT` - usually `https://<account-id>.r2.cloudflarestorage.com`
+- `R2_ENDPOINT` - optional if `R2_ACCOUNT_ID` is set; usually `https://<account-id>.r2.cloudflarestorage.com`
 - `R2_PUBLIC_URL` - optional, only if public reads are intentionally enabled
+
+The application validates R2 centrally. In production there is no local fallback:
+missing R2 configuration fails fast with a clear storage error.
 
 Recommended R2 CORS for browser uploads via presigned URLs:
 
@@ -72,12 +75,15 @@ The App Router endpoint is `app/api/inngest/route.ts`. After production deploy, 
 
 Configure and verify the sending domain in Resend before relying on production emails.
 
-### Flight APIs
+### FlightAware AeroAPI
 
-- `AVIATIONSTACK_API_KEY`
-- `AERODATABOX_API_KEY`
-- `AERODATABOX_API_HOST` - default: `aerodatabox.p.rapidapi.com`
+- `FLIGHTAWARE_AEROAPI_KEY`
+- `FLIGHTAWARE_AEROAPI_BASE_URL` - default: `https://aeroapi.flightaware.com/aeroapi`
+- `FLIGHTAWARE_AEROAPI_TIMEOUT_MS` - default: `10000`
+- `FLIGHT_DATA_CACHE_TTL_HOURS` - default: `6`
 - `USE_FLIGHT_API_MOCK=false`
+
+The FlightAware key must be configured in `.env.local` for local development and in Vercel Project Settings for deployed environments. After changing `.env.local`, restart `npm run dev`.
 
 ## GitHub Actions Secrets
 
@@ -126,6 +132,8 @@ Do not add `NEXTAUTH_SECRET`; OWEME uses Supabase Auth, not NextAuth/Auth.js.
 - Document generation stores a `.docx` file in R2.
 - Inngest functions are visible and can receive events.
 - Resend can send a test transactional email.
+- `/wiedza` renders published blog posts from the database (or static fallback when DB is empty).
+- `/crm/admin/blog` is accessible for `ADMIN` and `EDITOR`; create a post and verify it appears at `/wiedza/<slug>`.
 
 ## Current Caveats
 

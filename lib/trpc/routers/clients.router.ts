@@ -299,4 +299,27 @@ export const clientsRouter = router({
         take: 10,
       });
     }),
+
+  listForNewsletter: permissionProcedure(PERMISSIONS.BLOG_MANAGE).query(async ({ ctx }) => {
+    const clients = await ctx.prisma.client.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        createdAt: true,
+        _count: { select: { claims: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return clients.map((c) => ({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      email: c.email,
+      createdAt: c.createdAt.toISOString(),
+      claimsCount: c._count.claims,
+    }));
+  }),
 });

@@ -5,10 +5,13 @@ import { notFound } from "next/navigation";
 import SiteNav from "@/components/SiteNav";
 import ReadingProgress from "@/components/ReadingProgress";
 import { ARTICLES, getArticleBySlug } from "@/lib/articles";
+import { createTRPCCaller } from "@/lib/trpc/server";
 import styles from "../wiedza.module.css";
 import navStyles from "@/app/landing.module.css";
 
-export function generateStaticParams() {
+export const revalidate = 60;
+
+export async function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
@@ -18,12 +21,22 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
-  if (!article) return {};
-  return {
-    title: `${article.title} – ClaimAir`,
-    description: article.excerpt,
-  };
+
+  try {
+    const trpc = await createTRPCCaller();
+    const post = await trpc.blog.getPublishedBySlug({ slug });
+    return {
+      title: `${post.metaTitle || post.title} – ClaimAir`,
+      description: post.metaDescription || post.excerpt,
+    };
+  } catch {
+    const article = getArticleBySlug(slug);
+    if (!article) return {};
+    return {
+      title: `${article.title} – ClaimAir`,
+      description: article.excerpt,
+    };
+  }
 }
 
 function ChevronIcon() {
@@ -34,7 +47,206 @@ function ChevronIcon() {
   );
 }
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 const related = ARTICLES.filter((a) => !a.featured).slice(0, 3);
+
+type DbPost = Awaited<
+  ReturnType<Awaited<ReturnType<typeof createTRPCCaller>>["blog"]["getPublishedBySlug"]>
+>;
+
+function DbArticleView({ post }: { post: DbPost }) {
+  const authorInitials = initials(post.authorName);
+  const publishDate = post.publishedAt
+    ? new Date(post.publishedAt).toLocaleDateString("pl-PL", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
+
+  return (
+    <>
+      <ReadingProgress />
+      <Suspense fallback={null}>
+        <SiteNav />
+      </Suspense>
+
+      <div className={styles.articleHeader}>
+        <div className={styles.articleBc}>
+          <Link href="/wiedza">Wiedza</Link>
+          <ChevronIcon />
+          <Link href="/wiedza">{post.category}</Link>
+          <ChevronIcon />
+          <span style={{ color: "var(--text-3)" }}>{post.slug}</span>
+        </div>
+
+        <div className={styles.articleTagRow}>
+          <span className={styles.articleTag}>{post.category}</span>
+          <span className={styles.articleReading}>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 12 12"
+              fill="none"
+              style={{ verticalAlign: "middle" }}
+            >
+              <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
+              <path d="M6 3.5v3l2 1" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" />
+            </svg>
+            {post.readTime} minut czytania
+          </span>
+        </div>
+
+        <h1 className={styles.articleTitle}>{post.title}</h1>
+        <p className={styles.articleSubtitle}>{post.excerpt || post.metaDescription}</p>
+
+        <div className={styles.articleByline}>
+          <div className={styles.bylineAv}>{authorInitials}</div>
+          <div>
+            <div className={styles.bylineName}>{post.authorName}</div>
+            <div className={styles.bylineMeta}>
+              {post.authorRole} · {publishDate}
+            </div>
+          </div>
+          <div className={styles.bylineSep} />
+          <div className={styles.bylineShare}>
+            <button className={styles.shareBtn} title="Kopiuj link">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="11" cy="3" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
+                <circle cx="11" cy="11" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
+                <circle cx="3" cy="7" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
+                <path d="M4.3 6.3l5.4-2.7M4.3 7.7l5.4 2.7" stroke="#5c4f42" strokeWidth="1.2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.articleHeroStrip}>
+        <div className={styles.heroStripBg} />
+        <div className={styles.heroStripContent}>
+          <div className={styles.heroStripStat}>
+            <div className={styles.heroStripBig}>600</div>
+            <div className={styles.heroStripTiny}>€ MAX / os.</div>
+          </div>
+          <div className={styles.heroStripDivider} />
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" opacity="0.22">
+            <path d="M10 50L50 5l40 45H75v40H25V50H10z" fill="#c96a2a" />
+          </svg>
+          <div className={styles.heroStripDivider} />
+          <div className={styles.heroStripStat}>
+            <div className={styles.heroStripBig}>3</div>
+            <div className={styles.heroStripTiny}>LATA na roszczenie</div>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.articleBodyWrap}>
+        <div className={styles.articleContent}>
+          <div className={styles.prose} id="article-prose">
+            <div className="whitespace-pre-wrap">{post.content}</div>
+
+            {post.tags && (
+              <div className={styles.articleTagsRow}>
+                <span className={styles.articleTagsLabel}>Tematy:</span>
+                {post.tags
+                  .split(",")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .map((tag) => (
+                    <span key={tag} className={styles.artTag}>
+                      {tag}
+                    </span>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside className={styles.articleSidebar}>
+          <div className={styles.sidebarCta}>
+            <h3>Masz lot do sprawdzenia?</h3>
+            <p>Analiza bezpłatna. Działa w 30 sekund.</p>
+            <Link href="/#checker" className={styles.sidebarCtaBtn}>
+              Sprawdź lot →
+            </Link>
+          </div>
+
+          {post.authorBio && (
+            <div className={styles.sidebarSection}>
+              <div className={styles.sidebarLabel}>O autorze</div>
+              <div className={styles.authorCard}>
+                <div className={styles.authorCardAv}>{authorInitials}</div>
+                <div>
+                  <div className={styles.authorCardName}>{post.authorName}</div>
+                  <div className={styles.authorCardRole}>{post.authorRole}</div>
+                </div>
+              </div>
+              <p className={styles.authorCardBio}>{post.authorBio}</p>
+            </div>
+          )}
+        </aside>
+      </div>
+
+      <div className={styles.relatedSection}>
+        <h2 className={styles.relatedH2}>Powiązane artykuły</h2>
+        <div className={styles.relatedGrid}>
+          {related.map((rel) => (
+            <Link
+              key={rel.slug}
+              href={`/wiedza/${rel.slug}`}
+              className={styles.articleCard}
+            >
+              <div className={styles.cardThumb} style={{ background: "#fdf0e6", height: 120 }}>
+                <div className={styles.thumbBg} />
+                <div className={styles.thumbIcon}>
+                  <svg width="44" height="44" viewBox="0 0 56 56" fill="none" opacity="0.3">
+                    <circle cx="28" cy="28" r="18" stroke="#c96a2a" strokeWidth="2" />
+                  </svg>
+                </div>
+              </div>
+              <div className={styles.cardBody}>
+                <div className={styles.cardTag}>{rel.category}</div>
+                <div className={styles.cardTitle}>{rel.title}</div>
+                <div className={styles.cardFooter} style={{ marginTop: "auto" }}>
+                  <div className={styles.cardAuthorSm}>
+                    <div
+                      className={styles.avSm}
+                      style={rel.author.color ? { background: rel.author.color } : undefined}
+                    >
+                      {rel.author.initials}
+                    </div>
+                    <span className={styles.cardByline}>{rel.author.name}</span>
+                  </div>
+                  <span className={styles.cardReadTime}>{rel.readTime} min</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <footer className={navStyles.footer}>
+        <p className={navStyles.footerCopy}>
+          © 2025 ClaimAir sp. z o.o. · Wszelkie prawa zastrzeżone
+        </p>
+        <div className={navStyles.footerLinks}>
+          <a href="#">Polityka prywatności</a>
+          <a href="#">Regulamin</a>
+          <a href="#">Kontakt</a>
+        </div>
+      </footer>
+    </>
+  );
+}
 
 export default async function ArticlePage({
   params,
@@ -42,6 +254,21 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  // Fetch from DB first (data only — no JSX inside the try block)
+  let dbPost: DbPost | null = null;
+  try {
+    const trpc = await createTRPCCaller();
+    dbPost = await trpc.blog.getPublishedBySlug({ slug });
+  } catch {
+    // Not in DB — fall through to static fallback
+  }
+
+  if (dbPost) {
+    return <DbArticleView post={dbPost} />;
+  }
+
+  // Static fallback
   const article = getArticleBySlug(slug);
   if (!article) notFound();
 
@@ -66,7 +293,13 @@ export default async function ArticlePage({
         <div className={styles.articleTagRow}>
           <span className={styles.articleTag}>{article.category}</span>
           <span className={styles.articleReading}>
-            <svg width="13" height="13" viewBox="0 0 12 12" fill="none" style={{ verticalAlign: "middle" }}>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 12 12"
+              fill="none"
+              style={{ verticalAlign: "middle" }}
+            >
               <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
               <path d="M6 3.5v3l2 1" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" />
             </svg>
@@ -109,7 +342,12 @@ export default async function ArticlePage({
             <button className={styles.shareBtn} title="LinkedIn">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <rect x="2" y="2" width="10" height="10" rx="2" stroke="#5c4f42" strokeWidth="1.2" />
-                <path d="M5 6v4M5 4.5v.1M7 10V7.5c0-1 .5-1.5 1.5-1.5s1.5.5 1.5 1.5V10" stroke="#5c4f42" strokeWidth="1.2" strokeLinecap="round" />
+                <path
+                  d="M5 6v4M5 4.5v.1M7 10V7.5c0-1 .5-1.5 1.5-1.5s1.5.5 1.5 1.5V10"
+                  stroke="#5c4f42"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -268,8 +506,10 @@ export default async function ArticlePage({
               <span className={styles.articleTagsLabel}>Tematy:</span>
               {["WE 261/2004", "Prawa pasażera", "Opóźnienia", "Odszkodowania", "Prawo UE"].map(
                 (tag) => (
-                  <span key={tag} className={styles.artTag}>{tag}</span>
-                )
+                  <span key={tag} className={styles.artTag}>
+                    {tag}
+                  </span>
+                ),
               )}
             </div>
           </div>
@@ -339,7 +579,12 @@ export default async function ArticlePage({
                 <div className={styles.thumbIcon}>
                   <svg width="44" height="44" viewBox="0 0 56 56" fill="none" opacity="0.3">
                     <circle cx="28" cy="28" r="18" stroke="#c96a2a" strokeWidth="2" />
-                    <path d="M28 20v8.5l5 3" stroke="#c96a2a" strokeWidth="2.5" strokeLinecap="round" />
+                    <path
+                      d="M28 20v8.5l5 3"
+                      stroke="#c96a2a"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -366,7 +611,9 @@ export default async function ArticlePage({
 
       {/* Footer */}
       <footer className={navStyles.footer}>
-        <p className={navStyles.footerCopy}>© 2025 ClaimAir sp. z o.o. · Wszelkie prawa zastrzeżone</p>
+        <p className={navStyles.footerCopy}>
+          © 2025 ClaimAir sp. z o.o. · Wszelkie prawa zastrzeżone
+        </p>
         <div className={navStyles.footerLinks}>
           <a href="#">Polityka prywatności</a>
           <a href="#">Regulamin</a>

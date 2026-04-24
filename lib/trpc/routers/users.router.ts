@@ -228,6 +228,78 @@ export const usersRouter = router({
       });
     }),
 
+  systemLogs: permissionProcedure(PERMISSIONS.ADMIN_USERS).query(async ({ ctx }) => {
+    const [statusChanges, assignments] = await ctx.prisma.$transaction([
+      ctx.prisma.claimStatusHistory.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 200,
+        select: {
+          id: true,
+          createdAt: true,
+          oldStatus: true,
+          newStatus: true,
+          comment: true,
+          claim: { select: { id: true, claimNumber: true } },
+          changedBy: { select: { id: true, name: true } },
+        },
+      }),
+      ctx.prisma.assignmentHistory.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          createdAt: true,
+          previousOwnerId: true,
+          newOwnerId: true,
+          claim: { select: { id: true, claimNumber: true } },
+          changedBy: { select: { id: true, name: true } },
+        },
+      }),
+    ]);
+
+    const userIds = Array.from(
+      new Set([
+        ...assignments.map((a) => a.previousOwnerId).filter(Boolean),
+        ...assignments.map((a) => a.newOwnerId).filter(Boolean),
+      ]),
+    ) as string[];
+
+    const owners = userIds.length
+      ? await ctx.prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+
+    const ownerName = new Map(owners.map((u) => [u.id, u.name]));
+
+    const statusEvents = statusChanges.map((e) => ({
+      kind: "status" as const,
+      id: e.id,
+      createdAt: e.createdAt.toISOString(),
+      claimId: e.claim.id,
+      claimNumber: e.claim.claimNumber,
+      actor: e.changedBy.name,
+      description: `Status: ${e.oldStatus} → ${e.newStatus}`,
+      detail: e.comment ?? null,
+    }));
+
+    const assignmentEvents = assignments.map((e) => ({
+      kind: "assignment" as const,
+      id: e.id,
+      createdAt: e.createdAt.toISOString(),
+      claimId: e.claim.id,
+      claimNumber: e.claim.claimNumber,
+      actor: e.changedBy.name,
+      description: `Przypisanie: ${ownerName.get(e.previousOwnerId ?? "") ?? "—"} → ${ownerName.get(e.newOwnerId ?? "") ?? "—"}`,
+      detail: null,
+    }));
+
+    return [...statusEvents, ...assignmentEvents]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 250);
+  }),
+
   resetPassword: permissionProcedure(PERMISSIONS.ADMIN_USERS)
     .input(userIdInputSchema)
     .mutation(async ({ ctx, input }) => {

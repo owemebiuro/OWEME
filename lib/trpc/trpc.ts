@@ -1,19 +1,31 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 
+import { toSchemaOutdatedTRPCError } from "@/lib/prisma-errors";
 import type { Context } from "@/lib/trpc/context";
 
 const t = initTRPC.context<Context>().create();
 
 const timingMiddleware = t.middleware(async ({ next, path, type }) => {
   const start = Date.now();
-  const result = await next();
 
-  if (process.env.NODE_ENV === "development") {
-    const duration = Date.now() - start;
-    console.log(`[tRPC] ${type} ${path} ${duration}ms`);
+  try {
+    const result = await next();
+
+    if (process.env.NODE_ENV === "development") {
+      const duration = Date.now() - start;
+      console.log(`[tRPC] ${type} ${path} ${duration}ms`);
+    }
+
+    return result;
+  } catch (error) {
+    const schemaError = toSchemaOutdatedTRPCError(error);
+
+    if (schemaError) {
+      throw schemaError;
+    }
+
+    throw error;
   }
-
-  return result;
 });
 
 const requireAuthMiddleware = t.middleware(({ ctx, next }) => {

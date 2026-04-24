@@ -2,7 +2,7 @@ import { type User as SupabaseUser } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
-import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions";
+import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions.shared";
 import { createClient } from "@/lib/supabase/server";
 import type { AppUser, PermissionAction } from "@/types/auth";
 import { type UserRole } from "@/types/auth";

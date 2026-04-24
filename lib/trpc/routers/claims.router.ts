@@ -38,6 +38,14 @@ const closedStatuses: readonly ClaimStatus[] = [
   ClaimStatus.DISMISSED,
 ];
 
+const TERMINAL_STATUSES: ClaimStatus[] = [
+  ClaimStatus.WON,
+  ClaimStatus.SETTLEMENT,
+  ClaimStatus.CLOSED_PAID,
+  ClaimStatus.REJECTED,
+  ClaimStatus.DISMISSED,
+];
+
 const listInputSchema = z
   .object({
     page: z.number().int().min(1).default(1),
@@ -52,10 +60,12 @@ const listInputSchema = z
     overdueTasks: z.boolean().optional(),
     airlineId: z.string().optional(),
     source: z.array(claimSourceSchema).optional(),
+    archived: z.boolean().default(false),
   })
   .default({
     page: 1,
     pageSize: 25,
+    archived: false,
   });
 
 const getByIdInputSchema = z.object({
@@ -103,6 +113,17 @@ const deleteInputSchema = z.object({
   id: z.string().min(1),
 });
 
+const updateBillingInputSchema = z.object({
+  id: z.string().min(1),
+  airlinePaid: z.boolean().optional(),
+  airlinePaidAt: z.coerce.date().nullable().optional(),
+  clientPaid: z.boolean().optional(),
+  clientPaidAt: z.coerce.date().nullable().optional(),
+  clientIban: z.string().trim().nullable().optional(),
+  transferTitle: z.string().trim().nullable().optional(),
+  clientSettled: z.boolean().optional(),
+});
+
 function requireAppUser(ctx: Context): AppUser {
   if (!ctx.appUser) {
     throw new TRPCError({
@@ -145,6 +166,10 @@ function buildListWhere(
 
   if (input.status?.length) {
     where.status = { in: input.status };
+  } else if (input.archived) {
+    where.status = { in: TERMINAL_STATUSES };
+  } else {
+    where.status = { notIn: TERMINAL_STATUSES };
   }
 
   if (input.ownerId) {
@@ -549,6 +574,31 @@ export const claimsRouter = router({
                 : new Prisma.Decimal(data.estimatedFee),
         },
         include: claimListInclude,
+      });
+    }),
+
+  updateBilling: permissionProcedure(PERMISSIONS.BILLING_EDIT)
+    .input(updateBillingInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      requireAppUser(ctx);
+
+      const { id, ...data } = input;
+      const claim = await ctx.prisma.claim.findFirst({
+        where: { id, deletedAt: null },
+        select: { id: true },
+      });
+
+      if (!claim) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nie znaleziono sprawy.",
+        });
+      }
+
+      return ctx.prisma.claim.update({
+        where: { id },
+        data,
+        select: { id: true },
       });
     }),
 

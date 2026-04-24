@@ -40,6 +40,13 @@ export type ClaimDetailData = {
   qualifiedAt: string | null;
   closedAt: string | null;
   closeReason: string | null;
+  airlinePaid: boolean;
+  airlinePaidAt: string | null;
+  clientPaid: boolean;
+  clientPaidAt: string | null;
+  clientIban: string | null;
+  transferTitle: string | null;
+  clientSettled: boolean;
   createdAt: string;
   updatedAt: string;
   client: {

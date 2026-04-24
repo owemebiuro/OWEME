@@ -4,7 +4,7 @@ import {
   PERMISSIONS,
   canLawyerSetClaimStatus,
   hasRolePermission,
-} from "@/lib/trpc/permissions";
+} from "@/lib/trpc/permissions.shared";
 
 describe("permissions", () => {
   it("OPERATOR nie moze zmieniac modelu prowizji", () => {

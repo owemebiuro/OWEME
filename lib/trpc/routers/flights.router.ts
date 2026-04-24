@@ -1,13 +1,16 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { fetchFlightData } from "@/lib/services/flight-api.service";
+import { fetchFlightData } from "@/lib/services/flight-data.service";
 import { protectedProcedure, publicProcedure, router } from "@/lib/trpc/trpc";
 
 const flightNumberSchema = z
   .string()
   .trim()
-  .min(2)
+  .min(3)
+  .regex(/^[A-Z0-9]{2,3}\s?\d{1,4}[A-Z]?$/i, {
+    message: "Numer lotu ma nieprawidłowy format.",
+  })
   .transform((value) => value.replace(/\s+/g, "").toUpperCase());
 
 const flightDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
@@ -32,6 +35,12 @@ function formatFlightDate(date: Date) {
 }
 
 export const flightsRouter = router({
+  searchPublic: publicProcedure
+    .input(searchInputSchema)
+    .query(async ({ input }) => {
+      return fetchFlightData(input.flightNumber, input.date);
+    }),
+
   search: publicProcedure.input(searchInputSchema).query(async ({ input }) => {
     return fetchFlightData(input.flightNumber, input.date);
   }),

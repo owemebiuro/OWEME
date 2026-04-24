@@ -1,3 +1,4 @@
+import { analyticsRouter } from "@/lib/trpc/routers/analytics.router";
 import { attachmentsRouter } from "@/lib/trpc/routers/attachments.router";
 import { blogRouter } from "@/lib/trpc/routers/blog.router";
 import { claimsRouter } from "@/lib/trpc/routers/claims.router";
@@ -13,6 +14,7 @@ import { usersRouter } from "@/lib/trpc/routers/users.router";
 import { router } from "@/lib/trpc/trpc";
 
 export const appRouter = router({
+  analytics: analyticsRouter,
   attachments: attachmentsRouter,
   blog: blogRouter,
   claims: claimsRouter,

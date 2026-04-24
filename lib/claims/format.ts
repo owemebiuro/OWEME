@@ -1,3 +1,22 @@
+import type { ClaimType } from "@prisma/client";
+
+const incidentLabels: Record<ClaimType, string> = {
+  DELAY: "opóźnionym lotem",
+  CANCELLATION: "odwołanym lotem",
+  DENIED_BOARDING: "odmową wejścia na pokład",
+};
+
+export function generateTransferTitle(
+  airlineName: string | null | undefined,
+  claimType: ClaimType,
+  flightNumber: string | null | undefined,
+): string {
+  const airline = airlineName ?? "linii lotniczej";
+  const incident = incidentLabels[claimType];
+  const flight = flightNumber ?? "nieznanym locie";
+  return `Wierzytelność z tytułu odszkodowania od linii lotniczej ${airline} w związku z ${incident} ${flight}`;
+}
+
 const dateFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "2-digit",
   month: "2-digit",

@@ -20,6 +20,7 @@ export type ClaimsListQueryInput = {
   overdueTasks?: boolean;
   airlineId?: string;
   source?: ClaimSource[];
+  archived?: boolean;
 };
 
 type SearchParamUpdate =
