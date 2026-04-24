@@ -116,11 +116,12 @@ Do not add `NEXTAUTH_SECRET`; OWEME uses Supabase Auth, not NextAuth/Auth.js.
 
 1. Create or verify the Supabase project and production Postgres database.
 2. Add Vercel production environment variables listed above.
-3. Create the Cloudflare R2 bucket and configure CORS.
-4. Verify the Resend sending domain and set `RESEND_FROM_EMAIL`.
-5. Configure Inngest and confirm `/api/inngest` is reachable after deploy.
-6. Deploy from Vercel Git integration or from GitHub Actions with Vercel CLI secrets.
-7. Create Supabase Auth users and matching OWEME application users.
+3. Run `prisma migrate deploy` against the production database to apply all migrations. The deploy workflow does this automatically; for a manual first-time run use `DIRECT_URL=... DATABASE_URL=... npx prisma migrate deploy`.
+4. Create the Cloudflare R2 bucket and configure CORS.
+5. Verify the Resend sending domain and set `RESEND_FROM_EMAIL`.
+6. Configure Inngest and confirm `/api/inngest` is reachable after deploy.
+7. Deploy from Vercel Git integration or from GitHub Actions with Vercel CLI secrets.
+8. Create Supabase Auth users and matching OWEME application users.
 
 ## Post-Deploy Smoke Checklist
 
@@ -137,6 +138,5 @@ Do not add `NEXTAUTH_SECRET`; OWEME uses Supabase Auth, not NextAuth/Auth.js.
 
 ## Current Caveats
 
-- Prisma migrations are not present yet, so deployment skips `prisma migrate deploy` until `prisma/migrations` exists.
 - E2E tests need a dedicated Supabase/Auth test setup for full authenticated flows.
 - `isActive=false` blocks the application user in OWEME checks, but a complete Supabase Auth-side account blocking strategy still needs a final decision.

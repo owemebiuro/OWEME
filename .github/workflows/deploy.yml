@@ -51,13 +51,8 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Apply Prisma migrations when present
-        run: |
-          if [ -d prisma/migrations ]; then
-            npx prisma migrate deploy
-          else
-            echo "No prisma/migrations directory found; skipping migrate deploy."
-          fi
+      - name: Apply Prisma migrations
+        run: npx prisma migrate deploy
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
