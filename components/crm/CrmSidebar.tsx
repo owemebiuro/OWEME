@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions";
+import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions.shared";
 import type { AppUser } from "@/types/auth";
 
 type CrmSidebarProps = {

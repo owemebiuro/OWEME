@@ -1,3 +1,5 @@
+import "server-only";
+
 import { initTRPC, TRPCError } from "@trpc/server";
 
 import { toSchemaOutdatedTRPCError } from "@/lib/prisma-errors";
