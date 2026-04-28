@@ -71,14 +71,20 @@ function getApiKey() {
 
 function createDateWindow(date: string) {
   const normalizedDate = normalizeFlightDate(date);
-  const start = new Date(`${normalizedDate}T00:00:00.000Z`);
-  const end = new Date(start);
-  end.setUTCDate(end.getUTCDate() + 1);
 
   return {
-    start: start.toISOString(),
-    end: end.toISOString(),
+    start: `${normalizedDate}T00:00:00Z`,
+    end: `${normalizedDate}T23:59:59Z`,
   };
+}
+
+function isHistoricalFlight(date: string) {
+  const normalizedDate = normalizeFlightDate(date);
+  const flightDate = new Date(`${normalizedDate}T12:00:00Z`);
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+  return flightDate < twoWeeksAgo;
 }
 
 async function requestAeroApi(
@@ -161,12 +167,9 @@ export async function fetchFlightAwareFlights(
   flightNumber: string,
   date: string,
 ) {
-  const targetDate = normalizeFlightDate(date);
-  const today = new Date().toISOString().slice(0, 10);
-  const endpoints =
-    targetDate < today
-      ? ["/history/flights", "/flights"]
-      : ["/flights", "/history/flights"];
+  const endpoints = isHistoricalFlight(date)
+    ? ["/history/flights", "/flights"]
+    : ["/flights", "/history/flights"];
 
   let lastError: Error | null = null;
 

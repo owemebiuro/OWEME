@@ -142,6 +142,35 @@ enum BlogPostStatus {
   PUBLISHED
 }
 
+enum NewsletterCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  PAUSED
+  CANCELLED
+}
+
+enum NewsletterSubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+  PENDING
+}
+
+enum NewsletterEmailStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  UNSUBSCRIBED
+  FAILED
+}
+
 model User {
   id          String    @id @default(cuid())
   authUserId  String?   @unique
@@ -162,6 +191,9 @@ model User {
   assignmentHistory  AssignmentHistory[]  @relation("ChangedBy")
   generatedDocuments Document[]
   blogPosts          BlogPost[]
+  newsletterCampaigns NewsletterCampaign[]
+  newsletterSegments  NewsletterSegment[]
+  newsletterTemplates NewsletterTemplate[]
 
   @@index([email])
   @@index([authUserId])
@@ -181,6 +213,8 @@ model Client {
   country          String   @default("PL")
   idDocumentNumber String?
   status           String   @default("ACTIVE")
+  marketingConsent Boolean  @default(false)
+  emailValid       Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -189,6 +223,7 @@ model Client {
 
   @@index([email])
   @@index([lastName, firstName])
+  @@index([marketingConsent, emailValid])
 }
 
 model Airline {
@@ -491,4 +526,135 @@ model BlogPost {
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
+}
+
+model NewsletterSubscriber {
+  id                String                     @id @default(cuid())
+  email             String                     @unique
+  firstName         String?
+  lastName          String?
+  status            NewsletterSubscriberStatus @default(PENDING)
+  source            String?
+  tags              String[]                   @default([])
+  subscribedAt      DateTime?
+  unsubscribedAt    DateTime?
+  unsubscribeReason String?
+  lastOpenAt        DateTime?
+  openCount         Int                        @default(0)
+  preferences       Json                       @default("{}")
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model NewsletterSegment {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?  @db.Text
+  rules            Json     @default("[]")
+  rootOperator     String   @default("AND")
+  isDynamic        Boolean  @default(true)
+  isSystem         Boolean  @default(false)
+  recipientCount   Int?
+  lastCalculatedAt DateTime?
+  createdById      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  createdBy User                 @relation(fields: [createdById], references: [id])
+  campaigns NewsletterCampaign[]
+
+  @@index([createdById])
+  @@index([isSystem])
+}
+
+model NewsletterTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?  @db.Text
+  thumbnailUrl String?
+  contentHtml  String   @db.Text
+  isSystem     Boolean  @default(false)
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdBy User?                @relation(fields: [createdById], references: [id])
+  campaigns NewsletterCampaign[]
+
+  @@index([isSystem])
+}
+
+model NewsletterCampaign {
+  id             String                   @id @default(cuid())
+  name           String
+  status         NewsletterCampaignStatus @default(DRAFT)
+  subject        String
+  previewText    String?
+  fromName       String?
+  fromEmail      String?
+  replyTo        String?
+  segmentId      String?
+  recipientIds   String[]                 @default([])
+  recipientCount Int                      @default(0)
+  contentHtml    String?                  @db.Text
+  contentText    String?                  @db.Text
+  templateId     String?
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  createdById    String
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  createdBy User                @relation(fields: [createdById], references: [id])
+  segment   NewsletterSegment?  @relation(fields: [segmentId], references: [id])
+  template  NewsletterTemplate? @relation(fields: [templateId], references: [id])
+  emailLogs NewsletterEmailLog[]
+  linkClicks NewsletterLinkClick[]
+
+  @@index([status])
+  @@index([segmentId])
+  @@index([createdById])
+  @@index([scheduledAt])
+}
+
+model NewsletterEmailLog {
+  id             String                @id @default(cuid())
+  campaignId     String
+  recipientEmail String
+  recipientName  String?
+  status         NewsletterEmailStatus
+  messageId      String?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  bouncedAt      DateTime?
+  bounceType     String?
+  errorMessage   String?               @db.Text
+  sentAt         DateTime?
+  createdAt      DateTime              @default(now())
+
+  campaign NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([recipientEmail])
+  @@index([status])
+}
+
+model NewsletterLinkClick {
+  id             String   @id @default(cuid())
+  campaignId     String
+  recipientEmail String
+  originalUrl    String   @db.Text
+  trackingUrl    String
+  clickedAt      DateTime @default(now())
+  userAgent      String?  @db.Text
+  ipAddress      String?
+
+  campaign NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([recipientEmail])
 }

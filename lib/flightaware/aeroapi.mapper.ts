@@ -32,7 +32,12 @@ function parseDate(value: string | null | undefined) {
 }
 
 function getAirportCode(airport: FlightAwareAirport | null | undefined) {
-  const code = airport?.code_iata ?? airport?.iata ?? airport?.code ?? null;
+  const code =
+    airport?.code_iata ??
+    airport?.iata ??
+    airport?.code ??
+    airport?.code_icao ??
+    null;
   return code?.trim().toUpperCase() || null;
 }
 
@@ -109,8 +114,9 @@ function mapFlightStatus(record: FlightAwareFlightRecord): FlightStatus {
   }
 
   if (
-    status.includes("land") ||
     status.includes("arriv") ||
+    status.includes("gate arrival") ||
+    status.includes("taxiing") ||
     status.includes("complete")
   ) {
     return FlightStatus.LANDED;
@@ -119,7 +125,8 @@ function mapFlightStatus(record: FlightAwareFlightRecord): FlightStatus {
   if (
     status.includes("active") ||
     status.includes("en route") ||
-    status.includes("enroute")
+    status.includes("enroute") ||
+    status.includes("departed")
   ) {
     return FlightStatus.ACTIVE;
   }
@@ -193,6 +200,14 @@ function getDistanceKm(record: FlightAwareFlightRecord) {
   }
 
   if (
+    typeof record.route_distance === "number" &&
+    Number.isFinite(record.route_distance) &&
+    record.route_distance > 0
+  ) {
+    return Math.round(record.route_distance * 1.852);
+  }
+
+  if (
     typeof record.distance_nm === "number" &&
     Number.isFinite(record.distance_nm) &&
     record.distance_nm > 0
@@ -210,6 +225,17 @@ function getDistanceKm(record: FlightAwareFlightRecord) {
       longitude: getAirportCoordinate(record.destination, "longitude"),
     },
   );
+}
+
+function getArrivalDelayMinutes(record: FlightAwareFlightRecord) {
+  if (
+    typeof record.arrival_delay === "number" &&
+    Number.isFinite(record.arrival_delay)
+  ) {
+    return Math.max(0, Math.round(record.arrival_delay));
+  }
+
+  return null;
 }
 
 export function mapFlightAwareResponse(
@@ -249,6 +275,7 @@ export function mapFlightAwareResponse(
   const scheduledArrival = parseDate(bestRecord.scheduled_in);
   const actualArrival = parseDate(bestRecord.actual_in);
   const distanceKm = getDistanceKm(bestRecord);
+  const providerArrivalDelayMinutes = getArrivalDelayMinutes(bestRecord);
 
   return {
     flightNumber,
@@ -268,7 +295,11 @@ export function mapFlightAwareResponse(
     scheduledArrival,
     actualArrival,
     distanceKm,
-    delayMinutes: calculateDelayMinutes(scheduledArrival, actualArrival, null),
+    delayMinutes: calculateDelayMinutes(
+      scheduledArrival,
+      actualArrival,
+      providerArrivalDelayMinutes,
+    ),
     flightStatus: mapFlightStatus(bestRecord),
     dataSource: FLIGHTAWARE_DATA_SOURCE,
     rawResponse: response,

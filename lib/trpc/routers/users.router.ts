@@ -4,7 +4,11 @@ import { z } from "zod";
 
 import { sendEmail } from "@/lib/email";
 import { passwordResetEmailTemplate } from "@/lib/email/templates";
-import { createSupabaseAdminClient, getSiteUrl } from "@/lib/supabase/admin";
+import {
+  createSupabaseAdminClient,
+  getSupabaseAdminConfigurationStatus,
+  getSiteUrl,
+} from "@/lib/supabase/admin";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
 import { protectedProcedure, router } from "@/lib/trpc/trpc";
 
@@ -40,10 +44,22 @@ function getAdminClientOrThrow() {
   const supabaseAdmin = createSupabaseAdminClient();
 
   if (!supabaseAdmin) {
+    const status = getSupabaseAdminConfigurationStatus();
+    const details = [
+      status.missingEnv.length
+        ? `brak: ${status.missingEnv.join(", ")}`
+        : null,
+      status.invalidEnv.length
+        ? `nieprawidłowy format: ${status.invalidEnv.join(", ")}`
+        : null,
+    ].filter(Boolean);
+
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message:
-        "Brak SUPABASE_SERVICE_ROLE_KEY. Nie można wykonać operacji administracyjnej Supabase Auth.",
+        `Brak konfiguracji Supabase Admin (${details.join(
+          "; ",
+        )}). Dodaj lub popraw zmienne w .env.local oraz w Vercel i uruchom aplikację ponownie.`,
     });
   }
 

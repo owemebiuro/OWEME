@@ -1,46 +1,152 @@
 "use client";
 
-import { useState } from "react";
+import type { inferRouterOutputs } from "@trpc/server";
+import { useMemo, useState } from "react";
 
-type BackupEntry = {
-  id: string;
-  name: string;
-  size: string;
-  createdAt: string;
-  status: "completed" | "in_progress" | "failed";
+import { formatDateTime, formatFileSize } from "@/lib/claims/format";
+import { api } from "@/lib/trpc/hooks";
+import type { AppRouter } from "@/lib/trpc/types";
+
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type BackupListOutput = RouterOutputs["backups"]["list"];
+type BackupEntry = BackupListOutput["backups"][number];
+type BackupStorageStatus = BackupListOutput["storage"];
+
+type BackupsPanelProps = {
+  initialBackups: BackupEntry[];
+  initialStorage: BackupStorageStatus;
 };
-
-const MOCK_BACKUPS: BackupEntry[] = [
-  { id: "1", name: "oweme-backup-2026-04-24.sql.gz", size: "12.4 MB", createdAt: "2026-04-24 03:00", status: "completed" },
-  { id: "2", name: "oweme-backup-2026-04-23.sql.gz", size: "12.1 MB", createdAt: "2026-04-23 03:00", status: "completed" },
-  { id: "3", name: "oweme-backup-2026-04-22.sql.gz", size: "11.9 MB", createdAt: "2026-04-22 03:00", status: "completed" },
-  { id: "4", name: "oweme-backup-2026-04-21.sql.gz", size: "11.8 MB", createdAt: "2026-04-21 03:00", status: "completed" },
-  { id: "5", name: "oweme-backup-2026-04-20.sql.gz", size: "11.6 MB", createdAt: "2026-04-20 03:00", status: "completed" },
-];
 
 const STATUS_LABELS = {
   completed: "Zakończona",
-  in_progress: "W toku",
-  failed: "Błąd",
 } as const;
 
 const STATUS_COLORS = {
   completed: "bg-teal-100 text-teal-700",
-  in_progress: "bg-blue-100 text-blue-700",
-  failed: "bg-red-100 text-red-700",
 } as const;
 
-export function BackupsPanel() {
-  const [isRunning, setIsRunning] = useState(false);
+const BACKEND_LABELS = {
+  r2: "R2",
+  "local-dev": "Local dev",
+} as const;
+
+function StorageNotice({ storage }: { storage: BackupStorageStatus }) {
+  if (storage.backend === "r2") {
+    return (
+      <div className="rounded-lg border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+        <p className="font-semibold">Storage aktywny</p>
+        <p className="mt-1">
+          Ręczne kopie zapasowe są zapisywane w Cloudflare R2. Supabase PITR
+          pozostaje dodatkową warstwą odzyskiwania bazy.
+        </p>
+      </div>
+    );
+  }
+
+  if (storage.backend === "local-dev") {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <p className="font-semibold">Tryb developerski</p>
+        <p className="mt-1">
+          Brakuje konfiguracji R2, więc lokalnie kopie będą zapisywane w
+          katalogu `.dev-storage`. Na produkcji uzupełnij zmienne:
+          {" "}
+          {storage.missingEnv.join(", ")}.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <p className="font-semibold">Brak konfiguracji storage</p>
+      <p className="mt-1">
+        Tworzenie ręcznych kopii wymaga konfiguracji R2. Brakuje zmiennych:
+        {" "}
+        {storage.missingEnv.join(", ")}.
+      </p>
+    </div>
+  );
+}
+
+export function BackupsPanel({
+  initialBackups,
+  initialStorage,
+}: BackupsPanelProps) {
+  const utils = api.useUtils();
   const [notice, setNotice] = useState<string | null>(null);
+  const [downloadingBackupId, setDownloadingBackupId] = useState<string | null>(
+    null,
+  );
+
+  const backupsQuery = api.backups.list.useQuery(undefined, {
+    initialData: {
+      backups: initialBackups,
+      storage: initialStorage,
+    },
+  });
+  const createBackup = api.backups.create.useMutation({
+    onSuccess: async (result) => {
+      setNotice(`Kopia ${result.backup.name} została utworzona.`);
+      utils.backups.list.setData(undefined, (current) => ({
+        backups: [
+          result.backup,
+          ...(current?.backups.filter(
+            (backup) => backup.id !== result.backup.id,
+          ) ?? []),
+        ],
+        storage: result.storage,
+      }));
+      await utils.backups.list.invalidate();
+    },
+  });
+  const getDownloadUrl = api.backups.getDownloadUrl.useMutation();
+
+  const data = backupsQuery.data ?? {
+    backups: initialBackups,
+    storage: initialStorage,
+  };
+  const backups = data.backups;
+  const storage = data.storage;
+  const latestBackup = backups[0];
+  const errorMessage =
+    backupsQuery.error?.message ??
+    createBackup.error?.message ??
+    getDownloadUrl.error?.message;
+
+  const summaryItems = useMemo(
+    () => [
+      {
+        label: "Ostatnia kopia",
+        value: latestBackup ? formatDateTime(latestBackup.createdAt) : "Brak kopii",
+      },
+      {
+        label: "Storage",
+        value: storage.label,
+      },
+      {
+        label: "Format",
+        value: "JSON.gz",
+      },
+    ],
+    [latestBackup, storage.label],
+  );
 
   function handleManualBackup() {
-    setIsRunning(true);
     setNotice(null);
-    setTimeout(() => {
-      setIsRunning(false);
-      setNotice("Kopia zapasowa została zlecona. Pojawi się na liście po zakończeniu (zwykle do 5 minut).");
-    }, 2000);
+    createBackup.mutate();
+  }
+
+  async function downloadBackup(backupId: string) {
+    setNotice(null);
+    setDownloadingBackupId(backupId);
+
+    try {
+      const result = await getDownloadUrl.mutateAsync({ backupId });
+      window.open(result.downloadUrl, "_blank", "noopener,noreferrer");
+    } finally {
+      setDownloadingBackupId(null);
+    }
   }
 
   return (
@@ -52,87 +158,128 @@ export function BackupsPanel() {
             Kopie zapasowe
           </h1>
           <p className="mt-2 text-sm leading-6 text-neutral-600">
-            Automatyczne kopie bazy danych. Tworzone codziennie o 03:00 UTC.
+            Ręczne eksporty danych CRM z możliwością pobrania pliku.
           </p>
         </div>
         <button
           type="button"
           onClick={handleManualBackup}
-          disabled={isRunning}
-          className="inline-flex h-10 items-center justify-center rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
+          disabled={createBackup.isPending || !storage.canCreate}
+          title={
+            storage.canCreate
+              ? undefined
+              : "Skonfiguruj R2, aby tworzyć kopie zapasowe."
+          }
+          className="inline-flex h-10 items-center justify-center rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isRunning ? "Trwa tworzenie..." : "Utwórz teraz"}
+          {createBackup.isPending ? "Trwa tworzenie..." : "Utwórz teraz"}
         </button>
       </header>
 
-      {notice && (
+      {notice ? (
         <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-800">
           {notice}
         </div>
-      )}
+      ) : null}
+
+      {errorMessage ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {errorMessage}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {[
-          { label: "Ostatnia kopia", value: "Dzisiaj 03:00" },
-          { label: "Przechowywanie", value: "30 dni" },
-          { label: "Harmonogram", value: "Codziennie 03:00 UTC" },
-        ].map((item) => (
-          <div key={item.label} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">{item.label}</p>
-            <p className="mt-2 text-lg font-semibold text-neutral-950">{item.value}</p>
+        {summaryItems.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              {item.label}
+            </p>
+            <p className="mt-2 text-lg font-semibold text-neutral-950">
+              {item.value}
+            </p>
           </div>
         ))}
       </div>
 
       <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="border-b border-neutral-100 px-5 py-4">
+        <div className="flex flex-col gap-2 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="font-semibold text-neutral-950">Historia kopii</h2>
+          {backupsQuery.isFetching ? (
+            <span className="text-xs font-medium text-neutral-500">
+              Odświeżanie...
+            </span>
+          ) : null}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-4 py-3">Nazwa pliku</th>
                 <th className="px-4 py-3">Rozmiar</th>
                 <th className="px-4 py-3">Data</th>
+                <th className="px-4 py-3">Storage</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Akcje</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {MOCK_BACKUPS.map((backup) => (
-                <tr key={backup.id} className="hover:bg-neutral-50">
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-700">{backup.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">{backup.size}</td>
-                  <td className="px-4 py-3 text-neutral-600">{backup.createdAt}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[backup.status]}`}>
-                      {STATUS_LABELS[backup.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      className="text-sm font-medium text-neutral-600 hover:text-neutral-950"
-                      onClick={() => alert("Pobieranie kopii zapasowej wymaga konfiguracji S3/Storage.")}
-                    >
-                      Pobierz
-                    </button>
+              {backups.length ? (
+                backups.map((backup) => (
+                  <tr key={backup.id} className="hover:bg-neutral-50">
+                    <td className="px-4 py-3 font-mono text-xs text-neutral-700">
+                      {backup.name}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      {formatFileSize(backup.sizeBytes)}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      {formatDateTime(backup.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      {BACKEND_LABELS[backup.backend]}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[backup.status]}`}
+                      >
+                        {STATUS_LABELS[backup.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-neutral-600 hover:text-neutral-950 disabled:cursor-wait disabled:opacity-50"
+                        disabled={downloadingBackupId === backup.id}
+                        onClick={() => void downloadBackup(backup.id)}
+                      >
+                        {downloadingBackupId === backup.id
+                          ? "Przygotowuję..."
+                          : "Pobierz"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-14 text-center">
+                    <p className="text-base font-semibold text-neutral-950">
+                      Brak ręcznych kopii
+                    </p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      Utwórz pierwszą kopię zapasową, aby pojawiła się w historii.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        <p className="font-semibold">Informacja</p>
-        <p className="mt-1">
-          Kopie zapasowe są przechowywane w Supabase Point-in-Time Recovery (PITR).
-          Pełna integracja z pobraniem pliku wymaga konfiguracji storage S3.
-        </p>
-      </div>
+      <StorageNotice storage={storage} />
     </div>
   );
 }

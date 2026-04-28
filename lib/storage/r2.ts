@@ -1,9 +1,11 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import path from "node:path";
 
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -26,6 +28,16 @@ type UploadObjectInput = {
   body: Buffer | Uint8Array;
   contentType: string;
   allowDevelopmentLocalFallback?: boolean;
+};
+
+type ListObjectsOptions = {
+  allowDevelopmentLocalFallback?: boolean;
+};
+
+export type StorageObject = {
+  storageKey: string;
+  sizeBytes: number;
+  createdAt: string;
 };
 
 const localStoragePrefix = "local://";
@@ -250,6 +262,69 @@ async function uploadObjectToLocalDevelopmentStorage(
   };
 }
 
+async function listLocalDevelopmentStorageObjects(prefix: string) {
+  const normalizedPrefix = ensureRelativeStoragePath(prefix);
+  const rootPath = getLocalDevelopmentStoragePath(
+    buildLocalStorageKey(normalizedPrefix),
+  );
+  const resolvedRoot = path.resolve(localStorageRoot);
+  const results: StorageObject[] = [];
+
+  async function visit(directoryPath: string) {
+    let entries: Dirent[];
+
+    try {
+      entries = await readdir(directoryPath, { withFileTypes: true });
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return;
+      }
+
+      throw error;
+    }
+
+    for (const entry of entries) {
+      const entryPath = path.join(directoryPath, entry.name);
+
+      if (!path.resolve(entryPath).startsWith(resolvedRoot)) {
+        throw new StorageDownloadError(
+          "Ścieżka local-dev storage wychodzi poza dozwolony katalog.",
+        );
+      }
+
+      if (entry.isDirectory()) {
+        await visit(entryPath);
+        continue;
+      }
+
+      if (!entry.isFile()) {
+        continue;
+      }
+
+      const fileStats = await stat(entryPath);
+      const relativePath = path
+        .relative(localStorageRoot, entryPath)
+        .split(path.sep)
+        .join("/");
+
+      results.push({
+        storageKey: buildLocalStorageKey(relativePath),
+        sizeBytes: fileStats.size,
+        createdAt: fileStats.mtime.toISOString(),
+      });
+    }
+  }
+
+  await visit(rootPath);
+
+  return results;
+}
+
 export function getStorageKey(claimId: string, fileName: string) {
   return `claims/${claimId}/attachments/${Date.now()}-${sanitizeFileName(
     fileName,
@@ -353,6 +428,61 @@ export async function deleteObject(key: string) {
 
     throw new StorageDeleteError(
       "Nie udało się usunąć pliku z Cloudflare R2.",
+      error,
+    );
+  }
+}
+
+export async function listObjects(
+  prefix: string,
+  options: ListObjectsOptions = {},
+): Promise<StorageObject[]> {
+  try {
+    const { client, config } = createR2Client("list objects");
+    const objects: StorageObject[] = [];
+    let continuationToken: string | undefined;
+
+    do {
+      const response = await client.send(
+        new ListObjectsV2Command({
+          Bucket: config.bucketName,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+        }),
+      );
+
+      for (const object of response.Contents ?? []) {
+        if (!object.Key) {
+          continue;
+        }
+
+        objects.push({
+          storageKey: object.Key,
+          sizeBytes: object.Size ?? 0,
+          createdAt:
+            object.LastModified?.toISOString() ?? new Date(0).toISOString(),
+        });
+      }
+
+      continuationToken = response.NextContinuationToken;
+    } while (continuationToken);
+
+    return objects;
+  } catch (error) {
+    if (
+      error instanceof StorageConfigurationError &&
+      options.allowDevelopmentLocalFallback &&
+      canUseDevelopmentLocalFallback()
+    ) {
+      return listLocalDevelopmentStorageObjects(prefix);
+    }
+
+    if (error instanceof StorageConfigurationError) {
+      throw error;
+    }
+
+    throw new StorageDownloadError(
+      "Nie udało się pobrać listy plików ze storage.",
       error,
     );
   }

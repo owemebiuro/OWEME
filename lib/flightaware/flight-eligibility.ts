@@ -112,11 +112,31 @@ export function amountFromCategory(
   return null;
 }
 
+const EC261_AIRPORTS = new Set([
+  "WAW", "KRK", "WRO", "GDN", "KTW", "POZ", "RZE", "BZG", "SZZ", "LCJ",
+  "FRA", "MUC", "BER", "DUS", "HAM", "CGN", "STR", "HAJ", "NUE", "LEJ",
+  "CDG", "ORY", "NCE", "LYS", "MRS", "TLS", "BOD", "NTE", "SXB",
+  "MAD", "BCN", "AGP", "PMI", "LPA", "TFN", "SVQ", "VLC", "ALC", "BIO", "IBZ",
+  "FCO", "MXP", "LIN", "NAP", "VCE", "PSA", "BGY", "CTA", "PMO",
+  "AMS", "RTM", "EIN", "BRU", "CRL", "LGG", "VIE", "GRZ", "INN", "SZG", "LNZ",
+  "ZRH", "GVA", "BSL", "CPH", "ARN", "HEL", "OSL", "GOT", "BGO", "TRD",
+  "ATH", "SKG", "HER", "RHO", "CFU", "KGS", "JTR", "LIS", "OPO", "FAO",
+  "DUB", "ORK", "SNN", "LHR", "LGW", "MAN", "STN", "LTN", "BHX", "EDI", "GLA", "BRS",
+  "PRG", "BUD", "OTP", "CLJ", "SOF", "VAR", "BOJ", "ZAG", "SPU", "DBV", "PUY",
+  "BTS", "LJU", "RIX", "TLL", "VNO", "LCA", "MLA", "LUX",
+]);
+
+function isEc261Airport(code: string | null | undefined) {
+  return Boolean(code && EC261_AIRPORTS.has(code.toUpperCase()));
+}
+
 export function buildEligibilityResult(input: {
   found: boolean;
   distanceKm: number | null;
   delayMinutes: number | null;
   flightStatus: FlightStatus | null;
+  departureAirportCode?: string | null;
+  arrivalAirportCode?: string | null;
   error?: string;
 }): FlightCompensationResult {
   if (!input.found) {
@@ -126,6 +146,34 @@ export function buildEligibilityResult(input: {
       reason:
         input.error ??
         "Nie znaleźliśmy lotu o podanym numerze i dacie. Sprawdź numer lotu albo wybierz ręczne uzupełnienie danych.",
+    };
+  }
+
+  const isEc261Route =
+    isEc261Airport(input.departureAirportCode) ||
+    isEc261Airport(input.arrivalAirportCode);
+
+  if (!isEc261Route) {
+    return {
+      amountEur: null,
+      category: null,
+      reason:
+        "Lot nie wygląda na objęty WE 261/2004, bo żadne z lotnisk nie jest w zakresie EC 261.",
+    };
+  }
+
+  const isCancelled = input.flightStatus === FlightStatus.CANCELLED;
+  const isDelayEligible = (input.delayMinutes ?? 0) >= 180;
+
+  if (!isCancelled && !isDelayEligible) {
+    return {
+      amountEur: null,
+      category: null,
+      reason:
+        input.flightStatus === FlightStatus.SCHEDULED ||
+        input.flightStatus === FlightStatus.ACTIVE
+          ? "Lot nie jest jeszcze zakończony. Sprawdź ponownie po przylocie do gate."
+          : `Opóźnienie przylotu do gate wynosi ${input.delayMinutes ?? 0} min, czyli poniżej progu 180 min.`,
     };
   }
 
@@ -141,7 +189,7 @@ export function buildEligibilityResult(input: {
   }
 
   const qualifier =
-    input.flightStatus === FlightStatus.CANCELLED
+    isCancelled
       ? "Lot jest oznaczony jako odwołany."
       : input.delayMinutes !== null
         ? `Wstępnie wykryte opóźnienie: ${input.delayMinutes} min.`

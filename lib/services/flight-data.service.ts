@@ -189,6 +189,8 @@ function buildLookupResult(input: {
       distanceKm: input.data?.distanceKm ?? null,
       delayMinutes: input.data?.delayMinutes ?? null,
       flightStatus: input.data?.flightStatus ?? null,
+      departureAirportCode: input.data?.departureAirportCode ?? null,
+      arrivalAirportCode: input.data?.arrivalAirportCode ?? null,
       error: input.error,
     }),
     error: input.error,

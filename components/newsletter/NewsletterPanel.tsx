@@ -1,64 +1,136 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
-type Subscriber = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  createdAt: string;
-  claimsCount: number;
+import { api } from "@/lib/trpc/hooks";
+
+type Overview = {
+  stats: {
+    campaigns: number;
+    subscribersTotal: number;
+    subscribersActive: number;
+    crmEligible: number;
+  };
+  campaigns: Array<Record<string, any>>;
+  segments: Array<Record<string, any>>;
+  defaultSegments: Array<Record<string, any>>;
 };
 
 type NewsletterPanelProps = {
-  subscribers: Subscriber[];
+  overview: NonNullable<Overview>;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("pl-PL", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
+const tabs = ["Kampanie", "Subskrybenci", "Segmenty", "Szablony", "Ustawienia"] as const;
+type Tab = (typeof tabs)[number];
 
-function escapeCsv(value: string | number) {
-  const text = String(value);
-  return `"${text.replaceAll('"', '""')}"`;
+const statusLabels: Record<string, string> = {
+  DRAFT: "Robocza",
+  SCHEDULED: "Zaplanowana",
+  SENDING: "Wysyłanie",
+  SENT: "Wysłana",
+  PAUSED: "Wstrzymana",
+  CANCELLED: "Anulowana",
+};
+
+const defaultRules = [
+  {
+    id: "rule-active-subscribers",
+    operator: "AND" as const,
+    group_operator: "AND" as const,
+    conditions: [
+      { field: "newsletter.status", operator: "equals", value: "ACTIVE" },
+    ],
+  },
+];
+
+function formatDate(value: string | Date | null | undefined) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
-function downloadCsv(rows: Subscriber[]) {
-  const headers = ["Imię", "Nazwisko", "Email", "Liczba spraw", "Data rejestracji"];
-  const lines = rows.map((r) =>
-    [r.firstName, r.lastName, r.email, r.claimsCount, r.createdAt.slice(0, 10)]
-      .map(escapeCsv)
-      .join(","),
+function metric(label: string, value: string | number, detail: string) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+      <p className="text-sm font-medium text-neutral-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-neutral-950">{value}</p>
+      <p className="mt-1 text-xs text-neutral-500">{detail}</p>
+    </div>
   );
-  const csv = [headers.map(escapeCsv).join(","), ...lines].join("\r\n");
-  const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `oweme-newsletter-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
-export function NewsletterPanel({ subscribers }: NewsletterPanelProps) {
-  const [search, setSearch] = useState("");
-  const [minClaims, setMinClaims] = useState(0);
+export function NewsletterPanel({ overview }: NewsletterPanelProps) {
+  const utils = api.useUtils();
+  const [activeTab, setActiveTab] = useState<Tab>("Kampanie");
+  const [campaignName, setCampaignName] = useState("");
+  const [campaignSubject, setCampaignSubject] = useState("");
+  const [subscriberEmail, setSubscriberEmail] = useState("");
+  const [segmentName, setSegmentName] = useState("");
+  const [testEmailByCampaign, setTestEmailByCampaign] = useState<Record<string, string>>({});
+  const [message, setMessage] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return subscribers.filter((s) => {
-      if (minClaims > 0 && s.claimsCount < minClaims) return false;
-      if (!q) return true;
-      return (
-        s.firstName.toLowerCase().includes(q) ||
-        s.lastName.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q)
+  const campaigns = api.newsletter.listCampaigns.useQuery();
+  const subscribers = api.newsletter.listSubscribers.useQuery(undefined, {
+    enabled: activeTab === "Subskrybenci",
+  });
+  const segments = api.newsletter.listSegments.useQuery(undefined, {
+    enabled: activeTab === "Segmenty" || activeTab === "Kampanie",
+  });
+  const preview = api.newsletter.previewSegment.useMutation();
+  const createCampaign = api.newsletter.createCampaign.useMutation({
+    onSuccess: async () => {
+      setCampaignName("");
+      setCampaignSubject("");
+      setMessage("Kampania robocza została utworzona.");
+      await utils.newsletter.listCampaigns.invalidate();
+    },
+  });
+  const createSubscriber = api.newsletter.createSubscriber.useMutation({
+    onSuccess: async () => {
+      setSubscriberEmail("");
+      setMessage("Subskrybent został zapisany.");
+      await utils.newsletter.listSubscribers.invalidate();
+    },
+  });
+  const createSegment = api.newsletter.createSegment.useMutation({
+    onSuccess: async () => {
+      setSegmentName("");
+      setMessage("Segment został zapisany.");
+      await utils.newsletter.listSegments.invalidate();
+    },
+  });
+  const sendTest = api.newsletter.sendTest.useMutation({
+    onSuccess: (result) => {
+      setMessage(
+        result.sent
+          ? "Email testowy został wysłany."
+          : "Test zapisany, ale Resend nie wysłał wiadomości. Sprawdź RESEND_API_KEY.",
       );
+    },
+  });
+
+  const segmentData = segments.data as
+    | { dbSegments: Array<Record<string, any>>; defaultSegments: Array<Record<string, any>> }
+    | undefined;
+  const allSegments = [
+    ...(segmentData?.dbSegments ?? overview.segments),
+    ...(segmentData?.defaultSegments ?? overview.defaultSegments),
+  ];
+  const subscriberRows = (subscribers.data ?? []) as Array<Record<string, any>>;
+  const campaignRows = (campaigns.data ?? overview.campaigns) as Array<Record<string, any>>;
+
+  async function handlePreviewDefault() {
+    const result = await preview.mutateAsync({
+      rules: defaultRules,
+      rootOperator: "AND",
     });
-  }, [subscribers, search, minClaims]);
+    setMessage(`Podgląd segmentu: ${result.count} odbiorców.`);
+  }
 
   return (
     <div className="space-y-5">
@@ -68,90 +140,325 @@ export function NewsletterPanel({ subscribers }: NewsletterPanelProps) {
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
             Newsletter
           </h1>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">
-            Lista klientów z adresami email — eksport do kampanii mailingowych.
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
+            Kampanie, segmenty i subskrybenci z wymuszoną zgodą marketingową dla klientów CRM.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-600">
-            <span className="font-semibold text-neutral-950">{filtered.length}</span>
-            kontaktów
-          </div>
-          <button
-            type="button"
-            onClick={() => downloadCsv(filtered)}
-            disabled={!filtered.length}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
-          >
-            Eksport CSV
-          </button>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Wysyłka masowa jest przygotowana jako workflow. Ten etap obsługuje drafty,
+          segmenty, testy Resend i listy odbiorców.
         </div>
       </header>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Szukaj po imieniu, nazwisku lub emailu..."
-          className="flex-1 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950"
-        />
-        <div className="flex items-center gap-2">
-          <label className="whitespace-nowrap text-sm text-neutral-600">Min. spraw:</label>
-          <select
-            value={minClaims}
-            onChange={(e) => setMinClaims(Number(e.target.value))}
-            className="rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950"
-          >
-            <option value={0}>Wszyscy</option>
-            <option value={1}>≥ 1 sprawa</option>
-            <option value={2}>≥ 2 sprawy</option>
-            <option value={3}>≥ 3 sprawy</option>
-          </select>
-        </div>
-      </div>
+      <section className="grid gap-3 md:grid-cols-4">
+        {metric("Aktywni subskrybenci", overview.stats.subscribersActive, "newsletter_subscribers")}
+        {metric("Klienci ze zgodą", overview.stats.crmEligible, "marketingConsent + emailValid")}
+        {metric("Kampanie", campaignRows.length, "robocze i zaplanowane")}
+        {metric("Segmenty", allSegments.length, "systemowe i własne")}
+      </section>
 
-      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-            <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">Imię i nazwisko</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3 text-center">Sprawy</th>
-                <th className="px-4 py-3">Data rejestracji</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {filtered.length ? (
-                filtered.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-neutral-50">
-                    <td className="px-4 py-3 font-semibold text-neutral-950">
-                      {sub.firstName} {sub.lastName}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">{sub.email}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100 text-xs font-semibold text-neutral-700">
-                        {sub.claimsCount}
+      <nav className="flex gap-2 overflow-x-auto rounded-lg border border-neutral-200 bg-white p-1 shadow-sm">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`h-10 rounded-md px-4 text-sm font-semibold transition ${
+              activeTab === tab
+                ? "bg-neutral-950 text-white"
+                : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </nav>
+
+      {message ? (
+        <p className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+          {message}
+        </p>
+      ) : null}
+
+      {activeTab === "Kampanie" ? (
+        <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
+          <form
+            className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+            onSubmit={(event) => {
+              event.preventDefault();
+              createCampaign.mutate({
+                name: campaignName,
+                subject: campaignSubject,
+                previewText: "Wiadomość przygotowana w OWEME CRM.",
+                contentHtml:
+                  "<h1>Newsletter OWEME</h1><p>Szanowny Kliencie, przygotowaliśmy aktualizację prawną.</p>",
+              });
+            }}
+          >
+            <h2 className="text-base font-semibold text-neutral-950">Nowa kampania</h2>
+            <label className="mt-4 block text-sm font-medium text-neutral-700">
+              Nazwa wewnętrzna
+              <input
+                value={campaignName}
+                onChange={(event) => setCampaignName(event.target.value)}
+                className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-950"
+                required
+              />
+            </label>
+            <label className="mt-3 block text-sm font-medium text-neutral-700">
+              Temat wiadomości
+              <input
+                value={campaignSubject}
+                onChange={(event) => setCampaignSubject(event.target.value)}
+                className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-950"
+                required
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={createCampaign.isPending}
+              className="mt-4 h-10 w-full rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            >
+              Utwórz draft
+            </button>
+          </form>
+
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+            <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+              <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <tr>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Kampania</th>
+                  <th className="px-4 py-3">Odbiorcy</th>
+                  <th className="px-4 py-3">Aktualizacja</th>
+                  <th className="px-4 py-3">Test</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {campaignRows.map((campaign) => (
+                  <tr key={campaign.id} className="align-top hover:bg-neutral-50">
+                    <td className="px-4 py-3">
+                      <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-700">
+                        {statusLabels[campaign.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-neutral-500">
-                      {dateFormatter.format(new Date(sub.createdAt))}
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-neutral-950">{campaign.name}</p>
+                      <p className="mt-1 text-xs text-neutral-500">{campaign.subject}</p>
+                    </td>
+                    <td className="px-4 py-3 font-semibold">{campaign.recipientCount}</td>
+                    <td className="px-4 py-3 text-neutral-500">{formatDate(campaign.updatedAt)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex min-w-72 gap-2">
+                        <input
+                          type="email"
+                          value={testEmailByCampaign[campaign.id] ?? ""}
+                          onChange={(event) =>
+                            setTestEmailByCampaign((current) => ({
+                              ...current,
+                              [campaign.id]: event.target.value,
+                            }))
+                          }
+                          placeholder="test@email.pl"
+                          className="h-9 flex-1 rounded-md border border-neutral-200 px-2 text-xs outline-none focus:border-neutral-950"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            sendTest.mutate({
+                              id: campaign.id,
+                              email: testEmailByCampaign[campaign.id] ?? "",
+                            })
+                          }
+                          className="h-9 rounded-md border border-neutral-200 px-3 text-xs font-semibold text-neutral-700 hover:border-neutral-400"
+                        >
+                          Wyślij
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "Subskrybenci" ? (
+        <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
+          <form
+            className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+            onSubmit={(event) => {
+              event.preventDefault();
+              createSubscriber.mutate({
+                email: subscriberEmail,
+                source: "manual",
+                tags: ["manual"],
+                status: "ACTIVE",
+              });
+            }}
+          >
+            <h2 className="text-base font-semibold text-neutral-950">Dodaj subskrybenta</h2>
+            <label className="mt-4 block text-sm font-medium text-neutral-700">
+              Email
+              <input
+                type="email"
+                value={subscriberEmail}
+                onChange={(event) => setSubscriberEmail(event.target.value)}
+                className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-950"
+                required
+              />
+            </label>
+            <p className="mt-3 text-xs leading-5 text-neutral-500">
+              Dodanie ręczne zakłada potwierdzoną zgodę marketingową. Rekordy wypisane,
+              bounced i complained są bezwzględnie wykluczane z wysyłek.
+            </p>
+            <button
+              type="submit"
+              disabled={createSubscriber.isPending}
+              className="mt-4 h-10 w-full rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            >
+              Zapisz
+            </button>
+          </form>
+
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+            <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+              <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 <tr>
-                  <td colSpan={4} className="px-4 py-14 text-center">
-                    <p className="text-base font-semibold text-neutral-950">Brak wyników</p>
-                    <p className="mt-1 text-sm text-neutral-500">Zmień filtry lub wyszukiwanie.</p>
-                  </td>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Źródło</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Data zapisu</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {subscriberRows.map((subscriber) => (
+                  <tr key={subscriber.id} className="hover:bg-neutral-50">
+                    <td className="px-4 py-3 font-semibold text-neutral-950">{subscriber.email}</td>
+                    <td className="px-4 py-3 text-neutral-600">{subscriber.source ?? "-"}</td>
+                    <td className="px-4 py-3">{subscriber.status}</td>
+                    <td className="px-4 py-3 text-neutral-500">{formatDate(subscriber.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "Segmenty" ? (
+        <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
+          <form
+            className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+            onSubmit={(event) => {
+              event.preventDefault();
+              createSegment.mutate({
+                name: segmentName,
+                description: "Aktywni subskrybenci newslettera.",
+                rules: defaultRules,
+                rootOperator: "AND",
+                isDynamic: true,
+              });
+            }}
+          >
+            <h2 className="text-base font-semibold text-neutral-950">Segment startowy</h2>
+            <label className="mt-4 block text-sm font-medium text-neutral-700">
+              Nazwa segmentu
+              <input
+                value={segmentName}
+                onChange={(event) => setSegmentName(event.target.value)}
+                className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-950"
+                required
+              />
+            </label>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={handlePreviewDefault}
+                className="h-10 flex-1 rounded-md border border-neutral-200 px-3 text-sm font-semibold text-neutral-700 hover:border-neutral-400"
+              >
+                Oblicz
+              </button>
+              <button
+                type="submit"
+                disabled={createSegment.isPending}
+                className="h-10 flex-1 rounded-md bg-neutral-950 px-3 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-50"
+              >
+                Zapisz
+              </button>
+            </div>
+          </form>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {allSegments.map((segment) => (
+              <article
+                key={"key" in segment ? segment.key : segment.id}
+                className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-neutral-950">{segment.name}</h3>
+                    <p className="mt-1 text-sm leading-5 text-neutral-600">
+                      {segment.description}
+                    </p>
+                  </div>
+                  <span className="rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
+                    {"isDynamic" in segment && !segment.isDynamic ? "Statyczny" : "Dynamiczny"}
+                  </span>
+                </div>
+                {"recipientCount" in segment ? (
+                  <p className="mt-3 text-sm font-semibold text-neutral-950">
+                    {segment.recipientCount ?? "-"} odbiorców
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "Szablony" ? (
+        <section className="grid gap-3 md:grid-cols-3">
+          {[
+            "Aktualizacja prawna",
+            "Aktualizacja sprawy",
+            "Newsletter miesięczny",
+            "Przypomnienie o terminie",
+            "Reaktywacja nieaktywnych",
+            "Pusty szablon",
+          ].map((template) => (
+            <article key={template} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <div className="aspect-[4/3] rounded-md border border-neutral-200 bg-neutral-50" />
+              <h3 className="mt-3 font-semibold text-neutral-950">{template}</h3>
+              <p className="mt-1 text-sm text-neutral-500">Wbudowany układ email z obowiązkową stopką.</p>
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      {activeTab === "Ustawienia" ? (
+        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-neutral-950">Ustawienia newslettera</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <label className="block text-sm font-medium text-neutral-700">
+              Nazwa nadawcy
+              <input className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3" defaultValue="Kancelaria OWEME" />
+            </label>
+            <label className="block text-sm font-medium text-neutral-700">
+              Email nadawcy
+              <input className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3" defaultValue="newsletter@oweme.pl" />
+            </label>
+            <label className="block text-sm font-medium text-neutral-700">
+              Reply-To
+              <input className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3" defaultValue="kontakt@oweme.pl" />
+            </label>
+          </div>
+          <p className="mt-4 rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+            Produkcyjna wysyłka wymaga `RESEND_API_KEY` i zweryfikowanego `RESEND_FROM_EMAIL`.
+          </p>
+        </section>
+      ) : null}
     </div>
   );
 }

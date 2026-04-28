@@ -35,6 +35,8 @@ yarn-error.log*
 !.env.example
 
 # local agent worktrees
+.claude/
+.dev-storage/
 .claude/worktrees/
 
 # vercel

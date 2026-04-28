@@ -1,5 +1,6 @@
 import { analyticsRouter } from "@/lib/trpc/routers/analytics.router";
 import { attachmentsRouter } from "@/lib/trpc/routers/attachments.router";
+import { backupsRouter } from "@/lib/trpc/routers/backups.router";
 import { blogRouter } from "@/lib/trpc/routers/blog.router";
 import { claimsRouter } from "@/lib/trpc/routers/claims.router";
 import { clientsRouter } from "@/lib/trpc/routers/clients.router";
@@ -7,6 +8,7 @@ import { dashboardRouter } from "@/lib/trpc/routers/dashboard.router";
 import { documentsRouter } from "@/lib/trpc/routers/documents.router";
 import { flightsRouter } from "@/lib/trpc/routers/flights.router";
 import { notesRouter } from "@/lib/trpc/routers/notes.router";
+import { newsletterRouter } from "@/lib/trpc/routers/newsletter.router";
 import { reportsRouter } from "@/lib/trpc/routers/reports.router";
 import { searchRouter } from "@/lib/trpc/routers/search.router";
 import { tasksRouter } from "@/lib/trpc/routers/tasks.router";
@@ -16,6 +18,7 @@ import { router } from "@/lib/trpc/trpc";
 export const appRouter = router({
   analytics: analyticsRouter,
   attachments: attachmentsRouter,
+  backups: backupsRouter,
   blog: blogRouter,
   claims: claimsRouter,
   clients: clientsRouter,
@@ -27,6 +30,7 @@ export const appRouter = router({
   search: searchRouter,
   tasks: tasksRouter,
   notes: notesRouter,
+  newsletter: newsletterRouter,
 });
 
 export type AppRouter = typeof appRouter;

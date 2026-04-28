@@ -3,10 +3,43 @@ import { createClient } from "@supabase/supabase-js";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import type { Database } from "@/types/supabase";
 
+function isValidAdminKeyFormat(value: string) {
+  if (value.startsWith("sb_secret_")) {
+    return true;
+  }
+
+  if (!value.startsWith("eyJ")) {
+    return false;
+  }
+
+  return value.split(".").length === 3;
+}
+
+export function getSupabaseAdminConfigurationStatus() {
+  const missingEnv: string[] = [];
+  const invalidEnv: string[] = [];
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    missingEnv.push("SUPABASE_SERVICE_ROLE_KEY");
+  } else if (!isValidAdminKeyFormat(process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+    invalidEnv.push("SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  return {
+    configured: missingEnv.length === 0 && invalidEnv.length === 0,
+    missingEnv,
+    invalidEnv,
+  };
+}
+
 export function createSupabaseAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!serviceRoleKey) {
+    return null;
+  }
+
+  if (!isValidAdminKeyFormat(serviceRoleKey)) {
     return null;
   }
 

@@ -9,6 +9,11 @@ import { api } from "@/lib/trpc/hooks";
 
 type UsersTableProps = {
   currentUserId: string;
+  supabaseAdminStatus: {
+    configured: boolean;
+    missingEnv: string[];
+    invalidEnv: string[];
+  };
 };
 
 const userRoles = [
@@ -36,7 +41,10 @@ function formatDateTime(value: string | Date | null) {
   return dateTimeFormatter.format(new Date(value));
 }
 
-export function UsersTable({ currentUserId }: UsersTableProps) {
+export function UsersTable({
+  currentUserId,
+  supabaseAdminStatus,
+}: UsersTableProps) {
   const utils = api.useUtils();
   const users = api.users.list.useQuery();
   const createUser = api.users.create.useMutation({
@@ -83,11 +91,37 @@ export function UsersTable({ currentUserId }: UsersTableProps) {
         <button
           type="button"
           onClick={() => setCreateModalOpen(true)}
-          className="h-11 rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          disabled={!supabaseAdminStatus.configured}
+          title={
+            supabaseAdminStatus.configured
+              ? undefined
+              : "Sprawdź SUPABASE_SERVICE_ROLE_KEY, aby zapraszać użytkowników."
+          }
+          className="h-11 rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Dodaj użytkownika
         </button>
       </header>
+
+      {!supabaseAdminStatus.configured ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <p className="font-semibold">Supabase Admin nie jest skonfigurowany</p>
+          {supabaseAdminStatus.missingEnv.length ? (
+            <p className="mt-1">
+              Tworzenie kont i resetowanie haseł wymaga zmiennej:
+              {" "}
+              {supabaseAdminStatus.missingEnv.join(", ")}. Dodaj ją w `.env.local`
+              oraz w Vercel, a potem uruchom aplikację ponownie.
+            </p>
+          ) : null}
+          {supabaseAdminStatus.invalidEnv.length ? (
+            <p className="mt-1">
+              Zmienna {supabaseAdminStatus.invalidEnv.join(", ")} ma nieprawidłowy format.
+              Użyj klucza `sb_secret_...` albo pełnego `service_role` JWT z trzema segmentami.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {message ? (
         <p className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
@@ -195,7 +229,8 @@ export function UsersTable({ currentUserId }: UsersTableProps) {
                               <button
                                 type="button"
                                 onClick={() => handleResetPassword(user.id)}
-                                className="block w-full rounded-md border border-neutral-200 px-3 py-2 text-left text-sm font-semibold text-neutral-700 transition hover:border-neutral-400"
+                                disabled={!supabaseAdminStatus.configured}
+                                className="block w-full rounded-md border border-neutral-200 px-3 py-2 text-left text-sm font-semibold text-neutral-700 transition hover:border-neutral-400 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 Resetuj hasło
                               </button>

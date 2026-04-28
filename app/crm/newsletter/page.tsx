@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ComponentProps } from "react";
 
 import { NewsletterPanel } from "@/components/newsletter/NewsletterPanel";
 import { requireAuth } from "@/lib/auth-helpers";
@@ -16,7 +17,7 @@ export default async function NewsletterPage() {
     return null;
   }
 
-  if (!hasRolePermission(currentUser.appUser.role, PERMISSIONS.BLOG_MANAGE)) {
+  if (!hasRolePermission(currentUser.appUser.role, PERMISSIONS.NEWSLETTER_MANAGE)) {
     return (
       <main className="min-h-screen bg-neutral-50 px-4 py-6 text-neutral-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-6">
@@ -30,12 +31,14 @@ export default async function NewsletterPage() {
   }
 
   const trpc = await createTRPCCaller();
-  const subscribers = await trpc.clients.listForNewsletter();
+  const overview = JSON.parse(
+    JSON.stringify(await trpc.newsletter.overview()),
+  ) as ComponentProps<typeof NewsletterPanel>["overview"];
 
   return (
     <main className="min-h-screen bg-neutral-50 px-4 py-6 text-neutral-950 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
-        <NewsletterPanel subscribers={subscribers} />
+        <NewsletterPanel overview={overview} />
       </div>
     </main>
   );
