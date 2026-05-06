@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { BlogPostStatus } from "@prisma/client";
 import Link from "next/link";
 
 import { DeleteBlogPostButton } from "@/components/blog/DeleteBlogPostButton";
@@ -26,7 +25,7 @@ type BlogListPost = {
   id: string;
   title: string;
   category: string;
-  status: BlogPostStatus;
+  status: keyof typeof STATUS_LABELS;
   publishedAt: Date | null;
   updatedAt: Date;
 };
