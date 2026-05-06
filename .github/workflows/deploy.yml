@@ -51,8 +51,8 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Apply Prisma migrations
-        run: npx prisma migrate deploy
+      - name: Sync Prisma schema
+        run: npx prisma db push --skip-generate
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
