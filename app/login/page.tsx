@@ -5,6 +5,7 @@ import { LoginForm } from "./login-form";
 type LoginPageProps = {
   searchParams: Promise<{
     next?: string | string[] | undefined;
+    reason?: string | string[] | undefined;
   }>;
 };
 
@@ -23,9 +24,32 @@ function getSafeRedirectPath(value: string | string[] | undefined) {
   return nextPath;
 }
 
+function getLoginNotice(value: string | string[] | undefined) {
+  const reason = Array.isArray(value) ? value[0] : value;
+
+  if (reason === "inactive-user") {
+    return {
+      title: "Dostep do CRM jest wstrzymany",
+      description:
+        "Twoje konto aplikacyjne OWEME jest nieaktywne. Skontaktuj sie z administratorem, aby przywrocic dostep.",
+    };
+  }
+
+  if (reason === "app-user-required") {
+    return {
+      title: "Brak aktywnego konta OWEME",
+      description:
+        "Sesja Supabase jest aktywna, ale nie znaleziono aktywnego uzytkownika aplikacyjnego CRM dla tego adresu email.",
+    };
+  }
+
+  return null;
+}
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const redirectTo = getSafeRedirectPath(params.next);
+  const notice = getLoginNotice(params.reason);
 
   return (
     <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
@@ -56,6 +80,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
 
             <LoginForm redirectTo={redirectTo} />
+
+            {notice ? (
+              <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <p className="font-semibold">{notice.title}</p>
+                <p className="mt-1 leading-6">{notice.description}</p>
+              </div>
+            ) : null}
           </section>
         </div>
       </div>

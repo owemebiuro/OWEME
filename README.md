@@ -95,3 +95,8 @@ Authenticated E2E scenarios require:
 Production setup is documented in [docs/deployment.md](docs/deployment.md).
 
 For Vercel, keep the root directory set to the repository root and use the standard Next.js framework preset. Do not set root directory to `apps/web`.
+
+## Project Planning
+
+- Current project structure: [docs/project-structure.md](docs/project-structure.md)
+- Development roadmap: [docs/development-roadmap.md](docs/development-roadmap.md)

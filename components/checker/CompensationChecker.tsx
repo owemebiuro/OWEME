@@ -71,6 +71,7 @@ function buildFormUrl(input: {
   const manualMode = !input.result?.found || !input.result.flight?.id;
 
   params.set("passengers", String(input.passengers));
+  params.set("source", "checker");
 
   if (!manualMode && input.result?.flight?.id) {
     params.set("flightId", input.result.flight.id);

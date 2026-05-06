@@ -16,6 +16,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1035.0",
     "@aws-sdk/s3-request-presigner": "^3.1035.0",
+    "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.19.3",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.0",
@@ -24,15 +25,22 @@
     "@trpc/react-query": "^11.16.0",
     "@trpc/server": "^11.16.0",
     "@vercel/analytics": "^2.0.1",
+    "axios": "^1.16.0",
+    "clsx": "^2.1.1",
     "docxtemplater": "^3.68.5",
+    "framer-motion": "^12.38.0",
     "inngest": "^4.2.4",
+    "jsqr": "^1.4.0",
     "next": "16.2.4",
     "pizzip": "^3.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hook-form": "^7.75.0",
     "recharts": "^3.8.1",
     "resend": "^6.12.2",
-    "zod": "^4.3.6"
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

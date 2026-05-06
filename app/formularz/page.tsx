@@ -49,6 +49,10 @@ function parseDelay(value: string | undefined) {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : null;
 }
 
+function parseSource(value: string | undefined) {
+  return value === "checker" ? "CHECKER_FORM" : "WEBSITE_FORM";
+}
+
 async function getInitialData(
   params: Awaited<ApplicationSearchParams>,
 ): Promise<ApplicationInitialData> {
@@ -90,6 +94,7 @@ async function getInitialData(
       "",
     delayMinutes: flightFromDb?.delayMinutes ?? parseDelay(readParam(params, "delayMinutes")),
     passengers: parsePassengers(readParam(params, "passengers")),
+    source: parseSource(readParam(params, "source")),
   };
 }
 

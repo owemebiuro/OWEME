@@ -1,0 +1,132 @@
+.footer {
+  background: var(--ink2);
+  padding: 64px 28px 32px;
+}
+
+.inner {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.top {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 44px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid color-mix(in srgb, var(--white) 9%, transparent);
+}
+
+.brand {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.logo {
+  color: var(--white);
+  font-family: var(--font-outfit);
+  font-size: 24px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.tagline {
+  max-width: 330px;
+  margin: 0;
+  color: color-mix(in srgb, var(--parchment) 58%, transparent);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.email {
+  color: var(--ember);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.email:hover {
+  color: var(--ember-hi);
+}
+
+.col {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.colTitle {
+  color: color-mix(in srgb, var(--parchment) 42%, transparent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.colLinks {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.colLink {
+  color: color-mix(in srgb, var(--parchment) 66%, transparent);
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.colLink:hover {
+  color: var(--white);
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.copy,
+.legal {
+  margin: 0;
+  color: color-mix(in srgb, var(--parchment) 34%, transparent);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.legal {
+  max-width: 480px;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .top {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer {
+    padding: 48px 16px 28px;
+  }
+
+  .top {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom {
+    flex-direction: column;
+  }
+
+  .legal {
+    text-align: left;
+  }
+}

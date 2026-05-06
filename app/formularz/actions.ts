@@ -58,6 +58,9 @@ const publicClaimApplicationSchema = z
   .object({
     flightId: optionalString,
     manual: z.boolean().default(false),
+    source: z
+      .enum([ClaimSource.WEBSITE_FORM, ClaimSource.CHECKER_FORM])
+      .default(ClaimSource.WEBSITE_FORM),
     flightNumber: z
       .string()
       .trim()
@@ -182,6 +185,7 @@ export async function submitPublicClaimApplication(
         },
         select: {
           id: true,
+          marketingConsent: true,
         },
       });
       const client = existingClient
@@ -198,6 +202,9 @@ export async function submitPublicClaimApplication(
               postalCode: data.primaryPassenger.postalCode,
               city: data.primaryPassenger.city,
               country: data.primaryPassenger.country,
+              marketingConsent:
+                existingClient.marketingConsent ||
+                data.consents.marketingAccepted,
             },
             select: {
               id: true,
@@ -213,6 +220,7 @@ export async function submitPublicClaimApplication(
               postalCode: data.primaryPassenger.postalCode,
               city: data.primaryPassenger.city,
               country: data.primaryPassenger.country,
+              marketingConsent: data.consents.marketingAccepted,
             },
             select: {
               id: true,
@@ -247,7 +255,7 @@ export async function submitPublicClaimApplication(
 
       return createClaimWithHistoryInTransaction(tx, {
         type: data.type,
-        source: ClaimSource.WEBSITE_FORM,
+        source: data.source,
         clientId: client.id,
         creatorId: systemUser.id,
         flightId: flight.id,

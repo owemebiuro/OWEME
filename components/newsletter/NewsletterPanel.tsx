@@ -11,14 +11,52 @@ type Overview = {
     subscribersActive: number;
     crmEligible: number;
   };
-  campaigns: Array<Record<string, any>>;
-  segments: Array<Record<string, any>>;
-  defaultSegments: Array<Record<string, any>>;
+  campaigns: NewsletterCampaignRow[];
+  segments: NewsletterSegmentRow[];
+  defaultSegments: DefaultNewsletterSegmentRow[];
 };
 
 type NewsletterPanelProps = {
   overview: NonNullable<Overview>;
 };
+
+type NewsletterCampaignRow = {
+  id: string;
+  name: string;
+  status: string;
+  subject: string;
+  recipientCount: number;
+  updatedAt: string | Date | null;
+};
+
+type NewsletterSubscriberRow = {
+  id: string;
+  email: string;
+  source: string | null;
+  status: string;
+  createdAt: string | Date | null;
+};
+
+type NewsletterSegmentRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  isDynamic: boolean;
+  recipientCount: number | null;
+};
+
+type DefaultNewsletterSegmentRow = {
+  key: string;
+  name: string;
+  description: string;
+};
+
+type NewsletterSegmentListData = {
+  dbSegments: NewsletterSegmentRow[];
+  defaultSegments: DefaultNewsletterSegmentRow[];
+};
+
+type SegmentRow = NewsletterSegmentRow | DefaultNewsletterSegmentRow;
 
 const tabs = ["Kampanie", "Subskrybenci", "Segmenty", "Szablony", "Ustawienia"] as const;
 type Tab = (typeof tabs)[number];
@@ -62,6 +100,10 @@ function metric(label: string, value: string | number, detail: string) {
       <p className="mt-1 text-xs text-neutral-500">{detail}</p>
     </div>
   );
+}
+
+function getSegmentKey(segment: SegmentRow) {
+  return "key" in segment ? segment.key : segment.id;
 }
 
 export function NewsletterPanel({ overview }: NewsletterPanelProps) {
@@ -114,15 +156,13 @@ export function NewsletterPanel({ overview }: NewsletterPanelProps) {
     },
   });
 
-  const segmentData = segments.data as
-    | { dbSegments: Array<Record<string, any>>; defaultSegments: Array<Record<string, any>> }
-    | undefined;
+  const segmentData = segments.data as NewsletterSegmentListData | undefined;
   const allSegments = [
     ...(segmentData?.dbSegments ?? overview.segments),
     ...(segmentData?.defaultSegments ?? overview.defaultSegments),
   ];
-  const subscriberRows = (subscribers.data ?? []) as Array<Record<string, any>>;
-  const campaignRows = (campaigns.data ?? overview.campaigns) as Array<Record<string, any>>;
+  const subscriberRows = (subscribers.data ?? []) as NewsletterSubscriberRow[];
+  const campaignRows = (campaigns.data ?? overview.campaigns) as NewsletterCampaignRow[];
 
   async function handlePreviewDefault() {
     const result = await preview.mutateAsync({
@@ -393,7 +433,7 @@ export function NewsletterPanel({ overview }: NewsletterPanelProps) {
           <div className="grid gap-3 md:grid-cols-2">
             {allSegments.map((segment) => (
               <article
-                key={"key" in segment ? segment.key : segment.id}
+                key={getSegmentKey(segment)}
                 className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">

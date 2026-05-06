@@ -47,7 +47,7 @@ const requireAuthMiddleware = t.middleware(({ ctx, next }) => {
 });
 
 const requireAdminMiddleware = t.middleware(({ ctx, next }) => {
-  if (!ctx.appUser || ctx.appUser.role !== "ADMIN") {
+  if (!ctx.appUser?.isActive || ctx.appUser.role !== "ADMIN") {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Wymagana jest rola ADMIN.",

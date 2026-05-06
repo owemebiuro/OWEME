@@ -10,6 +10,7 @@ import {
 } from "@/app/formularz/actions";
 
 type ClaimTypeValue = "DELAY" | "CANCELLATION" | "DENIED_BOARDING";
+type ClaimSourceValue = "WEBSITE_FORM" | "CHECKER_FORM";
 
 type PassengerDraft = {
   firstName: string;
@@ -34,6 +35,7 @@ export type ApplicationInitialData = {
   arrivalAirportCode: string;
   delayMinutes: number | null;
   passengers: number;
+  source: ClaimSourceValue;
 };
 
 type ApplicationState = {
@@ -44,6 +46,7 @@ type ApplicationState = {
   departureAirportCode: string;
   arrivalAirportCode: string;
   delayMinutes: number | null;
+  source: ClaimSourceValue;
   type: ClaimTypeValue;
   passengersCount: number;
   primaryPassenger: PrimaryPassengerDraft;
@@ -129,6 +132,7 @@ function buildInitialState(initialData: ApplicationInitialData): ApplicationStat
     departureAirportCode: initialData.departureAirportCode,
     arrivalAirportCode: initialData.arrivalAirportCode,
     delayMinutes: initialData.delayMinutes,
+    source: initialData.source,
     type: "DELAY",
     passengersCount,
     primaryPassenger: {
@@ -293,6 +297,7 @@ export function ApplicationForm({
       departureAirportCode: normalizeAirportCode(form.departureAirportCode),
       arrivalAirportCode: normalizeAirportCode(form.arrivalAirportCode),
       delayMinutes: form.delayMinutes,
+      source: form.source,
       type: form.type,
       passengersCount: form.passengersCount,
       primaryPassenger: form.primaryPassenger,

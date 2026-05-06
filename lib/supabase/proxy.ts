@@ -21,13 +21,17 @@ function isAdminPath(pathname: string) {
   );
 }
 
-function createLoginRedirect(request: NextRequest) {
+function createLoginRedirect(request: NextRequest, reason?: string) {
   const redirectUrl = request.nextUrl.clone();
   const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
 
   redirectUrl.pathname = "/login";
   redirectUrl.search = "";
   redirectUrl.searchParams.set("next", nextPath);
+
+  if (reason) {
+    redirectUrl.searchParams.set("reason", reason);
+  }
 
   return NextResponse.redirect(redirectUrl);
 }
@@ -36,14 +40,17 @@ function createForbiddenRedirect(request: NextRequest) {
   return NextResponse.redirect(new URL("/crm", request.url));
 }
 
-async function getAppRole(authUserId: string, email: string | undefined) {
+async function getAppAccess(authUserId: string, email: string | undefined) {
   if (!hasPrismaDatabaseUrl()) {
-    return null;
+    return {
+      checked: false,
+      role: null,
+      inactive: false,
+    } as const;
   }
 
   const appUser = await prisma.user.findFirst({
     where: {
-      isActive: true,
       OR: [
         { authUserId },
         ...(email ? [{ email: email.toLowerCase() }] : []),
@@ -51,10 +58,15 @@ async function getAppRole(authUserId: string, email: string | undefined) {
     },
     select: {
       role: true,
+      isActive: true,
     },
   });
 
-  return appUser?.role ?? null;
+  return {
+    checked: true,
+    role: appUser?.isActive ? appUser.role : null,
+    inactive: appUser ? !appUser.isActive : false,
+  } as const;
 }
 
 export async function updateSession(request: NextRequest) {
@@ -96,14 +108,23 @@ export async function updateSession(request: NextRequest) {
       }
     | undefined;
 
-  if (isProtectedPath(request.nextUrl.pathname) && (error || !claims?.sub)) {
+  const protectedPath = isProtectedPath(request.nextUrl.pathname);
+
+  if (protectedPath && (error || !claims?.sub)) {
     return createLoginRedirect(request);
   }
 
-  if (isAdminPath(request.nextUrl.pathname) && claims?.sub) {
-    const role = await getAppRole(claims.sub, claims.email);
+  if (protectedPath && claims?.sub) {
+    const access = await getAppAccess(claims.sub, claims.email);
 
-    if (role !== UserRole.ADMIN) {
+    if (access.checked && !access.role) {
+      return createLoginRedirect(
+        request,
+        access.inactive ? "inactive-user" : "app-user-required",
+      );
+    }
+
+    if (isAdminPath(request.nextUrl.pathname) && access.role !== UserRole.ADMIN) {
       return createForbiddenRedirect(request);
     }
   }
