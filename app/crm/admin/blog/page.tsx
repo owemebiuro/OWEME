@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { BlogPostStatus } from "@prisma/client";
 import Link from "next/link";
 
 import { DeleteBlogPostButton } from "@/components/blog/DeleteBlogPostButton";
@@ -21,11 +22,20 @@ const STATUS_STYLES = {
   PUBLISHED: "bg-green-50 text-green-700",
 } as const;
 
+type BlogListPost = {
+  id: string;
+  title: string;
+  category: string;
+  status: BlogPostStatus;
+  publishedAt: Date | null;
+  updatedAt: Date;
+};
+
 export default async function AdminBlogPage() {
   await requireRole(["ADMIN", "EDITOR"]);
 
   const trpc = await createTRPCCaller();
-  const posts = await trpc.blog.list();
+  const posts = (await trpc.blog.list()) as BlogListPost[];
 
   return (
     <main className="min-h-screen bg-neutral-50 px-4 py-6 text-neutral-950 sm:px-6 lg:px-8">
