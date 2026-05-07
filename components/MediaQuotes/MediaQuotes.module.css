@@ -50,4 +50,20 @@
   .section {
     padding: 64px 16px;
   }
+
+  .card {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+  }
 }

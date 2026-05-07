@@ -123,6 +123,9 @@
 @media (max-width: 1100px) {
   .inner {
     grid-template-columns: 1fr;
+    gap: 44px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .left {
@@ -141,10 +144,45 @@
 
   .rating {
     flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
     border-radius: 14px;
   }
 
   .h1 {
     font-size: 42px;
+  }
+
+  .desc {
+    max-width: 100%;
+  }
+
+  .checks li {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero {
+    padding: 80px 14px 44px;
+  }
+}
+
+@media (max-width: 320px) {
+  .h1 {
+    font-size: 30px;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+    grid-template-columns: 1fr 520px;
+    gap: 80px;
+  }
+
+  .h1 {
+    font-size: 80px;
   }
 }

@@ -469,7 +469,7 @@
 
 @media (max-width: 900px) {
   .card {
-    width: min(100%, 500px);
+    width: 100%;
     flex-direction: column;
   }
 
@@ -480,6 +480,15 @@
     overflow-x: auto;
     border-right: 0;
     border-bottom: 1px solid var(--line);
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar {
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .tab {
@@ -500,15 +509,84 @@
   }
 
   .formArea {
-    padding: 22px 18px 18px;
+    padding: 18px;
   }
 
   .cardTitle {
-    font-size: 24px;
+    font-size: 16px;
+  }
+
+  .tab {
+    padding: 10px 12px;
+  }
+
+  .resultTop {
+    flex-direction: column;
+    gap: 10px;
   }
 
   .resultAmount {
-    font-size: 44px;
+    font-size: 42px;
+  }
+}
+
+@media (max-width: 380px) {
+  .formArea {
+    padding: 14px;
+  }
+
+  .eyebrow,
+  .resultBadge {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .input,
+  .select {
+    height: 42px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .select {
+    background-position:
+      calc(100% - 18px) 18px,
+      calc(100% - 12px) 18px;
+  }
+
+  .submitBtn,
+  .resultCta {
+    height: 46px;
+    padding: 13px;
+    font-size: 14px;
+  }
+
+  .resultAmount {
+    font-size: 36px;
+  }
+
+  .resultFlightNo {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 320px) {
+  .card {
+    border-radius: 10px;
+  }
+
+  .formArea {
+    padding: 12px;
+  }
+
+  .resultAmount {
+    font-size: 32px;
+  }
+
+  .submitBtn,
+  .resultCta {
+    padding: 12px;
+    font-size: 13px;
   }
 }
 

@@ -107,13 +107,58 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 600px) {
-  .section {
-    padding: 68px 16px;
+@media (max-width: 900px) {
+  .actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 320px;
+    margin: 30px auto 0;
   }
 
   .primary,
   .ghost {
     width: 100%;
+    justify-content: center;
+  }
+
+  .checks {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding: 68px 16px;
+  }
+
+  .inner h2 {
+    font-size: clamp(28px, 8vw, 40px);
+  }
+
+  .primary,
+  .ghost {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+}
+
+@media (max-width: 320px) {
+  .inner h2 {
+    font-size: 26px;
+  }
+
+  .primary,
+  .ghost {
+    padding: 12px 20px;
+    font-size: 13px;
   }
 }

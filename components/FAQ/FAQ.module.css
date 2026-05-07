@@ -105,4 +105,29 @@
   .section {
     padding: 64px 16px;
   }
+
+  .question {
+    padding: 14px 0;
+    font-size: 14px;
+  }
+
+  .answer {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+  }
+
+  .header h2 {
+    font-size: 48px;
+  }
 }

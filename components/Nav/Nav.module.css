@@ -161,8 +161,48 @@
   }
 }
 
+@media (max-width: 768px) {
+  .nav {
+    padding: 0 20px;
+  }
+
+  .inner {
+    width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .inner {
     width: min(100% - 28px, 1180px);
+  }
+}
+
+@media (max-width: 380px) {
+  .nav {
+    height: 60px;
+    padding: 0 14px;
+  }
+
+  .inner {
+    width: 100%;
+  }
+
+  .links {
+    inset: 60px 0 0;
+  }
+
+  .logoText {
+    font-size: 18px;
+  }
+
+  .logoMark {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, calc(100% - 40px));
   }
 }

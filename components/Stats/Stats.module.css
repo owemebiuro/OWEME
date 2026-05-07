@@ -53,6 +53,10 @@
 }
 
 @media (max-width: 900px) {
+  .section {
+    padding: 0;
+  }
+
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -78,5 +82,35 @@
 
   .value {
     font-size: 31px;
+  }
+}
+
+@media (max-width: 380px) {
+  .item {
+    padding: 16px 8px;
+  }
+
+  .value {
+    font-size: 24px;
+  }
+
+  .label {
+    font-size: 11px;
+  }
+
+  .note {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 320px) {
+  .value {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .grid {
+    width: min(1320px, 100%);
   }
 }

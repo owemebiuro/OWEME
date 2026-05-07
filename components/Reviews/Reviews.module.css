@@ -164,6 +164,7 @@
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
@@ -172,8 +173,41 @@
     padding: 64px 16px;
   }
 
+  .badges {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
   .ratingBadge {
     width: 100%;
     max-width: 330px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .amount {
+    position: static;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+  }
+
+  .header h2 {
+    font-size: 48px;
   }
 }

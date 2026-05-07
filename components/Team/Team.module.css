@@ -123,3 +123,27 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+
+  .bio {
+    font-size: 12px;
+  }
+
+  .tag2 {
+    font-size: 9px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+  }
+
+  .h2 {
+    font-size: 48px;
+  }
+}

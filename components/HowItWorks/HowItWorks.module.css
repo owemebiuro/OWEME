@@ -115,4 +115,38 @@
   .section {
     padding: 64px 16px;
   }
+
+  .card {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+
+  .num {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .card h3 {
+    font-size: 16px;
+  }
+
+  .card p {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+  }
+
+  .header h2 {
+    font-size: 48px;
+  }
 }

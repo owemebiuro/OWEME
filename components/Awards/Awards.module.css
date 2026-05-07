@@ -72,4 +72,29 @@
   .section {
     padding: 70px 16px;
   }
+
+  .card {
+    padding: 24px 18px;
+  }
+
+  .badge {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 380px) {
+  .section {
+    padding: 44px 14px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .inner {
+    width: min(1320px, 100%);
+  }
+
+  .inner h2 {
+    font-size: 48px;
+  }
 }
