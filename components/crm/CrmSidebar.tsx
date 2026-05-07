@@ -133,7 +133,7 @@ function NavLink({
 }) {
   if (item.soon) {
     return (
-      <div className="flex items-center gap-3 rounded-md px-3 py-2 text-sm opacity-40 cursor-not-allowed">
+      <div className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm text-white opacity-40">
         {item.icon}
         <span>{item.label}</span>
         <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider opacity-60">wkrótce</span>
@@ -148,7 +148,7 @@ function NavLink({
       className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
         active
           ? "border-l-2 border-teal-400 bg-white/10 pl-2.5 font-semibold text-white"
-          : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+          : "text-white hover:bg-neutral-800 hover:text-white"
       }`}
     >
       {item.icon}
@@ -244,7 +244,7 @@ export function CrmSidebar({ user, onClose }: CrmSidebarProps) {
           className="h-6 w-auto brightness-0 invert"
           priority
         />
-        <span className="ml-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+        <span className="ml-2 text-xs font-semibold uppercase tracking-widest text-white">
           CRM
         </span>
       </div>
@@ -253,7 +253,7 @@ export function CrmSidebar({ user, onClose }: CrmSidebarProps) {
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         {navGroups.map((group) => (
           <div key={group.title} className="mb-5">
-            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-600">
+            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white">
               {group.title}
             </p>
             <ul className="space-y-0.5">
@@ -275,7 +275,7 @@ export function CrmSidebar({ user, onClose }: CrmSidebarProps) {
       <div className="shrink-0 border-t border-neutral-800 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-teal-400" />
-          <span className="text-xs text-neutral-500">System aktywny</span>
+          <span className="text-xs text-white">System aktywny</span>
         </div>
       </div>
     </div>

@@ -1,0 +1,308 @@
+.hero {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--ember) 18%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--ember) 10%, transparent), transparent 34%),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--card) 2.5%, transparent) 0 1px,
+      transparent 1px 64px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--card) 2.5%, transparent) 0 1px,
+      transparent 1px 64px
+    ),
+    var(--ink);
+  color: var(--parchment);
+  display: grid;
+  place-items: center;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.inner {
+  width: min(100%, 920px);
+}
+
+.trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--parchment) 12%, transparent);
+  border-radius: 999px;
+  color: var(--parchment);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  padding: 8px 14px;
+}
+
+.stars {
+  color: var(--ember-hi);
+  letter-spacing: 0.05em;
+}
+
+.headline {
+  color: var(--parchment);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: clamp(44px, 7vw, 84px);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.96;
+  margin: 0;
+}
+
+.headlineEm {
+  color: var(--ember);
+  display: block;
+}
+
+.description {
+  color: color-mix(in srgb, var(--parchment) 58%, var(--mist));
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.7;
+  margin: 24px auto 28px;
+  max-width: 560px;
+}
+
+.search {
+  width: min(100%, 780px);
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--ink) 35%, transparent);
+  display: flex;
+  gap: 0;
+  margin: 0 auto;
+  padding: 8px;
+  position: relative;
+  text-align: left;
+}
+
+.searchField {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.fieldControl {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+}
+
+.fieldIcon {
+  color: var(--ember-lo);
+  flex: 0 0 auto;
+}
+
+.fieldIcon svg {
+  height: 17px;
+  width: 17px;
+}
+
+.input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: 700 14px var(--font-manrope), sans-serif;
+}
+
+.input::placeholder {
+  color: color-mix(in srgb, var(--mist) 62%, var(--card));
+}
+
+.divider {
+  width: 1px;
+  height: 36px;
+  align-self: center;
+  background: var(--line);
+}
+
+.submit {
+  border: 0;
+  border-radius: 10px;
+  background: var(--ember);
+  color: var(--card);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 15px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 14px 28px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.submit svg {
+  height: 16px;
+  transition: transform 0.2s;
+  width: 16px;
+}
+
+.submit:hover {
+  background: var(--ember-hi);
+}
+
+.submit:hover svg {
+  transform: translateX(3px);
+}
+
+.submit:disabled {
+  background: var(--line);
+  color: var(--mist);
+  cursor: default;
+}
+
+.dropdown {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% + 6px);
+  z-index: 10;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--ink) 15%, transparent);
+}
+
+.dropdownItem {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.dropdownItem:hover,
+.dropdownItemActive {
+  background: var(--parchment);
+}
+
+.dropdownFlag {
+  font-size: 18px;
+}
+
+.dropdownName {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dropdownMeta {
+  display: block;
+  color: var(--mist);
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.clear {
+  border: 0;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.boarding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: color-mix(in srgb, var(--parchment) 62%, var(--mist));
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 18px;
+}
+
+.boardingButton {
+  border: 1px solid color-mix(in srgb, var(--parchment) 16%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--parchment) 8%, transparent);
+  color: var(--parchment);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  gap: 7px;
+  padding: 9px 14px;
+}
+
+.boardingButton:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.boardingButton svg {
+  height: 16px;
+  width: 16px;
+}
+
+.badges {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.badge {
+  border: 1px solid color-mix(in srgb, var(--parchment) 12%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--parchment) 72%, var(--mist));
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 13px;
+}
+
+.error {
+  color: var(--ember-hi);
+  font-size: 13px;
+  font-weight: 800;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .hero {
+    padding: 36px 16px;
+  }
+
+  .search {
+    flex-direction: column;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .submit {
+    width: 100%;
+  }
+
+  .boarding {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

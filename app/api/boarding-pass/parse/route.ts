@@ -10,9 +10,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Brak pliku' }, { status: 400 })
     }
 
-    const response: ParseResponse = {
+    const flightDate = new Date().toISOString().split('T')[0]
+    const response: ParseResponse & { date: string } = {
       flightNumber: 'LO231',
-      flightDate: new Date().toISOString().split('T')[0],
+      flightDate,
+      date: flightDate,
       airline: 'LOT Polish Airlines',
       from: 'WAW',
       to: 'LHR',

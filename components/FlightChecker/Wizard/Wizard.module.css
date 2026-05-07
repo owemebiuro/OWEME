@@ -1,0 +1,701 @@
+.shell {
+  min-height: 100vh;
+  background: var(--card);
+  color: var(--ink);
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  font-family: var(--font-manrope), sans-serif;
+}
+
+.sidebar {
+  min-height: 100vh;
+  background: var(--parchment);
+  border-right: 1px solid var(--line);
+  padding: 32px;
+  position: sticky;
+  top: 0;
+}
+
+.logo {
+  margin-bottom: 40px;
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.logoInk {
+  color: var(--ink);
+}
+
+.logoEmber {
+  color: var(--ember);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+}
+
+.progressItem {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 12px;
+}
+
+.progressDot {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.progressDotActive {
+  border-color: var(--ember);
+  background: var(--ember);
+}
+
+.progressDotActive::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.progressDotDone {
+  border-color: var(--sage);
+  background: var(--sage);
+  color: var(--card);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.progressLabel {
+  color: var(--mist);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.progressLabelActive {
+  color: var(--ink);
+}
+
+.progressConnector {
+  width: 1.5px;
+  min-height: 24px;
+  background: var(--line);
+  margin: 5px 0 5px 6px;
+}
+
+.content {
+  min-width: 0;
+  background: var(--card);
+  padding: 28px clamp(20px, 5vw, 72px);
+}
+
+.contentInner {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sage);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 26px;
+}
+
+.topbar svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mobileStrip {
+  display: none;
+}
+
+.breadcrumb {
+  margin-bottom: 18px;
+  color: var(--mist);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.breadcrumbArrow {
+  color: var(--ember);
+  padding: 0 8px;
+}
+
+.stepWrap {
+  outline: none;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.cardTitle {
+  color: var(--ink);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fieldGroup {
+  position: relative;
+}
+
+.label {
+  display: block;
+  color: var(--mist);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.field {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 12px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.fieldActive {
+  border-color: var(--ember-lo);
+}
+
+.fieldIcon {
+  color: var(--ember-lo);
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.fieldIcon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 600 14px var(--font-manrope), sans-serif;
+  outline: none;
+}
+
+.input::placeholder {
+  color: color-mix(in srgb, var(--mist) 62%, var(--card));
+}
+
+.textInput {
+  width: 100%;
+  min-height: 48px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: 600 14px var(--font-manrope), sans-serif;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textInput:focus {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ember) 10%, transparent);
+}
+
+.inputError {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.clearButton {
+  border: 0;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.5;
+  padding: 0 2px;
+}
+
+.dropdown {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--ink) 15%, transparent);
+}
+
+.dropdownItem {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.dropdownItem:hover,
+.dropdownItemActive {
+  background: var(--parchment);
+}
+
+.dropdownFlag {
+  font-size: 18px;
+}
+
+.dropdownName {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dropdownMeta {
+  display: block;
+  color: var(--mist);
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.radioGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.radioList {
+  display: grid;
+  gap: 8px;
+}
+
+.radioOption {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.radioOptionSelected {
+  border-color: var(--ember);
+  background: var(--ember-bg);
+}
+
+.radioDot {
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.radioOptionSelected .radioDot {
+  border-color: var(--ember);
+  background: var(--ember);
+}
+
+.radioOptionSelected .radioDot::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.radioLabel {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.infoNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  border-radius: 10px;
+  background: var(--info-bg);
+  color: var(--info-text);
+  padding: 13px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.infoIcon {
+  color: var(--info-icon);
+  flex: 0 0 auto;
+  font-weight: 800;
+}
+
+.hint {
+  color: var(--mist);
+  font-size: 11px;
+  margin: 7px 0 0;
+}
+
+.quickDate {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quickDateButton {
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ember);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 14px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.quickDateButton:hover {
+  border-color: var(--ember);
+  background: var(--ember-bg);
+}
+
+.flightNumberGrid {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.passengerTitle {
+  color: var(--ink);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.formLabel {
+  display: block;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+
+.fieldError {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+
+.checkboxList {
+  display: grid;
+  gap: 12px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.checkboxRow input {
+  accent-color: var(--ember);
+  margin-top: 2px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.backButton {
+  border: 0;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+}
+
+.continueButton {
+  border: 0;
+  border-radius: 10px;
+  background: var(--ember);
+  color: var(--card);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 32px;
+  transition: background 0.2s;
+}
+
+.continueButton:hover {
+  background: var(--ember-hi);
+}
+
+.continueButton svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s;
+}
+
+.continueButton:hover svg {
+  transform: translateX(3px);
+}
+
+.continueButtonDisabled,
+.continueButtonDisabled:hover {
+  background: var(--line);
+  color: color-mix(in srgb, var(--mist) 75%, var(--card));
+  cursor: default;
+}
+
+.continueButtonDisabled:hover svg {
+  transform: none;
+}
+
+.resultCard {
+  border-radius: 14px;
+  padding: 26px;
+  text-align: center;
+  outline: none;
+}
+
+.resultEligible {
+  border: 1px solid color-mix(in srgb, var(--sage) 20%, transparent);
+  background: var(--sage-bg);
+}
+
+.resultIneligible {
+  border: 1px solid var(--line);
+  background: var(--parchment);
+}
+
+.resultRoute {
+  color: var(--mist);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 22px;
+}
+
+.resultTitle {
+  color: var(--ink);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+}
+
+.resultAmount {
+  color: var(--ember);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0 0 18px;
+}
+
+.resultText {
+  color: var(--mist);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.resultCta {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ember);
+  color: var(--card);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 18px;
+  padding: 16px;
+  text-decoration: none;
+}
+
+.resources {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.resourceLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--parchment);
+  color: var(--ink);
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.resourceIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--card);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.resourceArrow {
+  color: var(--line);
+  font-size: 22px;
+  margin-left: auto;
+}
+
+.loadingText {
+  color: var(--mist);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 34px 0;
+  text-align: center;
+}
+
+@media (max-width: 1023px) {
+  .shell {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: 28px 22px;
+  }
+}
+
+@media (max-width: 767px) {
+  .shell {
+    display: block;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobileStrip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    background: var(--parchment);
+    padding: 16px 20px;
+  }
+
+  .mobileProgress {
+    color: var(--mist);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .content {
+    padding: 20px;
+  }
+
+  .contentInner {
+    width: 100%;
+  }
+
+  .topbar {
+    margin-bottom: 20px;
+  }
+
+  .gridTwo,
+  .radioGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .backButton,
+  .continueButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
