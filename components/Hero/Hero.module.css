@@ -26,6 +26,7 @@
   position: relative;
   z-index: 1;
   width: min(1180px, 100%);
+  min-width: 0;
   display: grid;
   grid-template-columns: 1fr 500px;
   gap: 60px;
@@ -34,6 +35,7 @@
 }
 
 .left {
+  min-width: 0;
   max-width: 590px;
 }
 
@@ -63,6 +65,7 @@
 }
 
 .h1 {
+  max-width: 100%;
   margin: 0;
   color: var(--parchment);
   font-family: var(--font-outfit);
@@ -70,6 +73,7 @@
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: 0;
+  overflow-wrap: break-word;
 }
 
 .h1 span {
@@ -83,11 +87,13 @@
   color: var(--mist);
   font-size: 16px;
   line-height: 1.75;
+  overflow-wrap: break-word;
 }
 
 .checks {
   display: grid;
   gap: 13px;
+  min-width: 0;
   margin: 30px 0 0;
   padding: 0;
   list-style: none;
@@ -98,9 +104,15 @@
   grid-template-columns: 20px 1fr;
   gap: 10px;
   align-items: start;
+  min-width: 0;
   color: color-mix(in srgb, var(--parchment) 82%, transparent);
   font-size: 14px;
   line-height: 1.55;
+}
+
+.checks li span:last-child {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .checkIcon {
@@ -116,6 +128,7 @@
 }
 
 .right {
+  min-width: 0;
   display: flex;
   justify-content: center;
 }
@@ -133,6 +146,8 @@
   }
 
   .right {
+    width: 100%;
+    max-width: 540px;
     justify-content: flex-start;
   }
 }
@@ -150,7 +165,8 @@
   }
 
   .h1 {
-    font-size: 42px;
+    font-size: clamp(34px, 9.4vw, 40px);
+    line-height: 1;
   }
 
   .desc {
@@ -160,11 +176,19 @@
   .checks li {
     font-size: 13px;
   }
+
+  .right {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 380px) {
   .hero {
     padding: 80px 14px 44px;
+  }
+
+  .h1 {
+    font-size: clamp(32px, 8.8vw, 36px);
   }
 }
 
