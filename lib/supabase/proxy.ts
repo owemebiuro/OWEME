@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { UserRole } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { resolveBootstrapAdminUser } from "@/lib/auth-bootstrap";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
 import type { Database } from "@/types/supabase";
@@ -49,7 +50,7 @@ async function getAppAccess(authUserId: string, email: string | undefined) {
     } as const;
   }
 
-  const appUser = await prisma.user.findFirst({
+  let appUser = await prisma.user.findFirst({
     where: {
       OR: [
         { authUserId },
@@ -57,10 +58,23 @@ async function getAppAccess(authUserId: string, email: string | undefined) {
       ],
     },
     select: {
+      id: true,
+      authUserId: true,
+      email: true,
+      name: true,
       role: true,
       isActive: true,
     },
   });
+
+  appUser = await resolveBootstrapAdminUser(
+    {
+      id: authUserId,
+      email,
+      user_metadata: {},
+    },
+    appUser,
+  );
 
   return {
     checked: true,

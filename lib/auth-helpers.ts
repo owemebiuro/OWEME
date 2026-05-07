@@ -1,6 +1,7 @@
 import { type User as SupabaseUser } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
+import { resolveBootstrapAdminUser } from "@/lib/auth-bootstrap";
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
 import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions.shared";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     return null;
   }
 
-  const appUser = hasPrismaDatabaseUrl()
+  let appUser = hasPrismaDatabaseUrl()
     ? await prisma.user.findFirst({
         where: {
           isActive: true,
@@ -50,6 +51,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         },
       })
     : null;
+
+  appUser = await resolveBootstrapAdminUser(authUser, appUser);
 
   return {
     authUser,
