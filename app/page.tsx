@@ -1,14 +1,9 @@
 import type { Metadata } from 'next'
 import { Nav } from '@/components/Nav/Nav'
 import { Hero } from '@/components/Hero/Hero'
-import { Ticker } from '@/components/Ticker/Ticker'
-import { Stats } from '@/components/Stats/Stats'
-import { Services } from '@/components/Services/Services'
 import { HowItWorks } from '@/components/HowItWorks/HowItWorks'
-import { LegalTrust } from '@/components/LegalTrust/LegalTrust'
-import { Team } from '@/components/Team/Team'
-import { Awards } from '@/components/Awards/Awards'
-import { MediaQuotes } from '@/components/MediaQuotes/MediaQuotes'
+import { AmountChecker } from '@/components/AmountChecker/AmountChecker'
+import { PricingComparison } from '@/components/PricingComparison/PricingComparison'
 import { Reviews } from '@/components/Reviews/Reviews'
 import { FAQ } from '@/components/FAQ/FAQ'
 import { CtaSection } from '@/components/CtaSection/CtaSection'
@@ -51,14 +46,9 @@ export default function Home() {
       <Nav />
       <main>
         <Hero />
-        <Ticker />
-        <Stats />
-        <Services />
         <HowItWorks />
-        <LegalTrust />
-        <Team />
-        <Awards />
-        <MediaQuotes />
+        <AmountChecker />
+        <PricingComparison />
         <Reviews />
         <FAQ />
         <CtaSection />

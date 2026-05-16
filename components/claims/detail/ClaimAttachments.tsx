@@ -28,7 +28,7 @@ const attachmentTypes = [
 ] as const satisfies readonly AttachmentType[];
 
 const statusClasses: Record<string, string> = {
-  PENDING: "border-amber-200 bg-amber-50 text-amber-700",
+  PENDING: "border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] text-[var(--ember-lo)]",
   UPLOADED: "border-blue-200 bg-blue-50 text-blue-700",
   VERIFIED: "border-green-200 bg-green-50 text-green-700",
   REJECTED: "border-red-200 bg-red-50 text-red-700",
@@ -144,9 +144,6 @@ export function ClaimAttachments({
           <h2 className="text-base font-semibold text-neutral-950">
             Załączniki
           </h2>
-          <p className="mt-1 text-sm text-neutral-500">
-            Pliki sprawy są wysyłane bezpośrednio do R2 przez presigned URL.
-          </p>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -224,7 +221,7 @@ export function ClaimAttachments({
           claim.attachments.map((attachment) => (
             <article
               key={attachment.id}
-              className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+              className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
             >
               <div className="flex min-w-0 gap-3">
                 <span className="flex h-11 w-12 shrink-0 items-center justify-center rounded-md bg-neutral-950 text-xs font-semibold text-white">

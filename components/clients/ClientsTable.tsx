@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ClientsFilters } from "@/components/clients/ClientsFilters";
 import { ClientsPagination } from "@/components/clients/ClientsPagination";
 import type { ClientsListData } from "@/lib/clients/types";
-import { formatDate } from "@/lib/claims/format";
+import { formatPhone } from "@/lib/utils/phone";
 
 type ClientsTableProps = {
   data: ClientsListData;
@@ -32,16 +32,13 @@ export function ClientsTable({ data }: ClientsTableProps) {
 
       <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-left">
+          <table className="w-full min-w-[760px] border-collapse text-left">
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-4 py-3">Klient</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Telefon</th>
-                <th className="px-4 py-3">Miasto</th>
-                <th className="px-4 py-3">Sprawy</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Utworzono</th>
+                <th className="px-4 py-3">PESEL</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 text-sm">
@@ -51,7 +48,6 @@ export function ClientsTable({ data }: ClientsTableProps) {
                     <td className="px-4 py-4">
                       <Link
                         href={`/crm/clients/${client.id}`}
-                        prefetch={false}
                         className="font-semibold text-neutral-950 underline-offset-4 hover:underline"
                       >
                         {client.firstName} {client.lastName}
@@ -61,27 +57,16 @@ export function ClientsTable({ data }: ClientsTableProps) {
                       {client.email}
                     </td>
                     <td className="px-4 py-4 text-neutral-600">
-                      {client.phone ?? "Brak"}
+                      {client.phone ? formatPhone(client.phone) : "Brak"}
                     </td>
                     <td className="px-4 py-4 text-neutral-600">
-                      {[client.city, client.country].filter(Boolean).join(", ")}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-neutral-950">
-                      {client.claimsCount}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs font-semibold text-neutral-700">
-                        {client.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-neutral-600">
-                      {formatDate(client.createdAt)}
+                      {client.pesel ?? "Brak"}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-4 py-14 text-center">
+                  <td colSpan={4} className="px-4 py-14 text-center">
                     <p className="text-base font-semibold text-neutral-950">
                       Brak klientów w tym widoku
                     </p>

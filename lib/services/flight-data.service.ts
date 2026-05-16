@@ -29,6 +29,7 @@ import {
   calculateAmountCategoryFromDistance,
   calculateDelayMinutes,
 } from "@/lib/flightaware/flight-eligibility";
+import { getAirlinePrismaData } from "@/lib/airlines/airline-prisma";
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
 
 type FetchFlightOptions = {
@@ -396,16 +397,17 @@ async function persistFlightData(data: NormalizedFlightData) {
     return null;
   }
 
+  const airlineIata =
+    data.airlineIata ?? airlineIataFromFlightNumber(data.flightNumber);
+  const airlineData = getAirlinePrismaData(airlineIata, data.airlineName);
   const airline = await prisma.airline.upsert({
     where: {
-      iataCode: data.airlineIata ?? airlineIataFromFlightNumber(data.flightNumber),
+      iataCode: airlineIata,
     },
-    update: {
-      name: data.airlineName ?? "Nieznana linia",
-    },
+    update: airlineData,
     create: {
-      iataCode: data.airlineIata ?? airlineIataFromFlightNumber(data.flightNumber),
-      name: data.airlineName ?? "Nieznana linia",
+      iataCode: airlineIata,
+      ...airlineData,
     },
   });
 

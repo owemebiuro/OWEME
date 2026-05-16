@@ -122,9 +122,6 @@ export function ClaimDocuments({ claim, onChanged }: ClaimDocumentsProps) {
           <h2 className="text-base font-semibold text-neutral-950">
             Dokumenty
           </h2>
-          <p className="mt-1 text-sm text-neutral-500">
-            Generowanie `.docx`, wersjonowanie i pobieranie z R2.
-          </p>
         </div>
         <button
           type="button"
@@ -190,7 +187,7 @@ export function ClaimDocuments({ claim, onChanged }: ClaimDocumentsProps) {
                         onClick={() => toggleExpanded(type)}
                         className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400"
                       >
-                        Starsze wersje ({older.length})
+                        Poprzednie pliki ({older.length})
                       </button>
                     ) : null}
                   </div>
@@ -232,22 +229,19 @@ export function ClaimDocuments({ claim, onChanged }: ClaimDocumentsProps) {
 
       {isGenerateOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 px-4"
+          className="crm-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="generate-document-title"
         >
-          <div className="w-full max-w-lg rounded-lg border border-neutral-200 bg-white shadow-xl">
-            <div className="border-b border-neutral-200 px-5 py-4">
+          <div className="crm-modal-surface w-full max-w-lg overflow-hidden">
+            <div className="border-b border-white/50 px-5 py-4">
               <h3
                 id="generate-document-title"
                 className="text-lg font-semibold text-neutral-950"
               >
                 Generuj dokument
               </h3>
-              <p className="mt-1 text-sm text-neutral-500">
-                Każda generacja tworzy kolejną wersję `.docx`.
-              </p>
             </div>
 
             <div className="space-y-4 px-5 py-4">
@@ -290,7 +284,7 @@ export function ClaimDocuments({ claim, onChanged }: ClaimDocumentsProps) {
               ) : null}
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-4">
+            <div className="flex justify-end gap-2 border-t border-white/50 px-5 py-4">
               <button
                 type="button"
                 onClick={() => setIsGenerateOpen(false)}

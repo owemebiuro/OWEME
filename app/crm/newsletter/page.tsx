@@ -20,9 +20,9 @@ export default async function NewsletterPage() {
   if (!hasRolePermission(currentUser.appUser.role, PERMISSIONS.NEWSLETTER_MANAGE)) {
     return (
       <main className="min-h-screen bg-neutral-50 px-4 py-6 text-neutral-950 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-6">
-          <h1 className="text-xl font-semibold text-amber-800">Brak dostępu</h1>
-          <p className="mt-2 text-sm text-amber-700">
+        <div className="mx-auto max-w-3xl rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] p-6">
+          <h1 className="text-xl font-semibold text-[var(--ember-lo)]">Brak dostępu</h1>
+          <p className="mt-2 text-sm text-[var(--ember-lo)]">
             Newsletter jest dostępny dla ról ADMIN i EDITOR.
           </p>
         </div>

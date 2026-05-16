@@ -12,6 +12,8 @@ export function GET(request: NextRequest) {
       city: airport.city,
       country: airport.country,
       flag: airport.flag,
+      lat: airport.lat,
+      lon: airport.lon,
     })),
   });
 }

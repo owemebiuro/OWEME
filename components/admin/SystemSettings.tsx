@@ -114,8 +114,8 @@ export function SystemSettings() {
         >
           <FieldRow label="Domyślny model prowizji">
             <select className={inputClass} defaultValue="STANDARD_30">
-              <option value="STANDARD_30">Standard 30%</option>
-              <option value="COURT_40">Sądowy 40%</option>
+              <option value="STANDARD_30">Pozasądowy 25%</option>
+              <option value="COURT_40">Sądowy 45%</option>
             </select>
           </FieldRow>
           <FieldRow

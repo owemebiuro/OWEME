@@ -208,10 +208,10 @@ export default function FlightChecker() {
       <div className={styles.checkerSub}>
         <span className={styles.checkerSubItem}>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
+            <circle cx="6" cy="6" r="5" stroke="var(--mist)" strokeWidth="1" />
             <path
               d="M6 5v3.5M6 3.5v.5"
-              stroke="#9e8e7e"
+              stroke="var(--mist)"
               strokeWidth="1"
               strokeLinecap="round"
             />
@@ -226,12 +226,12 @@ export default function FlightChecker() {
               width="8"
               height="6"
               rx="1"
-              stroke="#9e8e7e"
+              stroke="var(--mist)"
               strokeWidth="1"
             />
             <path
               d="M4 4V3a2 2 0 014 0v1"
-              stroke="#9e8e7e"
+              stroke="var(--mist)"
               strokeWidth="1"
             />
           </svg>
@@ -239,10 +239,10 @@ export default function FlightChecker() {
         </span>
         <span className={styles.checkerSubItem}>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
+            <circle cx="6" cy="6" r="5" stroke="var(--mist)" strokeWidth="1" />
             <path
               d="M4 6l1.5 1.5L8 4"
-              stroke="#9e8e7e"
+              stroke="var(--mist)"
               strokeWidth="1"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -262,7 +262,7 @@ export default function FlightChecker() {
             <div
               className={styles.resultDot}
               style={{
-                background: result.found ? "var(--orange-mid)" : "#c8bdb5",
+                background: result.found ? "var(--orange-mid)" : "var(--line)",
               }}
             >
               {result.found ? (

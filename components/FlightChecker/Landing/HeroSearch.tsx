@@ -18,6 +18,10 @@ interface BoardingPassResponse {
   flightNumber?: string;
 }
 
+interface HeroSearchProps {
+  variant?: "default" | "landingCard";
+}
+
 function ArrowRightIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -69,13 +73,14 @@ function buildCheckerUrl(data: BoardingPassResponse) {
   return `/claim/check?${params.toString()}`;
 }
 
-export function HeroSearch() {
+export function HeroSearch({ variant = "default" }: HeroSearchProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [from, setFrom] = useState<Airport | null>(null);
   const [to, setTo] = useState<Airport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const isLandingCard = variant === "landingCard";
 
   function goToChecker(nextFrom = from?.iata, nextTo = to?.iata) {
     if (!nextFrom || !nextTo) {
@@ -110,8 +115,12 @@ export function HeroSearch() {
       }
 
       router.push(checkerUrl);
-    } catch {
-      setError("Nie udało się przetworzyć karty pokładowej.");
+    } catch (error) {
+      const message = axios.isAxiosError<{ error?: string }>(error)
+        ? (error.response?.data?.error ?? "Nie udało się przetworzyć karty pokładowej.")
+        : "Nie udało się przetworzyć karty pokładowej.";
+
+      setError(message);
     } finally {
       setIsParsing(false);
       if (fileInputRef.current) {
@@ -120,13 +129,20 @@ export function HeroSearch() {
     }
   }
 
-  return (
+  const content = (
     <>
-      <div className={styles.search}>
+      {isLandingCard ? (
+        <h2 className={styles.landingCardTitle}>
+          Sprawdź <span>szybko</span>, czy przysługuje Ci odszkodowanie
+        </h2>
+      ) : null}
+
+      <div className={`${styles.search} ${isLandingCard ? styles.searchLandingCard : ""}`}>
         <AirportInput
           label="Lotnisko wylotu"
-          placeholder="Lotnisko wylotu"
+          placeholder={isLandingCard ? "np. Warszawa lub WAW" : "Lotnisko wylotu"}
           value={from}
+          variant={isLandingCard ? "card" : "default"}
           onChange={(airport) => {
             setFrom(airport);
             setError(null);
@@ -135,8 +151,9 @@ export function HeroSearch() {
         <span className={styles.divider} aria-hidden="true" />
         <AirportInput
           label="Lotnisko docelowe"
-          placeholder="Lotnisko docelowe"
+          placeholder={isLandingCard ? "np. Gdańsk lub GDN" : "Lotnisko docelowe"}
           value={to}
+          variant={isLandingCard ? "card" : "default"}
           onChange={(airport) => {
             setTo(airport);
             setError(null);
@@ -153,8 +170,8 @@ export function HeroSearch() {
         </button>
       </div>
       {error ? <p className={styles.error}>{error}</p> : null}
-      <div className={styles.boarding}>
-        <span>lub sprawdź szybko przez</span>
+      <div className={`${styles.boarding} ${isLandingCard ? styles.boardingLandingCard : ""}`}>
+        <span>{isLandingCard ? "lub" : "lub sprawdź szybko przez"}</span>
         <button
           type="button"
           className={styles.boardingButton}
@@ -162,16 +179,24 @@ export function HeroSearch() {
           disabled={isParsing}
         >
           <UploadIcon />
-          <span>{isParsing ? "Czytamy kartę..." : "Kartę pokładową"}</span>
+          <span>
+            {isParsing
+              ? "Czytamy kartę..."
+              : isLandingCard
+                ? "Dodaj kartę pokładową, a wypełnimy dane lotu za Ciebie"
+                : "Kartę pokładową"}
+          </span>
         </button>
         <input
           ref={fileInputRef}
           type="file"
           hidden
-          accept=".pdf,.jpg,.jpeg,.png,.pkpass"
+          accept=".jpg,.jpeg,.png,.webp,.pkpass"
           onChange={(event) => handleBoardingPass(event.target.files?.[0])}
         />
       </div>
     </>
   );
+
+  return isLandingCard ? <div className={styles.landingCard}>{content}</div> : content;
 }

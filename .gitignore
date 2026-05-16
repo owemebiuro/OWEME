@@ -38,6 +38,7 @@ yarn-error.log*
 .claude/
 .dev-storage/
 .claude/worktrees/
+tmp/
 
 # vercel
 .vercel

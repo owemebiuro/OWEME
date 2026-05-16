@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminUsersPage() {
-  const currentUser = await requireRole(["ADMIN"]);
+  const currentUser = await requireRole(["ADMIN", "SUPER_ADMIN"]);
   const supabaseAdminStatus = getSupabaseAdminConfigurationStatus();
 
   return (
@@ -17,6 +17,7 @@ export default async function AdminUsersPage() {
       <div className="mx-auto w-full max-w-7xl">
         <UsersTable
           currentUserId={currentUser.appUser.id}
+          currentUserRole={currentUser.appUser.role}
           supabaseAdminStatus={supabaseAdminStatus}
         />
       </div>

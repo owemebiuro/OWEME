@@ -12,8 +12,8 @@ import type {
 } from "@prisma/client";
 
 export const commissionModelLabels: Record<CommissionModel, string> = {
-  STANDARD_30: "Standard 30%",
-  COURT_40: "Sądowa 40%",
+  STANDARD_30: "Pozasądowa 25%",
+  COURT_40: "Sądowa 45%",
 };
 
 export const flightStatusLabels: Record<FlightStatus, string> = {
@@ -90,6 +90,6 @@ export const settlementStatusLabels: Record<SettlementStatus, string> = {
 export const taskPriorityClasses: Record<TaskPriority, string> = {
   LOW: "border-neutral-200 bg-neutral-50 text-neutral-600",
   MEDIUM: "border-blue-200 bg-blue-50 text-blue-700",
-  HIGH: "border-amber-200 bg-amber-50 text-amber-700",
+  HIGH: "border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] text-[var(--ember-lo)]",
   URGENT: "border-red-200 bg-red-50 text-red-700",
 };

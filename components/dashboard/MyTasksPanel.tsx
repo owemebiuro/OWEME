@@ -25,7 +25,7 @@ type MyTasksPanelProps = {
 const priorityClasses: Record<TaskPriority, string> = {
   LOW: "border-neutral-200 bg-neutral-50 text-neutral-600",
   MEDIUM: "border-blue-200 bg-blue-50 text-blue-700",
-  HIGH: "border-amber-200 bg-amber-50 text-amber-700",
+  HIGH: "border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] text-[var(--ember-lo)]",
   URGENT: "border-red-200 bg-red-50 text-red-700",
 };
 
@@ -69,7 +69,6 @@ export function MyTasksPanel({ tasks }: MyTasksPanelProps) {
                   <div>
                     <Link
                       href={`/crm/claims/${task.claim.id}`}
-                      prefetch={false}
                       className="text-sm font-semibold text-neutral-950 underline-offset-4 hover:underline"
                     >
                       {task.title}

@@ -17,7 +17,8 @@ type ClaimTypeBadgeProps = {
 export function ClaimStatusBadge({ status }: ClaimStatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold ${claimStatusClasses[status]}`}
+      className={`inline-flex max-w-full items-center truncate rounded-md border px-2 py-1 text-xs font-semibold ${claimStatusClasses[status]}`}
+      title={claimStatusLabels[status]}
     >
       {claimStatusLabels[status]}
     </span>

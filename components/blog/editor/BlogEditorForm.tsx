@@ -133,7 +133,7 @@ function getScoreTone(score: number) {
   }
 
   if (score >= 55) {
-    return "text-amber-700";
+    return "text-[var(--ember-lo)]";
   }
 
   return "text-red-700";

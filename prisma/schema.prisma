@@ -13,6 +13,7 @@ datasource db {
 // to Supabase Auth with an authUserId field when the auth-domain bridge is added.
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   EDITOR
   OPERATOR
@@ -52,6 +53,13 @@ enum ClaimSource {
   CHECKER_FORM
   MANUAL
   IMPORT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  LOST
 }
 
 enum CommissionModel {
@@ -182,18 +190,19 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  ownedClaims        Claim[]              @relation("ClaimOwner")
-  createdClaims      Claim[]              @relation("ClaimCreator")
-  notes              Note[]
-  tasks              Task[]               @relation("TaskAssignee")
-  createdTasks       Task[]               @relation("TaskCreator")
-  statusHistory      ClaimStatusHistory[]
-  assignmentHistory  AssignmentHistory[]  @relation("ChangedBy")
-  generatedDocuments Document[]
-  blogPosts          BlogPost[]
+  ownedClaims         Claim[]              @relation("ClaimOwner")
+  createdClaims       Claim[]              @relation("ClaimCreator")
+  notes               Note[]
+  tasks               Task[]               @relation("TaskAssignee")
+  createdTasks        Task[]               @relation("TaskCreator")
+  statusHistory       ClaimStatusHistory[]
+  assignmentHistory   AssignmentHistory[]  @relation("ChangedBy")
+  generatedDocuments  Document[]
+  blogPosts           BlogPost[]
   newsletterCampaigns NewsletterCampaign[]
   newsletterSegments  NewsletterSegment[]
   newsletterTemplates NewsletterTemplate[]
+  notifications       Notification[]
 
   @@index([email])
   @@index([authUserId])
@@ -206,13 +215,19 @@ model Client {
   lastName         String
   email            String
   phone            String?
+  phoneFormatted   String?
   nationality      String?
   address          String?
   postalCode       String?
   city             String?
   country          String   @default("PL")
+  countryCode      String?
+  pesel            String?
+  documentType     String?
+  documentNumber   String?
+  documentSeries   String?
   idDocumentNumber String?
-  status           String   @default("ACTIVE")
+  status           String   @default("active")
   marketingConsent Boolean  @default(false)
   emailValid       Boolean  @default(true)
   createdAt        DateTime @default(now())
@@ -220,6 +235,7 @@ model Client {
 
   claims     Claim[]
   passengers Passenger[]
+  tasks      Task[]
 
   @@index([email])
   @@index([lastName, firstName])
@@ -227,15 +243,22 @@ model Client {
 }
 
 model Airline {
-  id               String   @id @default(cuid())
-  name             String
-  iataCode         String   @unique
-  country          String?
-  carrierType      String?
-  contactInfo      String?
-  operationalNotes String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  legalName             String?
+  iataCode              String   @unique
+  country               String?
+  carrierType           String?
+  contactInfo           String?
+  correspondenceAddress String?
+  addressLine           String?
+  postalCode            String?
+  city                  String?
+  registryInfo          String?
+  complaintEmail        String?
+  operationalNotes      String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   flights Flight[]
   claims  Claim[]
@@ -279,6 +302,8 @@ model Flight {
 model Claim {
   id                   String          @id @default(cuid())
   claimNumber          String          @unique
+  caseYear             Int?
+  caseSequence         Int?
   type                 ClaimType
   source               ClaimSource     @default(WEBSITE_FORM)
   status               ClaimStatus     @default(NEW)
@@ -294,16 +319,24 @@ model Claim {
   isCourtStage         Boolean         @default(false)
   isPolishJurisdiction Boolean         @default(true)
   dataCompleteness     Int             @default(0)
+  signatureFirst       String?
+  signatureSecond      String?
+  courtName            String?
   qualifiedAt          DateTime?
   closedAt             DateTime?
   closeReason          String?
-  airlinePaid          Boolean   @default(false)
+  // NOWE POLA — logika przedawnienia art. 205c
+  flightDate           DateTime?
+  complaintFiledAt     DateTime?
+  complaintAnsweredAt  DateTime?
+  airlinePaid          Boolean         @default(false)
   airlinePaidAt        DateTime?
-  clientPaid           Boolean   @default(false)
+  clientPaid           Boolean         @default(false)
   clientPaidAt         DateTime?
   clientIban           String?
   transferTitle        String?
-  clientSettled        Boolean   @default(false)
+  applicationPayload   Json?
+  clientSettled        Boolean         @default(false)
   deletedAt            DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
@@ -322,7 +355,9 @@ model Claim {
   statusHistory     ClaimStatusHistory[]
   assignmentHistory AssignmentHistory[]
   payouts           Payout[]
+  notifications     Notification[]
 
+  @@unique([caseYear, caseSequence])
   @@index([claimNumber])
   @@index([status])
   @@index([ownerId])
@@ -413,6 +448,7 @@ model Note {
 model Task {
   id          String       @id @default(cuid())
   claimId     String
+  clientId    String?
   assigneeId  String?
   creatorId   String
   title       String
@@ -424,11 +460,14 @@ model Task {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  claim    Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
-  assignee User? @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  creator  User  @relation("TaskCreator", fields: [creatorId], references: [id])
+  claim         Claim          @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  client        Client?        @relation(fields: [clientId], references: [id])
+  assignee      User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator       User           @relation("TaskCreator", fields: [creatorId], references: [id])
+  notifications Notification[]
 
   @@index([claimId])
+  @@index([clientId])
   @@index([assigneeId, status])
   @@index([dueDate, status])
 }
@@ -464,19 +503,27 @@ model AssignmentHistory {
 }
 
 model Payout {
-  id              String           @id @default(cuid())
-  claimId         String
-  amountRecovered Decimal          @db.Decimal(10, 2)
-  currency        String           @default("EUR")
-  receivedAt      DateTime
-  owemeFee        Decimal          @db.Decimal(10, 2)
-  commissionModel CommissionModel
-  clientAmount    Decimal          @db.Decimal(10, 2)
-  clientPaidAt    DateTime?
-  status          SettlementStatus @default(PENDING)
-  notes           String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                   String           @id @default(cuid())
+  claimId              String
+  amountRecovered      Decimal          @db.Decimal(10, 2)
+  currency             String           @default("EUR")
+  receivedAt           DateTime
+  owemeFee             Decimal          @db.Decimal(10, 2)
+  commissionModel      CommissionModel
+  clientAmount         Decimal          @db.Decimal(10, 2)
+  clientPaidAt         DateTime?
+  status               SettlementStatus @default(PENDING)
+  notes                String?
+  airlinePaymentAmount Decimal?         @db.Decimal(10, 2)
+  clientPaymentAmount  Decimal?         @db.Decimal(10, 2)
+  courtCosts           Decimal?         @db.Decimal(10, 2)
+  courtCostsPaid       Boolean          @default(false)
+  eurPlnRate           Decimal?         @db.Decimal(10, 4)
+  companyShare         Decimal?         @db.Decimal(10, 2)
+  clientShare          Decimal?         @db.Decimal(10, 2)
+  calculatedAt         DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
   claim Claim @relation(fields: [claimId], references: [id])
 
@@ -493,6 +540,39 @@ model CheckerEvent {
   createdAt    DateTime  @default(now())
 
   @@index([createdAt])
+}
+
+model Lead {
+  id                   String     @id @default(cuid())
+  status               LeadStatus @default(NEW)
+  firstName            String
+  lastName             String
+  email                String
+  phone                String
+  phoneFormatted       String?
+  departureAirportCode String
+  arrivalAirportCode   String
+  flightDate           DateTime?
+  airlineIata          String?
+  airlineName          String?
+  flightNumber         String?
+  disruption           String?
+  delayHours           String?
+  estimatedAmount      Int?
+  currency             String     @default("EUR")
+  eligible             Boolean?
+  source               String     @default("CHECKER_FORM")
+  marketingConsent     Boolean    @default(false)
+  termsAgreed          Boolean    @default(false)
+  convertedClaimId     String?
+  convertedAt          DateTime?
+  metadata             Json?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([phone])
 }
 
 model BlogPost {
@@ -551,18 +631,18 @@ model NewsletterSubscriber {
 }
 
 model NewsletterSegment {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   name             String
-  description      String?  @db.Text
-  rules            Json     @default("[]")
-  rootOperator     String   @default("AND")
-  isDynamic        Boolean  @default(true)
-  isSystem         Boolean  @default(false)
+  description      String?   @db.Text
+  rules            Json      @default("[]")
+  rootOperator     String    @default("AND")
+  isDynamic        Boolean   @default(true)
+  isSystem         Boolean   @default(false)
   recipientCount   Int?
   lastCalculatedAt DateTime?
   createdById      String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   createdBy User                 @relation(fields: [createdById], references: [id])
   campaigns NewsletterCampaign[]
@@ -609,10 +689,10 @@ model NewsletterCampaign {
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
 
-  createdBy User                @relation(fields: [createdById], references: [id])
-  segment   NewsletterSegment?  @relation(fields: [segmentId], references: [id])
-  template  NewsletterTemplate? @relation(fields: [templateId], references: [id])
-  emailLogs NewsletterEmailLog[]
+  createdBy  User                  @relation(fields: [createdById], references: [id])
+  segment    NewsletterSegment?    @relation(fields: [segmentId], references: [id])
+  template   NewsletterTemplate?   @relation(fields: [templateId], references: [id])
+  emailLogs  NewsletterEmailLog[]
   linkClicks NewsletterLinkClick[]
 
   @@index([status])
@@ -641,6 +721,27 @@ model NewsletterEmailLog {
   @@index([campaignId])
   @@index([recipientEmail])
   @@index([status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  taskId    String?
+  claimId   String?
+  priority  String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task  Task?  @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  claim Claim? @relation(fields: [claimId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read, createdAt])
+  @@index([taskId])
+  @@index([claimId])
 }
 
 model NewsletterLinkClick {

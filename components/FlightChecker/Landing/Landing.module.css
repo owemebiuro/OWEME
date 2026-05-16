@@ -1,23 +1,13 @@
 .hero {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--ember) 18%, transparent), transparent 30%),
-    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--ember) 10%, transparent), transparent 34%),
-    repeating-linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--card) 2.5%, transparent) 0 1px,
-      transparent 1px 64px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--card) 2.5%, transparent) 0 1px,
-      transparent 1px 64px
-    ),
-    var(--ink);
-  color: var(--parchment);
+    linear-gradient(135deg, color-mix(in srgb, var(--ink) 86%, var(--ember) 14%), color-mix(in srgb, var(--ink) 76%, var(--ember) 24%) 58%, color-mix(in srgb, var(--ember-lo) 76%, var(--ink) 24%)),
+    radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--ember-hi) 24%, transparent), transparent 34%),
+    radial-gradient(circle at 78% 86%, color-mix(in srgb, var(--ember) 28%, transparent), transparent 32%);
+  color: var(--white);
   display: grid;
   place-items: center;
-  padding: 48px 20px;
+  padding: 116px 20px 56px;
   text-align: center;
 }
 
@@ -29,9 +19,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid color-mix(in srgb, var(--parchment) 12%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
-  color: var(--parchment);
+  color: var(--white);
   font-size: 13px;
   font-weight: 800;
   margin-bottom: 24px;
@@ -39,45 +29,87 @@
 }
 
 .stars {
-  color: var(--ember-hi);
+  color: var(--star);
   letter-spacing: 0.05em;
 }
 
 .headline {
-  color: var(--parchment);
+  color: var(--white);
   font-family: var(--font-outfit), sans-serif;
-  font-size: clamp(44px, 7vw, 84px);
+  font-size: clamp(42px, 6.2vw, 78px);
   font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 0.96;
+  letter-spacing: 0;
+  line-height: 1;
   margin: 0;
 }
 
 .headlineEm {
-  color: var(--ember);
+  color: color-mix(in srgb, var(--ember-bg) 82%, var(--white));
   display: block;
 }
 
 .description {
-  color: color-mix(in srgb, var(--parchment) 58%, var(--mist));
-  font-size: 16px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.7;
-  margin: 24px auto 28px;
-  max-width: 560px;
+  margin: 24px auto 34px;
+  max-width: 680px;
+}
+
+.landingCard {
+  width: min(100%, 1294px);
+  margin: 0 auto;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, #fff);
+  border-radius: 18px;
+  background:
+    linear-gradient(58deg, transparent 0 18%, rgba(255, 255, 255, 0.34) 18% 27%, transparent 27% 74%, rgba(255, 255, 255, 0.42) 74% 100%),
+    var(--card);
+  box-shadow:
+    0 18px 42px rgba(18, 36, 58, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  padding: 26px 28px 24px;
+  text-align: left;
+}
+
+.landingCardTitle {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: clamp(22px, 2.1vw, 28px);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.landingCardTitle span {
+  color: var(--ember);
 }
 
 .search {
-  width: min(100%, 780px);
-  background: var(--card);
-  border-radius: 14px;
-  box-shadow: 0 8px 32px color-mix(in srgb, var(--ink) 35%, transparent);
-  display: flex;
+  width: min(100%, 900px);
+  background: var(--white);
+  border-radius: 28px;
+  box-shadow: 0 24px 68px rgba(13, 17, 23, 0.28);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
   gap: 0;
   margin: 0 auto;
-  padding: 8px;
+  padding: 22px;
   position: relative;
   text-align: left;
+}
+
+.searchLandingCard {
+  width: 100%;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+  margin-top: 24px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .searchField {
@@ -86,22 +118,124 @@
   position: relative;
 }
 
+.searchFieldProminent {
+  isolation: isolate;
+}
+
+.searchFieldCard {
+  isolation: isolate;
+}
+
+.fieldLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px 8px;
+  color: var(--ember-lo);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.searchFieldCard .fieldLabel {
+  display: block;
+  margin: 0 0 9px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .fieldControl {
-  min-height: 52px;
+  min-height: 70px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
+  gap: 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  padding: 14px 18px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.searchFieldCard .fieldControl {
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  gap: 12px;
+  padding: 0 14px;
+}
+
+.searchFieldCard .fieldControl:hover,
+.searchFieldCard .fieldControl:focus-within {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px rgba(27, 111, 212, 0.1);
+}
+
+.searchFieldProminent .fieldControl {
+  min-height: 82px;
+  border: 2px solid color-mix(in srgb, var(--ember) 34%, var(--line));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 253, 0.98)),
+    var(--white);
+  box-shadow:
+    0 0 0 5px rgba(27, 111, 212, 0.08),
+    0 14px 30px rgba(13, 17, 23, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.searchFieldProminent .fieldControl:hover {
+  border-color: color-mix(in srgb, var(--ember) 58%, var(--line));
+  box-shadow:
+    0 0 0 6px rgba(27, 111, 212, 0.12),
+    0 18px 36px rgba(13, 17, 23, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.fieldControl:focus-within {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ember) 13%, transparent);
+}
+
+.searchFieldProminent .fieldControl:focus-within {
+  border-color: var(--ember);
+  box-shadow:
+    0 0 0 6px rgba(27, 111, 212, 0.18),
+    0 18px 42px rgba(27, 111, 212, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .fieldIcon {
-  color: var(--ember-lo);
+  color: var(--ink);
   flex: 0 0 auto;
 }
 
+.searchFieldCard .fieldIcon {
+  color: var(--ember);
+}
+
+.searchFieldProminent .fieldIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--ember-bg);
+  color: var(--ember);
+  box-shadow: inset 0 0 0 1px rgba(27, 111, 212, 0.14);
+}
+
 .fieldIcon svg {
-  height: 17px;
-  width: 17px;
+  height: 24px;
+  width: 24px;
+}
+
+.searchFieldCard .fieldIcon svg {
+  height: 20px;
+  width: 20px;
 }
 
 .input {
@@ -110,36 +244,97 @@
   outline: none;
   background: transparent;
   color: var(--ink);
-  font: 700 14px var(--font-manrope), sans-serif;
+  font: 900 28px var(--font-manrope), sans-serif;
+  letter-spacing: 0;
+  min-width: 0;
+}
+
+.input:focus,
+.input:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
+.searchFieldCard .input {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.searchFieldProminent .input {
+  color: var(--ink2);
+  font-size: 32px;
 }
 
 .input::placeholder {
   color: color-mix(in srgb, var(--mist) 62%, var(--card));
+  font-weight: 700;
+}
+
+.searchFieldCard .input::placeholder {
+  color: var(--mist);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.searchFieldProminent .input::placeholder {
+  color: color-mix(in srgb, var(--ink) 64%, var(--mist));
+  opacity: 0.58;
+  font-weight: 900;
 }
 
 .divider {
   width: 1px;
-  height: 36px;
+  height: 70px;
   align-self: center;
-  background: var(--line);
+  background: transparent;
+}
+
+.searchLandingCard .divider {
+  display: none;
 }
 
 .submit {
+  grid-column: 1 / -1;
   border: 0;
-  border-radius: 10px;
+  border-radius: 18px;
   background: var(--ember);
-  color: var(--card);
+  color: var(--white);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 900;
   gap: 8px;
-  padding: 14px 28px;
+  margin-top: 18px;
+  min-height: 64px;
+  padding: 16px 28px;
   transition: background 0.2s;
   white-space: nowrap;
+}
+
+.searchLandingCard .submit {
+  grid-column: auto;
+  min-width: 260px;
+  min-height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--ember-hi), var(--ember));
+  box-shadow: 0 10px 22px rgba(23, 105, 232, 0.24);
+  font-size: 15px;
+  margin-top: 0;
+  padding: 0 27px;
+}
+
+.searchLandingCard .submit:hover {
+  background: linear-gradient(135deg, #3b91f0, var(--ember));
+}
+
+.searchLandingCard .submit:disabled {
+  background: linear-gradient(135deg, var(--ember-hi), var(--ember));
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.78;
 }
 
 .submit svg {
@@ -164,51 +359,106 @@
 
 .dropdown {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
   z-index: 10;
-  max-height: 280px;
-  overflow-y: auto;
-  background: var(--card);
+  max-height: none;
+  overflow: hidden;
+  background: var(--white);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px color-mix(in srgb, var(--ink) 15%, transparent);
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(13, 17, 23, 0.16);
 }
 
 .dropdownItem {
   width: 100%;
   border: 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-soft);
   background: transparent;
   color: var(--ink);
   cursor: pointer;
   display: flex;
-  gap: 10px;
+  gap: 14px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 16px;
   text-align: left;
 }
 
 .dropdownItem:hover,
 .dropdownItemActive {
-  background: var(--parchment);
+  background: var(--ember-bg);
+}
+
+.dropdownCode {
+  min-width: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: var(--ember-bg);
+  color: var(--ember-lo);
+  padding: 8px 10px;
+}
+
+.dropdownCode strong {
+  font-size: 15px;
+  font-weight: 900;
 }
 
 .dropdownFlag {
   font-size: 18px;
 }
 
+.countryFlag {
+  display: inline-block;
+  width: 22px;
+  height: 16px;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent) inset;
+}
+
+.dropdownFlagText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  color: var(--ember-lo);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.dropdownCopy {
+  min-width: 0;
+}
+
 .dropdownName {
-  display: block;
-  font-size: 13px;
-  font-weight: 800;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.dropdownName > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdownMeta {
   display: block;
-  color: var(--mist);
-  font-size: 11px;
+  color: var(--mist2);
+  font-size: 12px;
   font-weight: 700;
   margin-top: 2px;
 }
@@ -223,22 +473,66 @@
   opacity: 0.5;
 }
 
+.selectedAirport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  color: var(--mist2);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin: 8px 4px 0 58px;
+}
+
+.selectedAirport > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchFieldCard .selectedAirport {
+  min-height: 16px;
+  margin: 7px 2px 0 32px;
+  color: var(--mist2);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.searchFieldProminent .selectedAirport {
+  margin-left: 62px;
+  color: color-mix(in srgb, var(--ink) 68%, var(--mist2));
+  font-size: 13px;
+}
+
 .boarding {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: color-mix(in srgb, var(--parchment) 62%, var(--mist));
+  color: rgba(255, 255, 255, 0.78);
   font-size: 13px;
-  font-weight: 700;
-  margin-top: 18px;
+  font-weight: 900;
+  margin-top: 22px;
+  text-transform: uppercase;
+}
+
+.boardingLandingCard {
+  justify-content: flex-start;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 20px;
+  text-transform: none;
 }
 
 .boardingButton {
-  border: 1px solid color-mix(in srgb, var(--parchment) 16%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--parchment) 8%, transparent);
-  color: var(--parchment);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -246,6 +540,26 @@
   font-weight: 800;
   gap: 7px;
   padding: 9px 14px;
+}
+
+.boardingLandingCard .boardingButton {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ember);
+  font-size: 15px;
+  padding: 0;
+}
+
+.boardingLandingCard .boardingButton:hover {
+  color: var(--ember-lo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.boardingLandingCard .boardingButton svg {
+  height: 18px;
+  width: 18px;
 }
 
 .boardingButton:disabled {
@@ -267,42 +581,156 @@
 }
 
 .badge {
-  border: 1px solid color-mix(in srgb, var(--parchment) 12%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
-  color: color-mix(in srgb, var(--parchment) 72%, var(--mist));
+  color: rgba(255, 255, 255, 0.82);
   font-size: 13px;
   font-weight: 800;
   padding: 9px 13px;
 }
 
 .error {
-  color: var(--ember-hi);
+  color: #ffd5d5;
   font-size: 13px;
   font-weight: 800;
   margin: 12px 0 0;
   text-align: center;
 }
 
+.landingCard .error {
+  color: #c33c33;
+  margin: 12px 0 0;
+  text-align: left;
+}
+
 @media (max-width: 767px) {
   .hero {
-    padding: 36px 16px;
+    padding: 92px 16px 42px;
   }
 
   .search {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    border-radius: 26px;
+    padding: 16px;
+  }
+
+  .landingCard {
+    border-radius: 16px;
+    padding: 22px 16px 20px;
+  }
+
+  .searchLandingCard {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .searchFieldCard .fieldControl {
+    min-height: 52px;
+  }
+
+  .searchLandingCard .submit {
+    width: 100%;
+    min-width: 0;
   }
 
   .divider {
     width: 100%;
     height: 1px;
+    margin: 10px 0;
+    background: var(--line-soft);
   }
 
   .submit {
     width: 100%;
+    min-height: 58px;
+    font-size: 17px;
+    margin-top: 14px;
+  }
+
+  .searchLandingCard .submit {
+    min-height: 52px;
+    margin-top: 0;
   }
 
   .boarding {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .boardingLandingCard {
+    align-items: flex-start;
+  }
+
+  .boardingLandingCard .boardingButton {
+    justify-content: flex-start;
+    min-height: auto;
+    text-align: left;
+  }
+
+  .boardingButton {
+    width: 100%;
+    min-height: 52px;
+  }
+
+  .boardingLandingCard .boardingButton {
+    width: auto;
+  }
+
+  .input {
+    font-size: 22px;
+  }
+
+  .fieldControl {
+    min-height: 64px;
+  }
+
+  .searchFieldProminent .fieldControl {
+    min-height: 76px;
+  }
+
+  .searchFieldProminent .input {
+    font-size: 27px;
+  }
+
+  .selectedAirport {
+    margin-left: 50px;
+  }
+}
+
+@media (max-width: 420px) {
+  .headline {
+    font-size: clamp(36px, 10vw, 44px);
+  }
+
+  .description {
+    font-size: 15px;
+  }
+
+  .trust {
+    border-radius: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .fieldControl {
+    padding: 12px 14px;
+  }
+
+  .input {
+    font-size: 19px;
+  }
+
+  .searchFieldProminent .input {
+    font-size: 23px;
+  }
+
+  .dropdownCode {
+    min-width: 66px;
+    padding: 7px 8px;
+  }
+
+  .dropdownName > span:last-child {
+    white-space: normal;
   }
 }

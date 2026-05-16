@@ -6,8 +6,10 @@ import { useState } from "react";
 
 import { ClaimStatusBadge, ClaimTypeBadge } from "@/components/claims/ClaimStatusBadge";
 import { ClientEditModal } from "@/components/clients/ClientEditModal";
+import { getClientStatusLabel } from "@/lib/clients/status";
 import type { ClientDetailData } from "@/lib/clients/types";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/claims/format";
+import { formatPhone } from "@/lib/utils/phone";
 import { api } from "@/lib/trpc/hooks";
 
 type ClientDetailViewProps = {
@@ -84,7 +86,7 @@ export function ClientDetailView({ client }: ClientDetailViewProps) {
           value={
             client.phone ? (
               <a className="underline-offset-4 hover:underline" href={`tel:${client.phone}`}>
-                {client.phone}
+                {formatPhone(client.phone)}
               </a>
             ) : (
               "Brak"
@@ -93,12 +95,21 @@ export function ClientDetailView({ client }: ClientDetailViewProps) {
         />
         <DataTile label="Adres" value={fullAddress || "Brak adresu"} />
         <DataTile label="Sprawy" value={client.claimsCount} />
+        <DataTile label="PESEL" value={client.pesel ?? "Brak"} />
         <DataTile label="Narodowość" value={client.nationality ?? "Brak"} />
         <DataTile
           label="Dokument"
-          value={client.idDocumentNumber ?? "Brak"}
+          value={
+            [
+              client.documentType,
+              client.documentSeries,
+              client.documentNumber ?? client.idDocumentNumber,
+            ]
+              .filter(Boolean)
+              .join(" ") || "Brak"
+          }
         />
-        <DataTile label="Status" value={client.status} />
+        <DataTile label="Status" value={getClientStatusLabel(client.status)} />
         <DataTile label="Utworzono" value={formatDate(client.createdAt)} />
       </section>
 

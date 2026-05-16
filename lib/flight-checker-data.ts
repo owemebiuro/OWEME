@@ -1,3 +1,6 @@
+import airportsData from "./airports.generated.json";
+import { airlineCrmData } from "./airlines/airline-crm-data";
+
 export interface Airport {
   iata: string;
   name: string;
@@ -6,101 +9,80 @@ export interface Airport {
   flag: string;
   lat: number;
   lon: number;
+  type?: string;
+  scheduled?: boolean;
 }
 
 export interface Airline {
   iata: string;
   name: string;
+  aliases?: readonly string[];
 }
 
 export type Disruption = "delay" | "cancel" | "denied";
 export type DelayHours = "3plus" | "less3" | "never";
 
-export const AIRPORTS: readonly Airport[] = [
-  { iata: "WAW", name: "Warszawa Chopina", city: "Warszawa", country: "Polska", flag: "🇵🇱", lat: 52.1657, lon: 20.9671 },
-  { iata: "WMI", name: "Warszawa Modlin", city: "Nowy Dwór Mazowiecki", country: "Polska", flag: "🇵🇱", lat: 52.4511, lon: 20.6518 },
-  { iata: "KRK", name: "Kraków Balice", city: "Kraków", country: "Polska", flag: "🇵🇱", lat: 50.0777, lon: 19.7848 },
-  { iata: "GDN", name: "Gdańsk im. Lecha Wałęsy", city: "Gdańsk", country: "Polska", flag: "🇵🇱", lat: 54.3776, lon: 18.4662 },
-  { iata: "WRO", name: "Wrocław Strachowice", city: "Wrocław", country: "Polska", flag: "🇵🇱", lat: 51.1027, lon: 16.8858 },
-  { iata: "POZ", name: "Poznań Ławica", city: "Poznań", country: "Polska", flag: "🇵🇱", lat: 52.421, lon: 16.8263 },
-  { iata: "KTW", name: "Katowice Pyrzowice", city: "Katowice", country: "Polska", flag: "🇵🇱", lat: 50.4743, lon: 19.08 },
-  { iata: "LCJ", name: "Łódź Lublinek", city: "Łódź", country: "Polska", flag: "🇵🇱", lat: 51.7219, lon: 19.3981 },
-  { iata: "RZE", name: "Rzeszów Jasionka", city: "Rzeszów", country: "Polska", flag: "🇵🇱", lat: 50.11, lon: 22.019 },
-  { iata: "SZZ", name: "Szczecin Goleniów", city: "Szczecin", country: "Polska", flag: "🇵🇱", lat: 53.5847, lon: 14.9022 },
-  { iata: "LUZ", name: "Lublin", city: "Lublin", country: "Polska", flag: "🇵🇱", lat: 51.2403, lon: 22.7136 },
-  { iata: "BZG", name: "Bydgoszcz Szwederowo", city: "Bydgoszcz", country: "Polska", flag: "🇵🇱", lat: 53.0968, lon: 17.9777 },
-  { iata: "LHR", name: "London Heathrow", city: "Londyn", country: "Wielka Brytania", flag: "🇬🇧", lat: 51.47, lon: -0.4543 },
-  { iata: "LGW", name: "London Gatwick", city: "Londyn", country: "Wielka Brytania", flag: "🇬🇧", lat: 51.1537, lon: -0.1821 },
-  { iata: "STN", name: "London Stansted", city: "Londyn", country: "Wielka Brytania", flag: "🇬🇧", lat: 51.885, lon: 0.235 },
-  { iata: "CDG", name: "Paris Charles de Gaulle", city: "Paryż", country: "Francja", flag: "🇫🇷", lat: 49.0097, lon: 2.5479 },
-  { iata: "ORY", name: "Paris Orly", city: "Paryż", country: "Francja", flag: "🇫🇷", lat: 48.7233, lon: 2.3794 },
-  { iata: "AMS", name: "Amsterdam Schiphol", city: "Amsterdam", country: "Holandia", flag: "🇳🇱", lat: 52.3105, lon: 4.7683 },
-  { iata: "FRA", name: "Frankfurt am Main", city: "Frankfurt", country: "Niemcy", flag: "🇩🇪", lat: 50.0379, lon: 8.5622 },
-  { iata: "MAD", name: "Madrid Barajas", city: "Madryt", country: "Hiszpania", flag: "🇪🇸", lat: 40.4983, lon: -3.5676 },
-  { iata: "FCO", name: "Rome Fiumicino", city: "Rzym", country: "Włochy", flag: "🇮🇹", lat: 41.8003, lon: 12.2389 },
-  { iata: "BCN", name: "Barcelona El Prat", city: "Barcelona", country: "Hiszpania", flag: "🇪🇸", lat: 41.2974, lon: 2.0833 },
-  { iata: "VIE", name: "Vienna International", city: "Wiedeń", country: "Austria", flag: "🇦🇹", lat: 48.1103, lon: 16.5697 },
-  { iata: "ZRH", name: "Zurich Airport", city: "Zurych", country: "Szwajcaria", flag: "🇨🇭", lat: 47.4581, lon: 8.5555 },
-  { iata: "MUC", name: "Munich Airport", city: "Monachium", country: "Niemcy", flag: "🇩🇪", lat: 48.3538, lon: 11.7861 },
-  { iata: "ARN", name: "Stockholm Arlanda", city: "Sztokholm", country: "Szwecja", flag: "🇸🇪", lat: 59.6498, lon: 17.9238 },
-  { iata: "CPH", name: "Copenhagen Airport", city: "Kopenhaga", country: "Dania", flag: "🇩🇰", lat: 55.618, lon: 12.6561 },
-  { iata: "OSL", name: "Oslo Gardermoen", city: "Oslo", country: "Norwegia", flag: "🇳🇴", lat: 60.1939, lon: 11.1004 },
-  { iata: "HEL", name: "Helsinki Vantaa", city: "Helsinki", country: "Finlandia", flag: "🇫🇮", lat: 60.3172, lon: 24.9633 },
-  { iata: "DUB", name: "Dublin Airport", city: "Dublin", country: "Irlandia", flag: "🇮🇪", lat: 53.4213, lon: -6.2701 },
-  { iata: "BRU", name: "Brussels Airport", city: "Bruksela", country: "Belgia", flag: "🇧🇪", lat: 50.9014, lon: 4.4844 },
-  { iata: "LIS", name: "Lisbon Humberto Delgado", city: "Lizbona", country: "Portugalia", flag: "🇵🇹", lat: 38.7742, lon: -9.1342 },
-  { iata: "ATH", name: "Athens International", city: "Ateny", country: "Grecja", flag: "🇬🇷", lat: 37.9364, lon: 23.9445 },
-  { iata: "PRG", name: "Prague Václav Havel", city: "Praga", country: "Czechy", flag: "🇨🇿", lat: 50.1008, lon: 14.26 },
-  { iata: "BUD", name: "Budapest Ferenc Liszt", city: "Budapeszt", country: "Węgry", flag: "🇭🇺", lat: 47.4298, lon: 19.2611 },
-  { iata: "BER", name: "Berlin Brandenburg", city: "Berlin", country: "Niemcy", flag: "🇩🇪", lat: 52.3667, lon: 13.5033 },
-  { iata: "HAM", name: "Hamburg Airport", city: "Hamburg", country: "Niemcy", flag: "🇩🇪", lat: 53.6304, lon: 9.9882 },
-  { iata: "DUS", name: "Düsseldorf Airport", city: "Düsseldorf", country: "Niemcy", flag: "🇩🇪", lat: 51.2895, lon: 6.7668 },
-  { iata: "MXP", name: "Milan Malpensa", city: "Mediolan", country: "Włochy", flag: "🇮🇹", lat: 45.63, lon: 8.7231 },
-  { iata: "VCE", name: "Venice Marco Polo", city: "Wenecja", country: "Włochy", flag: "🇮🇹", lat: 45.5053, lon: 12.3519 },
-  { iata: "NAP", name: "Naples International", city: "Neapol", country: "Włochy", flag: "🇮🇹", lat: 40.8845, lon: 14.2908 },
-  { iata: "PMI", name: "Palma de Mallorca", city: "Palma", country: "Hiszpania", flag: "🇪🇸", lat: 39.5517, lon: 2.7388 },
-  { iata: "AGP", name: "Málaga Costa del Sol", city: "Malaga", country: "Hiszpania", flag: "🇪🇸", lat: 36.6749, lon: -4.4991 },
-  { iata: "ALC", name: "Alicante Elche", city: "Alicante", country: "Hiszpania", flag: "🇪🇸", lat: 38.2822, lon: -0.5582 },
-  { iata: "NCE", name: "Nice Côte d'Azur", city: "Nicea", country: "Francja", flag: "🇫🇷", lat: 43.6653, lon: 7.215 },
-  { iata: "LYS", name: "Lyon Saint Exupéry", city: "Lyon", country: "Francja", flag: "🇫🇷", lat: 45.7256, lon: 5.0811 },
-  { iata: "IST", name: "Istanbul Airport", city: "Stambuł", country: "Turcja", flag: "🇹🇷", lat: 41.2753, lon: 28.7519 },
-  { iata: "SAW", name: "Istanbul Sabiha Gökçen", city: "Stambuł", country: "Turcja", flag: "🇹🇷", lat: 40.8986, lon: 29.3092 },
-  { iata: "DXB", name: "Dubai International", city: "Dubaj", country: "ZEA", flag: "🇦🇪", lat: 25.2532, lon: 55.3657 },
-  { iata: "DOH", name: "Hamad International", city: "Doha", country: "Katar", flag: "🇶🇦", lat: 25.2731, lon: 51.6081 },
-  { iata: "JFK", name: "New York JFK", city: "Nowy Jork", country: "USA", flag: "🇺🇸", lat: 40.6413, lon: -73.7781 },
-  { iata: "EWR", name: "Newark Liberty", city: "Newark", country: "USA", flag: "🇺🇸", lat: 40.6895, lon: -74.1745 },
-  { iata: "LAX", name: "Los Angeles International", city: "Los Angeles", country: "USA", flag: "🇺🇸", lat: 33.9416, lon: -118.4085 },
-  { iata: "ORD", name: "Chicago O'Hare", city: "Chicago", country: "USA", flag: "🇺🇸", lat: 41.9742, lon: -87.9073 },
-  { iata: "BKK", name: "Bangkok Suvarnabhumi", city: "Bangkok", country: "Tajlandia", flag: "🇹🇭", lat: 13.69, lon: 100.7501 },
-  { iata: "SIN", name: "Singapore Changi", city: "Singapur", country: "Singapur", flag: "🇸🇬", lat: 1.3644, lon: 103.9915 },
+export const AIRPORTS = airportsData as readonly Airport[];
+
+const AIRPORT_BY_IATA = new Map(
+  AIRPORTS.map((airport) => [airport.iata, airport]),
+);
+
+const POPULAR_AIRPORT_CODES = [
+  "WAW",
+  "KRK",
+  "GDN",
+  "WRO",
+  "KTW",
+  "POZ",
+  "LHR",
+  "CDG",
+  "AMS",
+  "FRA",
+  "JFK",
+  "LAX",
 ] as const;
 
-export const AIRLINES: readonly Airline[] = [
-  { iata: "LO", name: "LOT Polish Airlines" },
-  { iata: "FR", name: "Ryanair" },
-  { iata: "W6", name: "Wizz Air" },
+const AIRPORT_SEARCH_ALIASES: Record<string, readonly string[]> = {
+  WAW: ["Warszawa", "Okęcie", "Lotnisko Chopina"],
+  WMI: ["Warszawa Modlin", "Modlin"],
+  RDO: ["Warszawa Radom"],
+  LHR: ["Londyn", "Londyn Heathrow"],
+  LGW: ["Londyn Gatwick"],
+  STN: ["Londyn Stansted"],
+  LTN: ["Londyn Luton"],
+  LCY: ["Londyn City"],
+  CDG: ["Paryż", "Paryż Charles de Gaulle"],
+  ORY: ["Paryż Orly"],
+  FCO: ["Rzym"],
+  CIA: ["Rzym Ciampino"],
+  MUC: ["Monachium"],
+  VIE: ["Wiedeń"],
+  PRG: ["Praga"],
+  BUD: ["Budapeszt"],
+  ATH: ["Ateny"],
+  IST: ["Stambuł"],
+  DXB: ["Dubaj"],
+  JFK: ["Nowy Jork"],
+  EWR: ["Nowy Jork Newark"],
+  NRT: ["Tokio Narita"],
+  HND: ["Tokio Haneda"],
+};
+
+const TYPE_PRIORITY: Record<string, number> = {
+  large_airport: 0,
+  medium_airport: 1,
+  small_airport: 2,
+  seaplane_base: 3,
+  heliport: 4,
+  balloonport: 5,
+};
+
+const EXTRA_AIRLINES: readonly Airline[] = [
   { iata: "U2", name: "easyJet" },
-  { iata: "LH", name: "Lufthansa" },
-  { iata: "KL", name: "KLM" },
-  { iata: "AF", name: "Air France" },
-  { iata: "BA", name: "British Airways" },
   { iata: "EK", name: "Emirates" },
-  { iata: "TK", name: "Turkish Airlines" },
   { iata: "QR", name: "Qatar Airways" },
-  { iata: "OS", name: "Austrian Airlines" },
-  { iata: "LX", name: "Swiss" },
-  { iata: "SK", name: "SAS Scandinavian Airlines" },
-  { iata: "DY", name: "Norwegian" },
-  { iata: "TP", name: "TAP Air Portugal" },
-  { iata: "IB", name: "Iberia" },
-  { iata: "VY", name: "Vueling" },
-  { iata: "AZ", name: "ITA Airways" },
-  { iata: "A3", name: "Aegean Airlines" },
-  { iata: "AY", name: "Finnair" },
-  { iata: "SN", name: "Brussels Airlines" },
-  { iata: "EW", name: "Eurowings" },
   { iata: "HV", name: "Transavia" },
-  { iata: "EI", name: "Aer Lingus" },
   { iata: "VS", name: "Virgin Atlantic" },
   { iata: "UA", name: "United Airlines" },
   { iata: "DL", name: "Delta Air Lines" },
@@ -108,39 +90,117 @@ export const AIRLINES: readonly Airline[] = [
   { iata: "AC", name: "Air Canada" },
 ] as const;
 
+function displayAirlineName(aliases: readonly string[] | undefined, legalName: string) {
+  return aliases?.at(-1) ?? legalName;
+}
+
+const CRM_AIRLINES: readonly Airline[] = airlineCrmData.map((airline) => ({
+  iata: airline.iata,
+  name: displayAirlineName(airline.aliases, airline.name),
+  aliases: airline.aliases,
+}));
+
+const CRM_AIRLINE_CODES = new Set(CRM_AIRLINES.map((airline) => airline.iata));
+
+export const AIRLINES: readonly Airline[] = [
+  ...CRM_AIRLINES,
+  ...EXTRA_AIRLINES.filter((airline) => !CRM_AIRLINE_CODES.has(airline.iata)),
+] as const;
+
+function normalizeSearch(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function typeRank(airport: Airport) {
+  return TYPE_PRIORITY[airport.type ?? ""] ?? 9;
+}
+
+function airportSearchText(airport: Airport) {
+  return normalizeSearch(
+    `${airport.iata} ${airport.name} ${airport.city} ${airport.country} ${
+      AIRPORT_SEARCH_ALIASES[airport.iata]?.join(" ") ?? ""
+    }`,
+  );
+}
+
+function airportScore(airport: Airport, normalizedQuery: string) {
+  const iata = airport.iata.toLowerCase();
+  const name = normalizeSearch(airport.name);
+  const city = normalizeSearch(airport.city);
+  const country = normalizeSearch(airport.country);
+  const aliases = (AIRPORT_SEARCH_ALIASES[airport.iata] ?? []).map((alias) =>
+    normalizeSearch(alias),
+  );
+  const aliasText = aliases.join(" ");
+  const haystack = `${iata} ${name} ${city} ${country} ${aliasText}`;
+
+  if (iata === normalizedQuery) return 0;
+  if (iata.startsWith(normalizedQuery)) return 1;
+  if (city.startsWith(normalizedQuery)) return 2;
+  if (aliases.some((alias) => alias.startsWith(normalizedQuery))) return 2;
+  if (name.startsWith(normalizedQuery)) return 3;
+  if (country.startsWith(normalizedQuery)) return 4;
+  if (haystack.includes(normalizedQuery)) return 5;
+
+  return Number.POSITIVE_INFINITY;
+}
+
 export function searchAirports(query: string) {
-  const normalized = query.trim().toLowerCase();
+  const normalized = normalizeSearch(query);
 
   if (!normalized) {
-    return AIRPORTS.slice(0, 8);
+    return POPULAR_AIRPORT_CODES.map((code) => AIRPORT_BY_IATA.get(code)).filter(
+      (airport): airport is Airport => Boolean(airport),
+    );
   }
 
-  return AIRPORTS.filter((airport) => {
-    const haystack = `${airport.iata} ${airport.name} ${airport.city} ${airport.country}`.toLowerCase();
-    return haystack.includes(normalized);
-  }).slice(0, 12);
+  return AIRPORTS.map((airport) => ({
+    airport,
+    score: airportScore(airport, normalized),
+  }))
+    .filter((result) => Number.isFinite(result.score))
+    .sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score;
+      if (a.airport.scheduled !== b.airport.scheduled) {
+        return a.airport.scheduled ? -1 : 1;
+      }
+      const typeDifference = typeRank(a.airport) - typeRank(b.airport);
+      if (typeDifference !== 0) return typeDifference;
+
+      return airportSearchText(a.airport).localeCompare(
+        airportSearchText(b.airport),
+      );
+    })
+    .slice(0, 12)
+    .map((result) => result.airport);
 }
 
 export function searchAirlines(query: string) {
-  const normalized = query.trim().toLowerCase();
+  const normalized = normalizeSearch(query);
 
   if (!normalized) {
     return AIRLINES.slice(0, 8);
   }
 
   return AIRLINES.filter((airline) => {
-    const haystack = `${airline.iata} ${airline.name}`.toLowerCase();
+    const haystack = normalizeSearch(
+      `${airline.iata} ${airline.name} ${(airline.aliases ?? []).join(" ")}`,
+    );
     return haystack.includes(normalized);
   }).slice(0, 12);
 }
 
 export function findAirport(iata: string | null | undefined) {
   const normalized = iata?.trim().toUpperCase();
-  return AIRPORTS.find((airport) => airport.iata === normalized) ?? null;
+  return normalized ? (AIRPORT_BY_IATA.get(normalized) ?? null) : null;
 }
 
 export function findAirline(value: string | null | undefined) {
-  const normalized = value?.trim().toLowerCase();
+  const normalized = normalizeSearch(value ?? "");
 
   if (!normalized) {
     return null;
@@ -149,8 +209,11 @@ export function findAirline(value: string | null | undefined) {
   return (
     AIRLINES.find(
       (airline) =>
-        airline.iata.toLowerCase() === normalized ||
-        airline.name.toLowerCase() === normalized,
+        normalizeSearch(airline.iata) === normalized ||
+        normalizeSearch(airline.name) === normalized ||
+        (airline.aliases ?? []).some(
+          (alias) => normalizeSearch(alias) === normalized,
+        ),
     ) ?? null
   );
 }

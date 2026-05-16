@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { Step1Route } from "./steps/Step1Route";
 import { Step2Details } from "./steps/Step2Details";
@@ -79,7 +79,6 @@ export function WizardShell({
   initialAirline = null,
   initialFlightNumber = null,
 }: WizardShellProps) {
-  const initialized = useRef(false);
   const prefersReducedMotion = useReducedMotion();
   const currentStep = useWizardStore((state) => state.currentStep);
   const data = useWizardStore((state) => state.data);
@@ -87,6 +86,7 @@ export function WizardShell({
   const nextStep = useWizardStore((state) => state.nextStep);
   const prevStep = useWizardStore((state) => state.prevStep);
   const setData = useWizardStore((state) => state.setData);
+  const reset = useWizardStore((state) => state.reset);
   const canContinue = canProceed();
   const showBreadcrumb = currentStep >= 1;
   const routeLabel =
@@ -95,11 +95,7 @@ export function WizardShell({
       : null;
 
   useEffect(() => {
-    if (initialized.current) {
-      return;
-    }
-
-    initialized.current = true;
+    reset();
     setData({
       departureAirport: initialDepartureAirport,
       destinationAirport: initialDestinationAirport,
@@ -113,6 +109,7 @@ export function WizardShell({
     initialDestinationAirport,
     initialFlightDate,
     initialFlightNumber,
+    reset,
     setData,
   ]);
 

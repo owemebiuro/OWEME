@@ -16,16 +16,32 @@
 .logo {
   display: flex;
   align-items: center;
+  gap: 10px;
+  color: var(--ink);
   text-decoration: none;
   flex-shrink: 0;
 }
 
-.logoImage {
-  display: block;
-  width: auto;
-  height: 24px;
-  max-width: 143px;
-  object-fit: contain;
+.logoMark {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--ember);
+}
+
+.logoText {
+  font-family: var(--font-outfit);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.logoText span {
+  color: var(--ember);
 }
 
 .navLinks {
@@ -163,7 +179,7 @@
 }
 
 .secondaryCta:hover {
-  border-color: rgba(201, 106, 42, 0.45);
+  border-color: rgba(27, 111, 212, 0.45);
   color: var(--text);
 }
 
@@ -231,7 +247,7 @@
   border: 1.5px solid var(--border);
   border-radius: 60px;
   padding: 6px 6px 6px 22px;
-  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.1);
+  box-shadow: 0 2px 20px rgba(13, 17, 23, 0.08);
   gap: 10px;
 }
 
@@ -246,7 +262,7 @@
   border: 1.5px solid var(--border);
   border-radius: 60px;
   padding: 6px;
-  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.08);
+  box-shadow: 0 2px 20px rgba(13, 17, 23, 0.07);
   gap: 10px;
 }
 
@@ -277,7 +293,7 @@
 }
 
 .checkerInput::placeholder {
-  color: #d0c4b8;
+  color: var(--line);
   font-weight: 400;
   letter-spacing: 1px;
   font-size: 17px;
@@ -313,7 +329,7 @@
 .checkerError {
   margin-top: 10px;
   font-size: 12px;
-  color: #b24c2c;
+  color: var(--danger);
   text-align: center;
 }
 
@@ -342,8 +358,8 @@
 }
 
 .resultBubbleEligible {
-  border-color: #e8b98a;
-  background: #fdf7f0;
+  border-color: var(--line);
+  background: var(--ember-bg);
 }
 
 .resultRow {
@@ -462,7 +478,7 @@
 }
 
 .resultGhostCta:hover {
-  border-color: rgba(201, 106, 42, 0.35);
+  border-color: rgba(27, 111, 212, 0.35);
   color: var(--text);
 }
 
@@ -517,7 +533,7 @@
 }
 
 .claimCard:hover {
-  box-shadow: 0 8px 32px rgba(180, 100, 30, 0.12);
+  box-shadow: 0 8px 32px rgba(13, 17, 23, 0.1);
   transform: translateY(-2px);
 }
 
@@ -848,7 +864,7 @@
   border: 1.5px solid var(--border);
   border-radius: var(--r-lg);
   background: var(--card);
-  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.1);
+  box-shadow: 0 2px 20px rgba(13, 17, 23, 0.08);
   padding: 1.35rem;
 }
 
@@ -871,7 +887,7 @@
 }
 
 .funnelSteps .funnelStepActive {
-  border-color: rgba(201, 106, 42, 0.35);
+  border-color: rgba(27, 111, 212, 0.35);
   background: var(--orange-light);
   color: var(--orange-deep);
 }
@@ -917,8 +933,8 @@
 
 .funnelField input:focus,
 .funnelField select:focus {
-  border-color: rgba(201, 106, 42, 0.55);
-  box-shadow: 0 0 0 3px rgba(201, 106, 42, 0.11);
+  border-color: rgba(27, 111, 212, 0.55);
+  box-shadow: 0 0 0 3px rgba(27, 111, 212, 0.11);
 }
 
 .funnelButton {
@@ -950,10 +966,10 @@
 }
 
 .funnelError {
-  border: 1px solid #f0c6bd;
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--line));
   border-radius: var(--r);
-  background: #fff4f1;
-  color: #9d2d16;
+  background: #fff0f0;
+  color: var(--danger);
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 700;
@@ -997,17 +1013,17 @@
 }
 
 .funnelResultGood {
-  border-color: rgba(62, 142, 91, 0.2);
-  background: #f0fbf4;
+  border-color: rgba(30, 138, 110, 0.2);
+  background: var(--sage-bg);
 }
 
 .funnelResultManual {
-  border-color: rgba(201, 106, 42, 0.25);
+  border-color: rgba(27, 111, 212, 0.25);
   background: var(--orange-light);
 }
 
 .funnelResultMuted {
-  background: #f6f3ef;
+  background: var(--card);
 }
 
 .funnelSummary {
@@ -1064,7 +1080,7 @@
 
 .funnelHint {
   border-radius: var(--r);
-  background: #f6f3ef;
+  background: var(--card);
   color: var(--text-2);
   padding: 10px 12px;
   font-size: 12.5px;
@@ -1124,7 +1140,7 @@
 }
 
 .applicationBenefits span {
-  border: 1px solid rgba(201, 106, 42, 0.22);
+  border: 1px solid rgba(27, 111, 212, 0.22);
   border-radius: 999px;
   background: var(--orange-light);
   color: var(--orange-deep);
@@ -1147,7 +1163,7 @@
   border: 1.5px solid var(--border);
   border-radius: var(--r-lg);
   background: var(--card);
-  box-shadow: 0 2px 20px rgba(180, 100, 30, 0.1);
+  box-shadow: 0 2px 20px rgba(13, 17, 23, 0.08);
   padding: 1.5rem;
 }
 
@@ -1167,7 +1183,7 @@
 .applicationProgressBar {
   height: 8px;
   border-radius: 999px;
-  background: #eee6de;
+  background: var(--line-soft);
   overflow: hidden;
 }
 
@@ -1196,7 +1212,7 @@
 }
 
 .applicationStepLabels .applicationStepActive {
-  border-color: rgba(201, 106, 42, 0.35);
+  border-color: rgba(27, 111, 212, 0.35);
   background: var(--orange-light);
   color: var(--orange-deep);
 }
@@ -1212,7 +1228,7 @@
 }
 
 .readonlyInput {
-  background: #f7f2ed !important;
+  background: var(--card) !important;
   color: var(--text-2) !important;
 }
 
@@ -1323,7 +1339,7 @@
 }
 
 .applicationSecondaryButton:hover:not(:disabled) {
-  border-color: rgba(201, 106, 42, 0.45);
+  border-color: rgba(27, 111, 212, 0.45);
   color: var(--text);
 }
 
@@ -1353,8 +1369,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  background: #f0fbf4;
-  color: #247747;
+  background: var(--sage-bg);
+  color: var(--sage);
   margin-bottom: 1rem;
 }
 
@@ -1565,9 +1581,13 @@
     padding: 0 1rem;
   }
 
-  .logoImage {
-    height: 17px;
-    max-width: 98px;
+  .logoText {
+    font-size: 18px;
+  }
+
+  .logoMark {
+    width: 28px;
+    height: 28px;
   }
 
   .navLinks a:not(.navCta) {

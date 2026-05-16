@@ -6,6 +6,8 @@ import { hasPermission } from "@/lib/auth-helpers";
 import type { Context } from "@/lib/trpc/context";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
 import { router } from "@/lib/trpc/trpc";
+import { formatPostalCode } from "@/lib/utils/postal";
+import { formatPhone } from "@/lib/utils/phone";
 
 const clientListInclude = {
   _count: {
@@ -53,6 +55,11 @@ const listInputSchema = z
     page: z.number().int().min(1).default(1),
     pageSize: z.number().int().min(1).max(100).default(25),
     search: z.string().trim().optional(),
+    firstName: z.string().trim().optional(),
+    lastName: z.string().trim().optional(),
+    email: z.string().trim().optional(),
+    phone: z.string().trim().optional(),
+    pesel: z.string().trim().optional(),
   })
   .default({
     page: 1,
@@ -68,13 +75,18 @@ const clientFormSchema = z.object({
   lastName: z.string().trim().min(1, "Nazwisko jest wymagane."),
   email: z.string().trim().email("Podaj poprawny email.").toLowerCase(),
   phone: z.string().trim().min(3).nullable().optional(),
+  pesel: z.string().trim().nullable().optional(),
   nationality: z.string().trim().nullable().optional(),
   address: z.string().trim().nullable().optional(),
   postalCode: z.string().trim().nullable().optional(),
   city: z.string().trim().nullable().optional(),
   country: z.string().trim().min(2).default("PL"),
+  countryCode: z.string().trim().min(2).nullable().optional(),
+  documentType: z.string().trim().nullable().optional(),
+  documentNumber: z.string().trim().nullable().optional(),
+  documentSeries: z.string().trim().nullable().optional(),
   idDocumentNumber: z.string().trim().nullable().optional(),
-  status: z.string().trim().min(1).default("ACTIVE"),
+  status: z.enum(["active", "inactive", "suspended", "vip"]).default("active"),
 });
 
 const createInputSchema = clientFormSchema;
@@ -109,8 +121,42 @@ function buildSearchWhere(search: string): Prisma.ClientWhereInput {
       { lastName: contains },
       { email: contains },
       { phone: contains },
+      { pesel: contains },
     ],
   };
+}
+
+function buildListWhere(input: z.infer<typeof listInputSchema>): Prisma.ClientWhereInput {
+  const where: Prisma.ClientWhereInput = {};
+  const and: Prisma.ClientWhereInput[] = [];
+
+  if (input.search) {
+    and.push(buildSearchWhere(input.search));
+  }
+
+  const fields: Array<keyof Pick<
+    z.infer<typeof listInputSchema>,
+    "firstName" | "lastName" | "email" | "phone" | "pesel"
+  >> = ["firstName", "lastName", "email", "phone", "pesel"];
+
+  for (const field of fields) {
+    const value = input[field];
+
+    if (value) {
+      and.push({
+        [field]: {
+          contains: value,
+          mode: "insensitive",
+        },
+      });
+    }
+  }
+
+  if (and.length) {
+    where.AND = and;
+  }
+
+  return where;
 }
 
 function normalizeNullableString(value: string | null | undefined) {
@@ -121,15 +167,36 @@ function normalizeNullableString(value: string | null | undefined) {
   return value?.trim() || null;
 }
 
+function formatNullablePhone(value: string | null | undefined) {
+  const normalized = normalizeNullableString(value);
+
+  if (normalized === undefined) {
+    return undefined;
+  }
+
+  return normalized ? formatPhone(normalized) : null;
+}
+
+function formatNullablePostalCode(
+  country: string | null | undefined,
+  value: string | null | undefined,
+) {
+  const normalized = normalizeNullableString(value);
+
+  if (normalized === undefined) {
+    return undefined;
+  }
+
+  return normalized ? formatPostalCode(country ?? "PL", normalized) : null;
+}
+
 export const clientsRouter = router({
   list: permissionProcedure(PERMISSIONS.CLIENT_READ).input(listInputSchema).query(async ({ ctx, input }) => {
     requireAppUser(ctx);
 
     const page = input.page;
     const pageSize = input.pageSize;
-    const where: Prisma.ClientWhereInput = input.search
-      ? buildSearchWhere(input.search)
-      : {};
+    const where = buildListWhere(input);
 
     const [items, total] = await ctx.prisma.$transaction([
       ctx.prisma.client.findMany({
@@ -208,10 +275,16 @@ export const clientsRouter = router({
         data: {
           ...input,
           phone: normalizeNullableString(input.phone),
+          phoneFormatted: formatNullablePhone(input.phone),
+          pesel: normalizeNullableString(input.pesel),
           nationality: normalizeNullableString(input.nationality),
           address: normalizeNullableString(input.address),
-          postalCode: normalizeNullableString(input.postalCode),
+          postalCode: formatNullablePostalCode(input.countryCode ?? input.country, input.postalCode),
           city: normalizeNullableString(input.city),
+          countryCode: normalizeNullableString(input.countryCode),
+          documentType: normalizeNullableString(input.documentType),
+          documentNumber: normalizeNullableString(input.documentNumber),
+          documentSeries: normalizeNullableString(input.documentSeries),
           idDocumentNumber: normalizeNullableString(input.idDocumentNumber),
         },
         include: clientCardInclude,
@@ -272,10 +345,19 @@ export const clientsRouter = router({
         data: {
           ...data,
           phone: normalizeNullableString(data.phone),
+          phoneFormatted: formatNullablePhone(data.phone),
+          pesel: normalizeNullableString(data.pesel),
           nationality: normalizeNullableString(data.nationality),
           address: normalizeNullableString(data.address),
-          postalCode: normalizeNullableString(data.postalCode),
+          postalCode: formatNullablePostalCode(
+            data.countryCode ?? data.country,
+            data.postalCode,
+          ),
           city: normalizeNullableString(data.city),
+          countryCode: normalizeNullableString(data.countryCode),
+          documentType: normalizeNullableString(data.documentType),
+          documentNumber: normalizeNullableString(data.documentNumber),
+          documentSeries: normalizeNullableString(data.documentSeries),
           idDocumentNumber: normalizeNullableString(data.idDocumentNumber),
         },
         include: clientCardInclude,

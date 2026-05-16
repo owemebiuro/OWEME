@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CrmSidebar } from "@/components/crm/CrmSidebar";
 import { CrmTopbar } from "@/components/crm/CrmTopbar";
 import type { AppUser } from "@/types/auth";
+import styles from "./CrmShell.module.css";
 
 type CrmShellProps = {
   user: AppUser | null;
@@ -15,31 +16,32 @@ export function CrmShell({ user, children }: CrmShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
+    <div className={styles.shell}>
+      <div className={styles.wallpaper} aria-hidden="true" />
+
+      {sidebarOpen ? (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className={styles.mobileOverlay}
           onClick={() => setSidebarOpen(false)}
         />
-      )}
+      ) : null}
 
-      {/* Sidebar — fixed, full height */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[220px] transition-transform duration-200 lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`${styles.sidebarFrame} ${
+          sidebarOpen ? "" : styles.sidebarClosed
         }`}
       >
         <CrmSidebar user={user} onClose={() => setSidebarOpen(false)} />
       </aside>
 
-      {/* Content — offset by sidebar on desktop */}
-      <div className="lg:pl-[220px]">
-        <CrmTopbar
-          user={user}
-          onMenuToggle={() => setSidebarOpen((v) => !v)}
-        />
-        {children}
+      <div className={styles.content}>
+        <div className={styles.contentInner}>
+          <CrmTopbar
+            user={user}
+            onMenuToggle={() => setSidebarOpen((value) => !value)}
+          />
+          <div className={styles.pageContent}>{children}</div>
+        </div>
       </div>
     </div>
   );

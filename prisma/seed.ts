@@ -13,6 +13,9 @@ import {
   UserRole,
 } from "@prisma/client";
 
+import { airlineCrmData } from "../lib/airlines/airline-crm-data";
+import { getAirlinePrismaData } from "../lib/airlines/airline-prisma";
+
 const prisma = new PrismaClient();
 
 const ids = {
@@ -107,36 +110,24 @@ async function seedUsers() {
 }
 
 async function seedAirlines() {
-  const airlines = [
-    {
-      id: ids.airlines.lot,
-      name: "LOT Polish Airlines",
-      iataCode: "LO",
-      country: "PL",
-    },
-    {
-      id: ids.airlines.ryanair,
-      name: "Ryanair",
-      iataCode: "FR",
-      country: "IE",
-    },
-    {
-      id: ids.airlines.wizzAir,
-      name: "Wizz Air",
-      iataCode: "W6",
-      country: "HU",
-    },
-  ];
+  const seedAirlineId = (iataCode: string) => {
+    if (iataCode === "LO") return ids.airlines.lot;
+    if (iataCode === "FR") return ids.airlines.ryanair;
+    if (iataCode === "W6") return ids.airlines.wizzAir;
+
+    return `seed-airline-${iataCode.toLowerCase()}`;
+  };
 
   await Promise.all(
-    airlines.map((airline) =>
+    airlineCrmData.map((airline) =>
       prisma.airline.upsert({
-        where: { iataCode: airline.iataCode },
-        update: {
-          name: airline.name,
-          country: airline.country,
+        where: { iataCode: airline.iata },
+        update: getAirlinePrismaData(airline.iata),
+        create: {
+          id: seedAirlineId(airline.iata),
+          iataCode: airline.iata,
+          ...getAirlinePrismaData(airline.iata),
         },
-        create: airline,
       }),
     ),
   );

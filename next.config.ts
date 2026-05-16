@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    authInterrupts: true,
+  },
+  outputFileTracingIncludes: {
+    "/*": ["./lib/documents/templates/**/*.docx"],
+  },
 };
 
 export default nextConfig;

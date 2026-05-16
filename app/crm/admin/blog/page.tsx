@@ -17,7 +17,7 @@ const STATUS_LABELS = {
 
 const STATUS_STYLES = {
   DRAFT: "bg-neutral-100 text-neutral-600",
-  REVIEW: "bg-amber-50 text-amber-700",
+  REVIEW: "bg-[var(--ember-bg)] text-[var(--ember-lo)]",
   PUBLISHED: "bg-green-50 text-green-700",
 } as const;
 

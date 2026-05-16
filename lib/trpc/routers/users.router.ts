@@ -29,7 +29,7 @@ const userIdInputSchema = z.object({
   userId: z.string().min(1),
 });
 
-function requireCurrentAdmin(ctx: { appUser: { id: string } | null }) {
+function requireCurrentAdmin(ctx: { appUser: { id: string; role: string } | null }) {
   if (!ctx.appUser) {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -180,11 +180,31 @@ export const usersRouter = router({
     .input(updateRoleInputSchema)
     .mutation(async ({ ctx, input }) => {
       const currentAdmin = requireCurrentAdmin(ctx);
+      const realAdmin = ctx.realAppUser ?? currentAdmin;
 
       if (input.userId === currentAdmin.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nie możesz zmienić własnej roli z tej listy.",
+        });
+      }
+
+      if (input.role === "SUPER_ADMIN" && realAdmin.role !== "SUPER_ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Tylko Super Admin może nadawać rolę Super Admina.",
+        });
+      }
+
+      const targetUser = await ctx.prisma.user.findUnique({
+        where: { id: input.userId },
+        select: { role: true },
+      });
+
+      if (targetUser?.role === "SUPER_ADMIN" && realAdmin.role !== "SUPER_ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Tylko Super Admin może modyfikować konta Super Admina.",
         });
       }
 
@@ -206,11 +226,24 @@ export const usersRouter = router({
     .input(userIdInputSchema)
     .mutation(async ({ ctx, input }) => {
       const currentAdmin = requireCurrentAdmin(ctx);
+      const realAdmin = ctx.realAppUser ?? currentAdmin;
 
       if (input.userId === currentAdmin.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Nie możesz dezaktywować własnego konta.",
+        });
+      }
+
+      const targetRoleCheck = await ctx.prisma.user.findUnique({
+        where: { id: input.userId },
+        select: { role: true },
+      });
+
+      if (targetRoleCheck?.role === "SUPER_ADMIN" && realAdmin.role !== "SUPER_ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Tylko Super Admin może dezaktywować konta Super Admina.",
         });
       }
 
@@ -341,7 +374,7 @@ export const usersRouter = router({
         type: "recovery",
         email: user.email,
         options: {
-          redirectTo: `${getSiteUrl()}/login`,
+          redirectTo: `${getSiteUrl()}/auth/update-password`,
         },
       });
 

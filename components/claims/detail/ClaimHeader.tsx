@@ -91,7 +91,7 @@ export function ClaimHeader({
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Owner
+                Pracownik
               </p>
               {canChangeOwner ? (
                 <select

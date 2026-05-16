@@ -52,13 +52,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const notice = getLoginNotice(params.reason);
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
+    <main className="min-h-screen bg-[var(--ink)] px-6 py-10 text-white">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center justify-center">
         <div className="grid w-full gap-10 lg:grid-cols-[1fr_440px] lg:items-center">
           <section className="max-w-2xl">
             <Link
               href="/"
-              className="inline-flex text-sm font-medium text-neutral-300 transition hover:text-white"
+              className="inline-flex text-sm font-semibold text-[var(--ember-hi)] transition hover:text-white"
             >
               OWEME
             </Link>
@@ -71,7 +71,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           </section>
 
-          <section className="rounded-lg border border-white/10 bg-white p-6 text-neutral-950 shadow-2xl shadow-black/30 sm:p-8">
+          <section className="rounded-lg border border-[var(--line)] bg-[var(--white)] p-6 text-[var(--ink)] shadow-2xl shadow-black/30 sm:p-8">
             <div>
               <p className="text-sm font-medium text-neutral-500">Logowanie</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">
@@ -82,7 +82,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <LoginForm redirectTo={redirectTo} />
 
             {notice ? (
-              <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <div className="mt-5 rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] px-4 py-3 text-sm text-[var(--ember-lo)]">
                 <p className="font-semibold">{notice.title}</p>
                 <p className="mt-1 leading-6">{notice.description}</p>
               </div>

@@ -16,24 +16,53 @@ type QuickActionsProps = {
   currentUser: ClaimsCurrentUser;
 };
 
+type MutationError = {
+  message: string;
+};
+
+type MutationOptions = {
+  onMutate?: () => void;
+  onSuccess?: () => void;
+  onError?: (error: MutationError) => void;
+};
+
+type MutationHandle<TInput> = {
+  isPending: boolean;
+  mutate: (input: TInput) => void;
+};
+
+type ClaimsMutationApi = {
+  assignOwner: {
+    useMutation: (options: MutationOptions) => MutationHandle<{
+      id: string;
+      ownerId: string | null;
+    }>;
+  };
+  updateStatus: {
+    useMutation: (options: MutationOptions) => MutationHandle<{
+      id: string;
+      status: ClaimStatus;
+    }>;
+  };
+};
+
 export function QuickActions({ claim, currentUser }: QuickActionsProps) {
   const router = useRouter();
-  const utils = api.useUtils();
+  const claimsApi = api.claims as unknown as ClaimsMutationApi;
   const [selectedStatus, setSelectedStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   function refreshData() {
-    void utils.claims.list.invalidate();
     router.refresh();
   }
 
-  const assignOwner = api.claims.assignOwner.useMutation({
+  const assignOwner = claimsApi.assignOwner.useMutation({
     onMutate: () => setError(null),
     onSuccess: refreshData,
     onError: (mutationError) => setError(mutationError.message),
   });
 
-  const updateStatus = api.claims.updateStatus.useMutation({
+  const updateStatus = claimsApi.updateStatus.useMutation({
     onMutate: () => setError(null),
     onSuccess: () => {
       setSelectedStatus("");

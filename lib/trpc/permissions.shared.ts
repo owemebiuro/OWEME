@@ -44,6 +44,7 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 const allPermissions = Object.values(PERMISSIONS);
 
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
+  SUPER_ADMIN: allPermissions,
   ADMIN: allPermissions,
   EDITOR: [
     PERMISSIONS.BLOG_MANAGE,

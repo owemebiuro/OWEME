@@ -15,14 +15,20 @@ type CreateUserModalProps = {
   }) => Promise<void>;
   isSubmitting: boolean;
   error: string | null;
+  isSuperAdmin?: boolean;
 };
 
-const userRoles = [
+const baseRoles = [
   "ADMIN",
   "OPERATOR",
   "LAWYER",
   "MARKETING",
   "READ_ONLY",
+] as const satisfies readonly UserRole[];
+
+const superAdminRoles = [
+  "SUPER_ADMIN",
+  ...baseRoles,
 ] as const satisfies readonly UserRole[];
 
 export function CreateUserModal({
@@ -31,6 +37,7 @@ export function CreateUserModal({
   onSubmit,
   isSubmitting,
   error,
+  isSuperAdmin = false,
 }: CreateUserModalProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -49,9 +56,9 @@ export function CreateUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-neutral-950/40 px-4 py-12">
-      <div className="mx-auto max-w-lg rounded-lg border border-neutral-200 bg-white shadow-xl">
-        <div className="border-b border-neutral-100 px-5 py-4">
+    <div className="crm-modal-backdrop fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 py-12 sm:items-center">
+      <div className="crm-modal-surface w-full max-w-lg overflow-hidden">
+        <div className="border-b border-white/50 px-5 py-4">
           <h2 className="text-lg font-semibold text-neutral-950">
             Dodaj użytkownika
           </h2>
@@ -95,7 +102,7 @@ export function CreateUserModal({
               onChange={(event) => setRole(event.target.value as UserRole)}
               className="mt-1 h-11 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-950"
             >
-              {userRoles.map((userRole) => (
+              {(isSuperAdmin ? superAdminRoles : baseRoles).map((userRole) => (
                 <option key={userRole} value={userRole}>
                   {roleLabels[userRole]}
                 </option>

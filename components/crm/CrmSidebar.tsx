@@ -1,11 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link, { useLinkStatus } from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
+import { initials } from "@/lib/claims/format";
 import { PERMISSIONS, hasRolePermission } from "@/lib/trpc/permissions.shared";
 import type { AppUser } from "@/types/auth";
+import styles from "./CrmSidebar.module.css";
 
 type CrmSidebarProps = {
   user: AppUser | null;
@@ -36,7 +37,7 @@ function HomeIcon() {
 function ChartIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      <polyline strokeLinecap="round" strokeLinejoin="round" points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   );
 }
@@ -122,6 +123,49 @@ function CogIcon() {
   );
 }
 
+function LogoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
+      />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+      <circle cx="11" cy="11" r="8" />
+      <path strokeLinecap="round" d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+const roleLabels = {
+  SUPER_ADMIN: "Super Administrator",
+  ADMIN: "Administrator",
+  EDITOR: "Redaktor",
+  OPERATOR: "Operator",
+  LAWYER: "Prawnik",
+  MARKETING: "Marketing",
+  READ_ONLY: "Tylko odczyt",
+} as const;
+
+function openSearchCommand() {
+  window.dispatchEvent(new Event("crm-search-open"));
+}
+
 function NavLink({
   item,
   active,
@@ -131,11 +175,13 @@ function NavLink({
   active: boolean;
   onClick?: () => void;
 }) {
+  const router = useRouter();
+
   if (item.soon) {
     return (
-      <div className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm text-white opacity-40">
-        {item.icon}
-        <span>{item.label}</span>
+      <div className={`${styles.navItem} ${styles.navLinkSoon}`}>
+        <span className={styles.navIcon}>{item.icon}</span>
+        <span className={styles.navLabel}>{item.label}</span>
         <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider opacity-60">wkrótce</span>
       </div>
     );
@@ -144,16 +190,30 @@ function NavLink({
   return (
     <Link
       href={item.href}
+      prefetch
       onClick={onClick}
-      className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-        active
-          ? "border-l-2 border-teal-400 bg-white/10 pl-2.5 font-semibold text-white"
-          : "text-white hover:bg-neutral-800 hover:text-white"
-      }`}
+      onFocus={() => router.prefetch(item.href)}
+      onPointerEnter={() => router.prefetch(item.href)}
+      aria-current={active ? "page" : undefined}
+      className={`${styles.navItem} ${active ? styles.navItemActive : ""}`}
     >
-      {item.icon}
-      <span>{item.label}</span>
+      <span className={styles.navIcon}>{item.icon}</span>
+      <span className={styles.navLabel}>{item.label}</span>
+      <NavPendingIndicator />
     </Link>
+  );
+}
+
+function NavPendingIndicator() {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span
+      aria-hidden="true"
+      className={`${styles.pendingIndicator} ${
+        pending ? styles.pendingIndicatorVisible : ""
+      }`}
+    />
   );
 }
 
@@ -198,7 +258,10 @@ export function CrmSidebar({ user, onClose }: CrmSidebarProps) {
                 : []),
               ...(showClaims
                 ? [
+                    { label: "Leady", href: "/crm/leads", icon: <UsersIcon /> },
+                    { label: "Do analizy", href: "/crm/do-analizy", icon: <ListIcon /> },
                     { label: "Sprawy", href: "/crm/claims", icon: <BriefcaseIcon /> },
+                    { label: "Zadania", href: "/crm/tasks", icon: <ListIcon /> },
                     { label: "Archiwum", href: "/crm/claims/archived", icon: <ArchiveIcon /> },
                   ]
                 : []),
@@ -233,30 +296,33 @@ export function CrmSidebar({ user, onClose }: CrmSidebarProps) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-neutral-950">
-      {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center border-b border-neutral-800 px-4">
-        <Image
-          src="/oweme-logo-cropped.png"
-          alt="OWEME"
-          width={968}
-          height={169}
-          className="h-6 w-auto brightness-0 invert"
-          priority
-        />
-        <span className="ml-2 text-xs font-semibold uppercase tracking-widest text-white">
-          CRM
-        </span>
+    <div className={`${styles.sidebar} sidebar`}>
+      <div className={styles.top}>
+        <Link href="/crm" className={styles.logo} onClick={onClose}>
+          <span className={styles.logoIcon}>
+            <LogoIcon />
+          </span>
+          <span className={styles.logoText}>
+            owe<span>me.</span>
+          </span>
+        </Link>
+        <button
+          type="button"
+          className={styles.search}
+          onClick={openSearchCommand}
+        >
+          <SearchIcon />
+          <span className={styles.searchLabel}>Szukaj...</span>
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4">
+      <nav className={styles.nav}>
         {navGroups.map((group) => (
-          <div key={group.title} className="mb-5">
-            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white">
+          <div key={group.title} className={styles.group}>
+            <p className={styles.groupTitle}>
               {group.title}
             </p>
-            <ul className="space-y-0.5">
+            <ul className={styles.navList}>
               {group.items.map((item) => (
                 <li key={item.label}>
                   <NavLink
@@ -271,11 +337,20 @@ export function CrmSidebar({ user, onClose }: CrmSidebarProps) {
         ))}
       </nav>
 
-      {/* System status */}
-      <div className="shrink-0 border-t border-neutral-800 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-teal-400" />
-          <span className="text-xs text-white">System aktywny</span>
+      <div className={styles.footer}>
+        <div className={styles.userCard}>
+          <span className={styles.avatar}>
+            {user ? initials(user.name) : "OW"}
+          </span>
+          <span className={styles.userMeta}>
+            <span className={styles.userName}>{user?.name ?? "OWEME CRM"}</span>
+            <span className={styles.userRole}>
+              {user ? roleLabels[user.role] : "System aktywny"}
+            </span>
+          </span>
+          <span className={styles.chevron}>
+            <ChevronIcon />
+          </span>
         </div>
       </div>
     </div>

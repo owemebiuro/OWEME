@@ -17,6 +17,7 @@ export interface PassengerData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   termsAgreed: true;
   newsletter?: boolean;
 }

@@ -1,4 +1,5 @@
 import { type User as SupabaseUser } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { resolveBootstrapAdminUser } from "@/lib/auth-bootstrap";
@@ -8,9 +9,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { AppUser, PermissionAction } from "@/types/auth";
 import { type UserRole } from "@/types/auth";
 
-type CurrentUser = {
+export const IMPERSONATE_COOKIE = "oweme_impersonate_id";
+
+export type CurrentUser = {
   authUser: SupabaseUser;
   appUser: AppUser | null;
+  realAppUser: AppUser | null;
 };
 
 const legacyPermissionMap = {
@@ -32,6 +36,15 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     return null;
   }
 
+  const userSelect = {
+    id: true,
+    authUserId: true,
+    email: true,
+    name: true,
+    role: true,
+    isActive: true,
+  } as const;
+
   let appUser = hasPrismaDatabaseUrl()
     ? await prisma.user.findFirst({
         where: {
@@ -41,22 +54,35 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
             ...(authUser.email ? [{ email: authUser.email.toLowerCase() }] : []),
           ],
         },
-        select: {
-          id: true,
-          authUserId: true,
-          email: true,
-          name: true,
-          role: true,
-          isActive: true,
-        },
+        select: userSelect,
       })
     : null;
 
   appUser = await resolveBootstrapAdminUser(authUser, appUser);
 
+  let realAppUser: AppUser | null = null;
+
+  if (appUser?.role === "SUPER_ADMIN" && hasPrismaDatabaseUrl()) {
+    const cookieStore = await cookies();
+    const impersonateId = cookieStore.get(IMPERSONATE_COOKIE)?.value;
+
+    if (impersonateId) {
+      const impersonatedUser = await prisma.user.findUnique({
+        where: { id: impersonateId },
+        select: userSelect,
+      });
+
+      if (impersonatedUser) {
+        realAppUser = appUser;
+        appUser = impersonatedUser;
+      }
+    }
+  }
+
   return {
     authUser,
     appUser,
+    realAppUser,
   };
 }
 
@@ -73,7 +99,14 @@ export async function requireAuth() {
 export async function requireRole(roles: readonly UserRole[]) {
   const currentUser = await requireAuth();
 
-  if (!currentUser.appUser || !roles.includes(currentUser.appUser.role)) {
+  const effectiveRole =
+    currentUser.realAppUser?.role ?? currentUser.appUser?.role;
+
+  if (
+    !currentUser.appUser ||
+    (!roles.includes(currentUser.appUser.role) &&
+      effectiveRole !== "SUPER_ADMIN")
+  ) {
     redirect("/crm");
   }
 

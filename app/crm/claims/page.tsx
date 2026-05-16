@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClaimStatus } from "@prisma/client";
 
 import { SchemaMismatchState } from "@/components/crm/SchemaMismatchState";
 import { ClaimsTable } from "@/components/claims/ClaimsTable";
@@ -13,6 +14,16 @@ import {
   type ClaimsRouteSearchParams,
 } from "@/lib/claims/url-filters";
 import { createTRPCCaller } from "@/lib/trpc/server";
+
+const operationalStatuses = Object.values(ClaimStatus).filter(
+  (status) =>
+    status !== ClaimStatus.AWAITING_VERIFICATION &&
+    status !== ClaimStatus.WON &&
+    status !== ClaimStatus.SETTLEMENT &&
+    status !== ClaimStatus.CLOSED_PAID &&
+    status !== ClaimStatus.REJECTED &&
+    status !== ClaimStatus.DISMISSED,
+);
 
 export const metadata: Metadata = {
   title: "Sprawy | OWEME CRM",
@@ -33,13 +44,20 @@ type RawClaimFlight = {
   arrivalAirportCode: string;
 };
 
+type RawClaimStatusHistory = {
+  id: string;
+  newStatus: ClaimsListItem["status"];
+  createdAt: RawDate;
+};
+
 type RawClaimListItem = Omit<
   ClaimsListItem,
-  "createdAt" | "potentialAmount" | "flight"
+  "createdAt" | "potentialAmount" | "flight" | "statusHistory"
 > & {
   createdAt: RawDate;
   potentialAmount: RawDecimal;
   flight: RawClaimFlight | null;
+  statusHistory: RawClaimStatusHistory[];
 };
 
 type RawClaimsListData = Omit<ClaimsListData, "items"> & {
@@ -61,7 +79,15 @@ function serializeClaimsList(data: RawClaimsListData): ClaimsListData {
       status: claim.status,
       ownerId: claim.ownerId,
       potentialAmount: claim.potentialAmount?.toString() ?? null,
+      signatureFirst: claim.signatureFirst,
+      courtName: claim.courtName,
+      isCourtStage: claim.isCourtStage,
       createdAt: serializeDate(claim.createdAt),
+      statusHistory: claim.statusHistory.map((entry) => ({
+        id: entry.id,
+        newStatus: entry.newStatus,
+        createdAt: serializeDate(entry.createdAt),
+      })),
       client: claim.client,
       flight: claim.flight
         ? {
@@ -81,12 +107,12 @@ function serializeClaimsList(data: RawClaimsListData): ClaimsListData {
 function AppUserMissingState({ email }: { email: string | undefined }) {
   return (
     <main className="min-h-screen bg-neutral-50 px-6 py-8 text-neutral-950">
-      <div className="mx-auto max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-6">
-        <p className="text-sm font-semibold text-amber-700">OWEME CRM</p>
+      <div className="mx-auto max-w-3xl rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] p-6">
+        <p className="text-sm font-semibold text-[var(--ember-lo)]">OWEME CRM</p>
         <h1 className="mt-2 text-2xl font-semibold">
           Brak użytkownika aplikacyjnego
         </h1>
-        <p className="mt-3 text-sm leading-6 text-amber-900">
+        <p className="mt-3 text-sm leading-6 text-[var(--ember-lo)]">
           Sesja Supabase jest aktywna{email ? ` dla ${email}` : ""}, ale nie ma
           jeszcze powiązanego rekordu w tabeli użytkowników aplikacyjnych CRM.
           Utwórz lub zseeduj użytkownika aplikacyjnego i połącz go przez email
@@ -106,15 +132,15 @@ export default async function ClaimsPage({ searchParams }: ClaimsPageProps) {
 
   const params = await searchParams;
   const listInput = parseClaimsListInput(params);
+  const effectiveListInput =
+    listInput.status === undefined
+      ? { ...listInput, status: operationalStatuses }
+      : listInput;
   const trpc = await createTRPCCaller();
   let claims: RawClaimsListData;
-  let owners: Awaited<ReturnType<typeof trpc.users.listActive>>;
 
   try {
-    [claims, owners] = await Promise.all([
-      trpc.claims.list(listInput),
-      trpc.users.listActive(),
-    ]);
+    claims = await trpc.claims.list(effectiveListInput);
   } catch (error) {
     if (isSchemaOutdatedError(error)) {
       return <SchemaMismatchState area="listy spraw" />;
@@ -128,7 +154,6 @@ export default async function ClaimsPage({ searchParams }: ClaimsPageProps) {
       <div className="mx-auto w-full max-w-7xl">
         <ClaimsTable
           data={serializeClaimsList(claims)}
-          owners={owners}
           currentUser={currentUser.appUser}
         />
       </div>

@@ -26,7 +26,7 @@ export default function PlanesDeco() {
             y1={p.y}
             x2={p.tx2}
             y2={p.ty2}
-            stroke="#1c1712"
+            stroke="var(--ink)"
             strokeWidth="1"
             strokeDasharray="4 7"
             opacity={p.op}
@@ -34,8 +34,8 @@ export default function PlanesDeco() {
         ))}
         {PLANES.map((p, i) => (
           <g key={`plane-${i}`} transform={`translate(${p.x},${p.y}) rotate(${p.rot}) scale(${p.sz})`}>
-            <path d="M0,-14 L5,4 L0,1 L-5,4 Z" fill="#1c1712" />
-            <path d="M-3,3 L0,1 L3,3" fill="#1c1712" />
+            <path d="M0,-14 L5,4 L0,1 L-5,4 Z" fill="var(--ink)" />
+            <path d="M-3,3 L0,1 L3,3" fill="var(--ink)" />
           </g>
         ))}
       </svg>

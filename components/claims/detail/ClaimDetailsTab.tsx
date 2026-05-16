@@ -1,8 +1,5 @@
 import type { ClaimDetailData } from "@/lib/claims/detail-types";
-import {
-  commissionModelLabels,
-} from "@/lib/claims/detail-labels";
-import { claimSourceLabels } from "@/lib/claims/status-colors";
+import { commissionModelLabels } from "@/lib/claims/detail-labels";
 
 type ClaimDetailsTabProps = {
   claim: ClaimDetailData;
@@ -23,9 +20,37 @@ function Panel({
   );
 }
 
+function DataTile({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        {label}
+      </p>
+      <div className="mt-1 font-semibold text-neutral-950">
+        {value || "Brak"}
+      </div>
+    </div>
+  );
+}
+
 export function ClaimDetailsTab({ claim }: ClaimDetailsTabProps) {
   return (
     <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <Panel title="Dane klienta">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <DataTile label="PESEL" value={claim.client.pesel} />
+          <DataTile label="Typ dokumentu" value={claim.client.documentType} />
+          <DataTile label="Seria dokumentu" value={claim.client.documentSeries} />
+          <DataTile label="Numer dokumentu" value={claim.client.documentNumber} />
+        </div>
+      </Panel>
+
       <Panel title="Pasażerowie">
         <div className="space-y-3">
           {claim.passengers.length ? (
@@ -48,7 +73,7 @@ export function ClaimDetailsTab({ claim }: ClaimDetailsTabProps) {
                   className={`rounded-md border px-2 py-1 text-xs font-semibold ${
                     passenger.hasSignedDocs
                       ? "border-green-200 bg-green-50 text-green-700"
-                      : "border-amber-200 bg-amber-50 text-amber-700"
+                      : "border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] text-[var(--ember-lo)]"
                   }`}
                 >
                   {passenger.hasSignedDocs ? "Dokumenty OK" : "Brak podpisu"}
@@ -66,22 +91,13 @@ export function ClaimDetailsTab({ claim }: ClaimDetailsTabProps) {
       <Panel title="Dane sprawy">
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Źródło
-              </p>
-              <p className="mt-1 font-semibold text-neutral-950">
-                {claimSourceLabels[claim.source]}
-              </p>
-            </div>
-            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Model prowizji
-              </p>
-              <p className="mt-1 font-semibold text-neutral-950">
-                {commissionModelLabels[claim.commissionModel]}
-              </p>
-            </div>
+            <DataTile
+              label="Model prowizji"
+              value={commissionModelLabels[claim.commissionModel]}
+            />
+            <DataTile label="Sygnatura I instancji" value={claim.signatureFirst} />
+            <DataTile label="Sygnatura II instancji" value={claim.signatureSecond} />
+            <DataTile label="Sąd" value={claim.courtName} />
           </div>
 
           <div>

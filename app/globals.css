@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --ink:        #1c1712;
-  --ink2:       #2a2118;
-  --ember:      #c96a2a;
-  --ember-hi:   #d97c3a;
-  --ember-lo:   #7a3b10;
-  --ember-bg:   #fdf0e6;
-  --parchment:  #faf8f5;
-  --card:       #fffefb;
-  --line:       #e8e0d5;
-  --line-soft:  #f0e6d8;
-  --mist:       #8a7a6e;
-  --mist2:      #6b5b4e;
-  --sage:       #2a8c5c;
-  --sage-bg:    #e4f5ed;
-  --info-bg:    #eff4ff;
-  --info-text:  #3a5fa8;
-  --info-icon:  #4a7ff5;
-  --white:      #ffffff;
+  --ink:        #0d1117;
+  --ink2:       #161c26;
+  --ember:      #1b6fd4;
+  --ember-hi:   #2a82e8;
+  --ember-lo:   #1259a8;
+  --ember-bg:   #ebf3fe;
+  --parchment:  #f0f4fa;
+  --white:      #fafcff;
+  --card:       #f4f7fd;
+  --line:       #d4def0;
+  --line-soft:  #e4eaf6;
+  --line-dark:  #1e2a3e;
+  --mist:       #6b7a94;
+  --mist2:      #4a5a74;
+  --sage:       #1e8a6e;
+  --sage-bg:    #e4f5f1;
+  --info-bg:    #ebf3fe;
+  --info-text:  #1259a8;
+  --info-icon:  #1b6fd4;
   --star:       #f5a623;
-  --danger:     #d04040;
+  --danger:     #c0392b;
 
   --c-ink: var(--ink);
   --c-ember: var(--ember);
@@ -65,6 +66,29 @@ body {
   margin: 0;
 }
 
+.crm-modal-backdrop {
+  background:
+    radial-gradient(circle at 20% 12%, rgba(42, 130, 232, 0.18), transparent 28rem),
+    rgba(13, 17, 23, 0.62);
+  backdrop-filter: blur(30px) saturate(130%);
+  -webkit-backdrop-filter: blur(30px) saturate(130%);
+}
+
+.crm-modal-surface {
+  background:
+    linear-gradient(180deg, rgba(250, 252, 255, 0.94), rgba(244, 247, 253, 0.86)),
+    rgba(250, 252, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.34),
+    0 28px 90px rgba(13, 17, 23, 0.3);
+  color: var(--ink);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+}
+
 /* Reset */
 *,
 *::before,
@@ -74,7 +98,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-outfit), sans-serif;
-  font-weight: 600;
+  font-weight: 800;
   line-height: 1.2;
 }
 
@@ -118,5 +142,26 @@ textarea:focus-visible,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .sidebar,
+  .toolbar {
+    display: none !important;
+  }
+
+  .analytics-grid {
+    gap: 8px !important;
+  }
+
+  .panel {
+    break-inside: avoid;
+    border: 1px solid #d4def0 !important;
+    box-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
   }
 }

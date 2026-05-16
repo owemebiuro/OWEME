@@ -7,7 +7,9 @@ import type { ClaimResult, ParseResponse } from '@/types/claim'
 import { useClaimStore } from './claimStore'
 import styles from './ClaimCard.module.css'
 
-const ACCEPTED = '.pdf,.jpg,.jpeg,.png,.pkpass'
+const ACCEPTED = '.jpg,.jpeg,.png,.webp,.pkpass'
+const PARSE_ERROR =
+  'To nie wygląda na kartę pokładową. Dodaj wyraźne zdjęcie albo screen prawidłowej karty pokładowej.'
 
 export function PanelBoarding() {
   const { setResult, setLoading, isLoading } = useClaimStore()
@@ -47,6 +49,20 @@ export function PanelBoarding() {
     [setResult]
   )
 
+  const parseBoardingPass = useCallback(async (formData: FormData) => {
+    const response = await fetch('/api/boarding-pass/parse', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null
+      throw new Error(payload?.error ?? PARSE_ERROR)
+    }
+
+    return (await response.json()) as ParseResponse
+  }, [])
+
   const processFile = useCallback(
     async (selectedFile: File) => {
       setFile(selectedFile)
@@ -56,21 +72,15 @@ export function PanelBoarding() {
       try {
         const formData = new FormData()
         formData.append('file', selectedFile)
-        const response = await fetch('/api/boarding-pass/parse', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) throw new Error('Parse failed')
-        const data = (await response.json()) as ParseResponse
+        const data = await parseBoardingPass(formData)
         finishWithParsedData(data)
-      } catch {
-        setError('Nie udało się odczytać karty pokładowej. Spróbuj ponownie albo wpisz dane ręcznie.')
+      } catch (error) {
+        setError(error instanceof Error ? error.message : PARSE_ERROR)
       } finally {
         setLoading(false)
       }
     },
-    [finishWithParsedData, setLoading]
+    [finishWithParsedData, parseBoardingPass, setLoading]
   )
 
   const onDrop = useCallback(
@@ -122,14 +132,19 @@ export function PanelBoarding() {
 
         if (code) {
           stopScanner()
-          finishWithParsedData({
-            flightNumber: code.data.slice(0, 10).trim() || 'LO231',
-            flightDate: new Date().toISOString().split('T')[0],
-            airline: '',
-            from: 'WAW',
-            to: 'LHR',
-            confidence: 0.72,
-          })
+          setError(null)
+          setLoading(true)
+
+          try {
+            const formData = new FormData()
+            formData.append('barcode', code.data)
+            const data = await parseBoardingPass(formData)
+            finishWithParsedData(data)
+          } catch (error) {
+            setError(error instanceof Error ? error.message : PARSE_ERROR)
+          } finally {
+            setLoading(false)
+          }
           return
         }
 
@@ -140,7 +155,7 @@ export function PanelBoarding() {
     } catch {
       setError('Nie udało się uzyskać dostępu do kamery.')
     }
-  }, [finishWithParsedData, stopScanner])
+  }, [finishWithParsedData, parseBoardingPass, setLoading, stopScanner])
 
   return (
     <div id="claim-panel-boarding" role="tabpanel" aria-labelledby="claim-tab-boarding" className={styles.boardingWrap}>
@@ -203,7 +218,7 @@ export function PanelBoarding() {
               <span className={styles.dropzoneText}>
                 Przeciągnij plik lub <strong>kliknij, aby wybrać</strong>
               </span>
-              <span className={styles.dropzoneHint}>PDF, JPG, PNG, .pkpass</span>
+              <span className={styles.dropzoneHint}>JPG, PNG, WebP, .pkpass</span>
             </>
           )}
         </div>

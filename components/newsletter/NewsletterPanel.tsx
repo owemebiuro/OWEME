@@ -184,7 +184,7 @@ export function NewsletterPanel({ overview }: NewsletterPanelProps) {
             Kampanie, segmenty i subskrybenci z wymuszoną zgodą marketingową dla klientów CRM.
           </p>
         </div>
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] px-4 py-3 text-sm text-[var(--ember-lo)]">
           Wysyłka masowa jest przygotowana jako workflow. Ten etap obsługuje drafty,
           segmenty, testy Resend i listy odbiorców.
         </div>

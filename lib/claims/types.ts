@@ -8,7 +8,15 @@ export type ClaimsListItem = {
   status: ClaimStatus;
   ownerId: string | null;
   potentialAmount: string | null;
+  signatureFirst: string | null;
+  courtName: string | null;
+  isCourtStage: boolean;
   createdAt: string;
+  statusHistory: Array<{
+    id: string;
+    newStatus: ClaimStatus;
+    createdAt: string;
+  }>;
   client: {
     id: string;
     firstName: string;

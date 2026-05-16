@@ -50,6 +50,18 @@ async function getAppAccess(authUserId: string, email: string | undefined) {
     } as const;
   }
 
+  try {
+    return await getAppAccessFromDb(authUserId, email);
+  } catch {
+    return {
+      checked: false,
+      role: null,
+      inactive: false,
+    } as const;
+  }
+}
+
+async function getAppAccessFromDb(authUserId: string, email: string | undefined) {
   let appUser = await prisma.user.findFirst({
     where: {
       OR: [
@@ -138,7 +150,11 @@ export async function updateSession(request: NextRequest) {
       );
     }
 
-    if (isAdminPath(request.nextUrl.pathname) && access.role !== UserRole.ADMIN) {
+    if (
+      isAdminPath(request.nextUrl.pathname) &&
+      access.role !== UserRole.ADMIN &&
+      access.role !== UserRole.SUPER_ADMIN
+    ) {
       return createForbiddenRedirect(request);
     }
   }

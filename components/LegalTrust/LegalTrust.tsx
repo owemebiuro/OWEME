@@ -6,15 +6,15 @@ import styles from './LegalTrust.module.css'
 
 export function LegalTrust() {
   return (
-    <section className={styles.section} id="prawnicy">
+    <section className={styles.section} id="bez-ryzyka">
       <div className={styles.inner}>
         <RevealWrapper>
           <div className={styles.header}>
-            <span>Dlaczego oweme?</span>
-            <h2>Prawnicy od EC 261/2004, nie masowa infolinia</h2>
+            <span>99,7% spraw obsłużonych bez opłat z góry</span>
+            <h2>Jedna opłata. Zero ryzyka. Wszystko obsłużone.</h2>
             <p>
-              Każda sprawa trafia do zespołu, który zna praktykę linii lotniczych,
-              ULC i sądów cywilnych. Bez sprzedaży roszczeń dalej.
+              Nie płacisz z własnej kieszeni za analizę, korespondencję ani dalsze
+              kroki. Prowizję pobieramy dopiero z odzyskanego odszkodowania.
             </p>
           </div>
         </RevealWrapper>

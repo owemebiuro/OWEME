@@ -45,7 +45,7 @@ function StorageNotice({ storage }: { storage: BackupStorageStatus }) {
 
   if (storage.backend === "local-dev") {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <div className="rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] p-4 text-sm text-[var(--ember-lo)]">
         <p className="font-semibold">Tryb developerski</p>
         <p className="mt-1">
           Brakuje konfiguracji R2, więc lokalnie kopie będą zapisywane w

@@ -1,6 +1,7 @@
 import type { ClaimSource, ClaimStatus, ClaimType } from "@prisma/client";
 
 import { CLAIM_SOURCES, CLAIM_STATUSES, CLAIM_TYPES } from "@/lib/claims/status-colors";
+import type { CaseView } from "@/lib/constants/statuses";
 
 export type ClaimsRouteSearchParams = Record<
   string,
@@ -11,10 +12,16 @@ export type ClaimsListQueryInput = {
   page: number;
   pageSize: number;
   search?: string;
+  flightNumber?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
   status?: ClaimStatus[];
   ownerId?: string;
   dateFrom?: Date;
   dateTo?: Date;
+  view?: CaseView;
   claimType?: ClaimType[];
   isCourtStage?: boolean;
   overdueTasks?: boolean;
@@ -100,6 +107,11 @@ export function parseClaimsListInput(
   searchParams: ClaimsRouteSearchParams,
 ): ClaimsListQueryInput {
   const search = firstParam(searchParams, "q")?.trim();
+  const flightNumber = firstParam(searchParams, "flightNumber")?.trim();
+  const firstName = firstParam(searchParams, "firstName")?.trim();
+  const lastName = firstParam(searchParams, "lastName")?.trim();
+  const phone = firstParam(searchParams, "phone")?.trim();
+  const email = firstParam(searchParams, "email")?.trim();
   const ownerId = firstParam(searchParams, "ownerId")?.trim();
   const airlineId = firstParam(searchParams, "airlineId")?.trim();
   const status = filterKnownValues(
@@ -115,6 +127,14 @@ export function parseClaimsListInput(
     CLAIM_SOURCES,
   );
 
+  const viewParam = firstParam(searchParams, "view");
+  const view =
+    viewParam === "extrajudicial" || viewParam === "judicial"
+      ? viewParam
+      : viewParam === "all"
+        ? "all"
+        : undefined;
+
   return {
     page: parseNumberParam(firstParam(searchParams, "page"), defaultPage),
     pageSize: parseNumberParam(
@@ -123,6 +143,12 @@ export function parseClaimsListInput(
       maxPageSize,
     ),
     ...(search ? { search } : {}),
+    ...(flightNumber ? { flightNumber } : {}),
+    ...(firstName ? { firstName } : {}),
+    ...(lastName ? { lastName } : {}),
+    ...(phone ? { phone } : {}),
+    ...(email ? { email } : {}),
+    ...(view ? { view } : {}),
     ...(status.length ? { status } : {}),
     ...(ownerId ? { ownerId } : {}),
     ...(parseDateParam(firstParam(searchParams, "dateFrom"))

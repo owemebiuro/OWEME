@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 import { formatDateTime } from "@/lib/claims/format";
@@ -8,7 +11,7 @@ type RecentActivityEvent = {
   type: "STATUS_CHANGE";
   description: string;
   comment: string | null;
-  createdAt: Date;
+  createdAt: string;
   claim: {
     id: string;
     claimNumber: string;
@@ -29,6 +32,8 @@ type RecentActivityPanelProps = {
   activity: RecentActivityEvent[];
 };
 
+const INITIAL_VISIBLE_ACTIVITY_COUNT = 5;
+
 function formatDescription(description: string) {
   return description.replace(
     /([A-Z_]+) -> ([A-Z_]+)/,
@@ -39,7 +44,17 @@ function formatDescription(description: string) {
   );
 }
 
+function formatActivityDate(value: string) {
+  return formatDateTime(value);
+}
+
 export function RecentActivityPanel({ activity }: RecentActivityPanelProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasMoreActivity = activity.length > INITIAL_VISIBLE_ACTIVITY_COUNT;
+  const visibleActivity = isExpanded
+    ? activity
+    : activity.slice(0, INITIAL_VISIBLE_ACTIVITY_COUNT);
+
   return (
     <section className="rounded-lg border border-neutral-200 bg-white shadow-sm">
       <div className="border-b border-neutral-100 px-5 py-4">
@@ -51,10 +66,11 @@ export function RecentActivityPanel({ activity }: RecentActivityPanelProps) {
         </p>
       </div>
 
-      <div className="divide-y divide-neutral-100">
+      <div id="recent-activity-list" className="divide-y divide-neutral-100">
         {activity.length ? (
-          activity.map((event) => (
-            <article key={event.id} className="p-5">
+          <>
+            {visibleActivity.map((event) => (
+              <article key={event.id} className="p-5">
               <div className="flex gap-3">
                 <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-neutral-950" />
                 <div className="min-w-0">
@@ -64,7 +80,6 @@ export function RecentActivityPanel({ activity }: RecentActivityPanelProps) {
                   <p className="mt-1 text-sm text-neutral-600">
                     <Link
                       href={`/crm/claims/${event.claim.id}`}
-                      prefetch={false}
                       className="font-semibold underline-offset-4 hover:underline"
                     >
                       {event.claim.claimNumber}
@@ -78,12 +93,27 @@ export function RecentActivityPanel({ activity }: RecentActivityPanelProps) {
                     </p>
                   ) : null}
                   <p className="mt-2 text-xs font-medium text-neutral-500">
-                    {event.user.name} · {formatDateTime(event.createdAt.toISOString())}
+                    {event.user.name} · {formatActivityDate(event.createdAt)}
                   </p>
                 </div>
               </div>
-            </article>
-          ))
+              </article>
+            ))}
+
+            {hasMoreActivity ? (
+              <div className="px-5 py-4">
+                <button
+                  type="button"
+                  aria-controls="recent-activity-list"
+                  aria-expanded={isExpanded}
+                  onClick={() => setIsExpanded((current) => !current)}
+                  className="inline-flex w-full items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 sm:w-auto"
+                >
+                  {isExpanded ? "Pokaż mniej" : "Pokaż więcej"}
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : (
           <div className="p-8 text-center">
             <p className="font-semibold text-neutral-950">Brak aktywności</p>

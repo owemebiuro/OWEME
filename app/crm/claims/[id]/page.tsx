@@ -67,6 +67,9 @@ function serializeClaim(claim: ClaimByIdResult): ClaimDetailData {
     isCourtStage: claim.isCourtStage,
     isPolishJurisdiction: claim.isPolishJurisdiction,
     dataCompleteness: claim.dataCompleteness,
+    signatureFirst: claim.signatureFirst,
+    signatureSecond: claim.signatureSecond,
+    courtName: claim.courtName,
     qualifiedAt: serializeDate(claim.qualifiedAt),
     closedAt: serializeDate(claim.closedAt),
     closeReason: claim.closeReason,
@@ -85,6 +88,10 @@ function serializeClaim(claim: ClaimByIdResult): ClaimDetailData {
       lastName: claim.client.lastName,
       email: claim.client.email,
       phone: claim.client.phone,
+      pesel: claim.client.pesel,
+      documentType: claim.client.documentType,
+      documentNumber: claim.client.documentNumber,
+      documentSeries: claim.client.documentSeries,
       nationality: claim.client.nationality,
       address: claim.client.address,
       postalCode: claim.client.postalCode,
@@ -195,6 +202,14 @@ function serializeClaim(claim: ClaimByIdResult): ClaimDetailData {
       clientPaidAt: serializeDate(payout.clientPaidAt),
       status: payout.status,
       notes: payout.notes,
+      airlinePaymentAmount: payout.airlinePaymentAmount?.toString() ?? null,
+      clientPaymentAmount: payout.clientPaymentAmount?.toString() ?? null,
+      courtCosts: payout.courtCosts?.toString() ?? null,
+      courtCostsPaid: payout.courtCostsPaid,
+      eurPlnRate: payout.eurPlnRate?.toString() ?? null,
+      companyShare: payout.companyShare?.toString() ?? null,
+      clientShare: payout.clientShare?.toString() ?? null,
+      calculatedAt: serializeDate(payout.calculatedAt),
     })),
   };
 }
@@ -202,12 +217,12 @@ function serializeClaim(claim: ClaimByIdResult): ClaimDetailData {
 function AppUserMissingState({ email }: { email: string | undefined }) {
   return (
     <main className="min-h-screen bg-neutral-50 px-6 py-8 text-neutral-950">
-      <div className="mx-auto max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-6">
-        <p className="text-sm font-semibold text-amber-700">OWEME CRM</p>
+      <div className="mx-auto max-w-3xl rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] p-6">
+        <p className="text-sm font-semibold text-[var(--ember-lo)]">OWEME CRM</p>
         <h1 className="mt-2 text-2xl font-semibold">
           Brak użytkownika aplikacyjnego
         </h1>
-        <p className="mt-3 text-sm leading-6 text-amber-900">
+        <p className="mt-3 text-sm leading-6 text-[var(--ember-lo)]">
           Sesja Supabase jest aktywna{email ? ` dla ${email}` : ""}, ale karta
           sprawy wymaga powiązanego użytkownika aplikacyjnego CRM.
         </p>

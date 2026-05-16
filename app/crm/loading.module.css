@@ -1,0 +1,147 @@
+.loading {
+  padding: 16px 24px 24px;
+}
+
+.inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pipelines {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.65fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.card,
+.panel,
+.pipe {
+  position: relative;
+  overflow: hidden;
+  border: 0.5px solid var(--crm-glass-border, rgba(255, 255, 255, 0.62));
+  border-radius: var(--crm-radius-lg, 18px);
+  background: var(--crm-glass, rgba(255, 255, 255, 0.72));
+  box-shadow: var(--crm-glass-shadow);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+
+.card {
+  min-height: 132px;
+  padding: 16px;
+}
+
+.pipe {
+  min-height: 76px;
+  padding: 14px;
+}
+
+.panel {
+  min-height: 360px;
+  padding: 18px;
+}
+
+.card::after,
+.panel::after,
+.pipe::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.48),
+    transparent
+  );
+  animation: shimmer 1.35s ease-in-out infinite;
+}
+
+.line,
+.lineShort,
+.dot {
+  border-radius: 999px;
+  background: rgba(120, 120, 128, 0.16);
+}
+
+.line {
+  width: 72%;
+  height: 12px;
+}
+
+.lineShort {
+  width: 42%;
+  height: 10px;
+  margin-top: 12px;
+}
+
+.value {
+  width: 58px;
+  height: 32px;
+  margin-top: 28px;
+  border-radius: 9px;
+  background: rgba(120, 120, 128, 0.18);
+}
+
+.dot {
+  width: 34px;
+  height: 34px;
+}
+
+.pipeContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panelRows {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 1180px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pipelines {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .loading {
+    padding: 14px 10px;
+  }
+
+  .kpis,
+  .pipelines {
+    grid-template-columns: 1fr;
+  }
+}

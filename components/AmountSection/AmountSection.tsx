@@ -1,5 +1,5 @@
 import { RevealWrapper } from '@/components/ui/RevealWrapper'
-import { AmountSlider } from './AmountSlider'
+import { DistanceCompensationChecker } from './DistanceCompensationChecker'
 import { DisruptionList } from './DisruptionList'
 import styles from './AmountSection.module.css'
 
@@ -9,18 +9,18 @@ export function AmountSection() {
       <div className={styles.inner}>
         <RevealWrapper>
           <div className={styles.header}>
-            <div className={styles.tag}>Kwoty odszkodowan</div>
-            <h2 className={styles.h2}>Ile mozesz odzyskac?</h2>
+            <div className={styles.tag}>Flight compensation</div>
+            <h2 className={styles.h2}>Ile możesz odzyskać?</h2>
             <p className={styles.lead}>
-              Wysokosc odszkodowania zalezy od dlugosci trasy. Przesun suwak,
-              aby zobaczyc kwote dla Twojego lotu.
+              Wysokość odszkodowania zależy od długości trasy. Wybierz lotnisko
+              startowe i docelowe, a checker policzy dystans oraz próg kwoty.
             </p>
           </div>
         </RevealWrapper>
 
         <div className={styles.grid}>
           <RevealWrapper delay={0.08}>
-            <AmountSlider />
+            <DistanceCompensationChecker />
           </RevealWrapper>
           <RevealWrapper delay={0.14}>
             <DisruptionList />

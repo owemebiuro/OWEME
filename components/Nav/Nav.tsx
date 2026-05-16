@@ -5,11 +5,26 @@ import Link from 'next/link'
 import styles from './Nav.module.css'
 
 const LINKS = [
-  { href: '#uslugi', label: 'Usługi' },
-  { href: '#jak-dziala', label: 'Jak działamy' },
-  { href: '#prawnicy', label: 'Prawnicy' },
-  { href: '#opinie', label: 'Opinie' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#checker', label: 'Sprawdź lot' },
+  { href: '/#jak-dziala', label: 'Jak to działa' },
+  { href: '/#ile-mozesz', label: 'Kwoty' },
+  { href: '/#opinie', label: 'Opinie' },
+  { href: '/#faq', label: 'FAQ' },
+] as const
+
+const RIGHTS_LINKS = [
+  { href: '/wiedza/odszkodowanie-za-opozniony-lot', label: 'Odszkodowanie za opóźniony lot' },
+  { href: '/wiedza/odszkodowanie-za-odwolany-lot', label: 'Odszkodowanie za odwołany lot' },
+  { href: '/wiedza/overbooking', label: 'Overbooking' },
+  { href: '/wiedza#linie-lotnicze', label: 'Linie lotnicze' },
+  { href: '/wiedza/strajk-linii-lotniczych', label: 'Strajk linii lotniczych' },
+  { href: '/wiedza/odszkodowanie-za-lot-przesiadkowy', label: 'Odszkodowanie za lot przesiadkowy' },
+  { href: '/wiedza/odszkodowanie-za-lot-czarterowy', label: 'Odszkodowanie za lot czarterowy' },
+  { href: '/wiedza/zwrot-za-lot', label: 'Zwrot za lot' },
+  {
+    href: '/wiedza/odszkodowanie-za-niewpuszczenie-na-poklad',
+    label: 'Odszkodowanie za niewpuszczenie na pokład samolotu',
+  },
 ] as const
 
 function PlaneLogo() {
@@ -27,16 +42,24 @@ function PlaneLogo() {
   )
 }
 
-function PhoneIcon() {
+function CheckIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M22 16.9v3a2 2 0 01-2.2 2A19.8 19.8 0 013 5.2 2 2 0 015 3h3a2 2 0 012 1.7c.1.9.3 1.7.6 2.5a2 2 0 01-.5 2.1L8.8 10.6a16 16 0 004.6 4.6l1.3-1.3a2 2 0 012.1-.5c.8.3 1.6.5 2.5.6A2 2 0 0122 16.9z"
+        d="M20 6 9 17l-5-5"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  )
+}
+
+function ChevronIcon() {
+  return (
+    <svg className={styles.dropdownChevron} width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -82,14 +105,34 @@ export function Nav() {
             if (event.target === panelRef.current) closeMenu()
           }}
         >
-          {LINKS.map((link) => (
+          {LINKS.slice(0, 3).map((link) => (
             <Link key={link.href} href={link.href} onClick={closeMenu}>
               {link.label}
             </Link>
           ))}
-          <Link href="tel:+48221234567" className={styles.cta} onClick={closeMenu}>
-            <PhoneIcon />
-            Połącz się z doradcą
+
+          <div className={styles.dropdownWrap}>
+            <Link href="/wiedza" className={styles.dropdownTrigger} aria-haspopup="true" onClick={closeMenu}>
+              Twoje prawa
+              <ChevronIcon />
+            </Link>
+            <div className={styles.dropdown} aria-label="Artykuły: Twoje prawa">
+              {RIGHTS_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.dropdownItem} onClick={closeMenu}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {LINKS.slice(3).map((link) => (
+            <Link key={link.href} href={link.href} onClick={closeMenu}>
+              {link.label}
+            </Link>
+          ))}
+          <Link href="/#checker" className={styles.cta} onClick={closeMenu}>
+            <CheckIcon />
+            Sprawdź odszkodowanie
           </Link>
         </div>
 

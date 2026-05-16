@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { LimitationBadge } from "@/components/LimitationBadge/LimitationBadge";
 import type { ClaimDetailData } from "@/lib/claims/detail-types";
 import {
   apiDataSourceLabels,
@@ -14,6 +15,7 @@ import {
   formatDate,
   formatDateTime,
 } from "@/lib/claims/format";
+import { computeLimitation, extractComplaintDates } from "@/lib/limitation/limitation";
 import { api } from "@/lib/trpc/hooks";
 
 type ClaimSidebarProps = {
@@ -52,6 +54,17 @@ function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
 export function ClaimSidebar({ claim, onChanged }: ClaimSidebarProps) {
   const previousClaims = Math.max(0, claim.client.claimsCount - 1);
   const payout = claim.payouts[0];
+  const { complaintFiledAt, complaintAnsweredAt } = extractComplaintDates(
+    claim.statusHistory.map((entry) => ({
+      status: entry.newStatus,
+      createdAt: new Date(entry.createdAt),
+    })),
+  );
+  const limitation = computeLimitation(
+    new Date(claim.flight?.flightDate ?? claim.createdAt),
+    complaintFiledAt,
+    complaintAnsweredAt,
+  );
   const address = [
     claim.client.address,
     [claim.client.postalCode, claim.client.city].filter(Boolean).join(" "),
@@ -198,6 +211,8 @@ export function ClaimSidebar({ claim, onChanged }: ClaimSidebarProps) {
           <p className="text-sm text-neutral-500">Brak przypisanego lotu.</p>
         )}
       </SidebarSection>
+
+      <LimitationBadge data={limitation} variant="full" />
 
       {payout ? (
         <SidebarSection title="Rozliczenie">

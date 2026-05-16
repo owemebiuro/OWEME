@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
@@ -32,6 +33,12 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
             Nie mogliśmy potwierdzić tokenu wypisania. Skontaktuj się z OWEME,
             jeśli nadal otrzymujesz wiadomości.
           </p>
+          <Link
+            href="/wiedza"
+            className="mt-5 inline-flex items-center justify-center rounded-md bg-neutral-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          >
+            Przejdź do bloga
+          </Link>
         </section>
       </main>
     );
@@ -73,6 +80,12 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
           Adres {payload.email} został wypisany z newslettera OWEME. Zmiana działa
           natychmiast dla kolejnych kampanii.
         </p>
+        <Link
+          href="/wiedza"
+          className="mt-5 inline-flex items-center justify-center rounded-md bg-neutral-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800"
+        >
+          Przejdź do bloga
+        </Link>
       </section>
     </main>
   );

@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 function AppUserMissingState({ email }: { email: string | undefined }) {
   return (
     <main className="min-h-screen bg-neutral-50 px-6 py-8 text-neutral-950">
-      <div className="mx-auto max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-6">
-        <p className="text-sm font-semibold text-amber-700">OWEME CRM</p>
+      <div className="mx-auto max-w-3xl rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] p-6">
+        <p className="text-sm font-semibold text-[var(--ember-lo)]">OWEME CRM</p>
         <h1 className="mt-2 text-2xl font-semibold">
           Brak użytkownika aplikacyjnego
         </h1>
-        <p className="mt-3 text-sm leading-6 text-amber-900">
+        <p className="mt-3 text-sm leading-6 text-[var(--ember-lo)]">
           Sesja Supabase jest aktywna{email ? ` dla ${email}` : ""}, ale nie ma
           jeszcze powiązanego rekordu użytkownika CRM.
         </p>

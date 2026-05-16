@@ -1,4 +1,5 @@
 import {
+  type ClaimAmountCategory,
   ClaimSource,
   ClaimStatus,
   ClaimType,
@@ -6,6 +7,7 @@ import {
   DocumentStatus,
   DocumentType,
   Prisma,
+  SettlementStatus,
   TaskStatus,
   UserRole,
 } from "@prisma/client";
@@ -14,7 +16,13 @@ import { z } from "zod";
 
 import { sendClaimRegisteredEmail } from "@/lib/email/claim-emails";
 import { hasPermission } from "@/lib/auth-helpers";
-import { claimCardInclude, createClaimWithHistory } from "@/lib/claims/create-claim";
+import {
+  calculateClaimAmounts,
+  claimCardInclude,
+  createClaimWithHistory,
+  resolveClaimAmountCategory,
+} from "@/lib/claims/create-claim";
+import { JUDICIAL_STATUSES } from "@/lib/constants/statuses";
 import { sendInngestEvent } from "@/lib/inngest/events";
 import type { Context } from "@/lib/trpc/context";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
@@ -26,6 +34,16 @@ const claimListInclude = {
   flight: true,
   airline: true,
   owner: true,
+  statusHistory: {
+    orderBy: {
+      createdAt: "asc",
+    },
+    select: {
+      id: true,
+      newStatus: true,
+      createdAt: true,
+    },
+  },
 } satisfies Prisma.ClaimInclude;
 
 const claimStatusSchema = z.enum(ClaimStatus);
@@ -51,10 +69,16 @@ const listInputSchema = z
     page: z.number().int().min(1).default(1),
     pageSize: z.number().int().min(1).max(100).default(25),
     search: z.string().trim().optional(),
+    flightNumber: z.string().trim().optional(),
+    firstName: z.string().trim().optional(),
+    lastName: z.string().trim().optional(),
+    phone: z.string().trim().optional(),
+    email: z.string().trim().optional(),
     status: z.array(claimStatusSchema).optional(),
     ownerId: z.string().optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
+    view: z.enum(["all", "extrajudicial", "judicial"]).optional(),
     claimType: z.array(claimTypeSchema).optional(),
     isCourtStage: z.boolean().optional(),
     overdueTasks: z.boolean().optional(),
@@ -106,6 +130,9 @@ const updateInputSchema = z.object({
   isCourtStage: z.boolean().optional(),
   isPolishJurisdiction: z.boolean().optional(),
   dataCompleteness: z.number().int().min(0).max(100).optional(),
+  signatureFirst: z.string().trim().nullable().optional(),
+  signatureSecond: z.string().trim().nullable().optional(),
+  courtName: z.string().trim().nullable().optional(),
   closeReason: z.string().trim().nullable().optional(),
 });
 
@@ -122,6 +149,17 @@ const updateBillingInputSchema = z.object({
   clientIban: z.string().trim().nullable().optional(),
   transferTitle: z.string().trim().nullable().optional(),
   clientSettled: z.boolean().optional(),
+});
+
+const createSettlementInputSchema = z.object({
+  claimId: z.string().min(1),
+  airlineAmountEur: z.coerce.number().positive(),
+  eurPlnRate: z.coerce.number().positive(),
+  airlineAmountPln: z.coerce.number().nonnegative(),
+  companySharePln: z.coerce.number().nonnegative(),
+  clientSharePln: z.coerce.number().nonnegative(),
+  courtCosts: z.coerce.number().nonnegative().nullable().optional(),
+  courtCostsPaid: z.boolean().optional(),
 });
 
 function requireAppUser(ctx: Context): AppUser {
@@ -164,6 +202,73 @@ function buildListWhere(
     Object.assign(where, buildSearchWhere(input.search));
   }
 
+  const and: Prisma.ClaimWhereInput[] = [];
+
+  if (input.flightNumber) {
+    and.push({
+      flight: {
+        is: {
+          flightNumber: {
+            contains: input.flightNumber,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+  }
+
+  if (input.firstName) {
+    and.push({
+      client: {
+        is: {
+          firstName: {
+            contains: input.firstName,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+  }
+
+  if (input.lastName) {
+    and.push({
+      client: {
+        is: {
+          lastName: {
+            contains: input.lastName,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+  }
+
+  if (input.phone) {
+    and.push({
+      client: {
+        is: {
+          phone: {
+            contains: input.phone,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+  }
+
+  if (input.email) {
+    and.push({
+      client: {
+        is: {
+          email: {
+            contains: input.email,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+  }
+
   if (input.status?.length) {
     where.status = { in: input.status };
   } else if (input.archived) {
@@ -177,13 +282,9 @@ function buildListWhere(
   }
 
   if (input.dateFrom || input.dateTo) {
-    where.flight = {
-      is: {
-        flightDate: {
-          ...(input.dateFrom ? { gte: input.dateFrom } : {}),
-          ...(input.dateTo ? { lte: input.dateTo } : {}),
-        },
-      },
+    where.createdAt = {
+      ...(input.dateFrom ? { gte: input.dateFrom } : {}),
+      ...(input.dateTo ? { lte: input.dateTo } : {}),
     };
   }
 
@@ -193,6 +294,12 @@ function buildListWhere(
 
   if (typeof input.isCourtStage === "boolean") {
     where.isCourtStage = input.isCourtStage;
+  }
+
+  if (input.view === "judicial") {
+    and.push({ status: { in: [...JUDICIAL_STATUSES] } });
+  } else if (input.view === "extrajudicial") {
+    and.push({ status: { notIn: [...JUDICIAL_STATUSES] } });
   }
 
   if (input.overdueTasks) {
@@ -214,6 +321,10 @@ function buildListWhere(
 
   if (input.source?.length) {
     where.source = { in: input.source };
+  }
+
+  if (and.length) {
+    where.AND = and;
   }
 
   return where;
@@ -283,6 +394,36 @@ function getClosedAtPatch(status: ClaimStatus) {
   }
 
   return {};
+}
+
+function getAnalysisAmountPatch(
+  claim: {
+    status: ClaimStatus;
+    applicationPayload: Prisma.JsonValue | null;
+    flight: {
+      departureAirportCode: string;
+      arrivalAirportCode: string;
+      amountCategory: ClaimAmountCategory | null;
+    } | null;
+  },
+  nextStatus: ClaimStatus,
+  nextCommissionModel: CommissionModel,
+) {
+  if (
+    claim.status !== ClaimStatus.AWAITING_VERIFICATION ||
+    nextStatus === ClaimStatus.AWAITING_VERIFICATION
+  ) {
+    return {};
+  }
+
+  const amountCategory = resolveClaimAmountCategory({
+    flight: claim.flight,
+    applicationPayload: claim.applicationPayload,
+  });
+
+  return amountCategory
+    ? calculateClaimAmounts(amountCategory, nextCommissionModel)
+    : {};
 }
 
 export const claimsRouter = router({
@@ -386,6 +527,13 @@ export const claimsRouter = router({
         include: {
           documents: true,
           payouts: true,
+          flight: {
+            select: {
+              departureAirportCode: true,
+              arrivalAirportCode: true,
+              amountCategory: true,
+            },
+          },
         },
       });
 
@@ -399,10 +547,17 @@ export const claimsRouter = router({
       await validateStatusTransition(ctx, claim, input.status);
 
       const updatedClaim = await ctx.prisma.$transaction(async (tx) => {
+        const nextIsJudicialStage = JUDICIAL_STATUSES.includes(input.status);
+        const nextCommissionModel = nextIsJudicialStage
+          ? CommissionModel.COURT_40
+          : CommissionModel.STANDARD_30;
         const updatedClaim = await tx.claim.update({
           where: { id: input.id },
           data: {
             status: input.status,
+            isCourtStage: nextIsJudicialStage,
+            commissionModel: nextCommissionModel,
+            ...getAnalysisAmountPatch(claim, input.status, nextCommissionModel),
             ...(input.status === ClaimStatus.QUALIFIED
               ? { qualifiedAt: new Date() }
               : {}),
@@ -599,6 +754,55 @@ export const claimsRouter = router({
         where: { id },
         data,
         select: { id: true },
+      });
+    }),
+
+  createSettlement: permissionProcedure(PERMISSIONS.BILLING_EDIT)
+    .input(createSettlementInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      requireAppUser(ctx);
+
+      const claim = await ctx.prisma.claim.findFirst({
+        where: { id: input.claimId, deletedAt: null },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+
+      if (!claim) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nie znaleziono sprawy.",
+        });
+      }
+
+      const commissionModel = JUDICIAL_STATUSES.includes(claim.status)
+        ? CommissionModel.COURT_40
+        : CommissionModel.STANDARD_30;
+
+      return ctx.prisma.payout.create({
+        data: {
+          claimId: claim.id,
+          amountRecovered: new Prisma.Decimal(input.airlineAmountPln),
+          currency: "PLN",
+          receivedAt: new Date(),
+          owemeFee: new Prisma.Decimal(input.companySharePln),
+          commissionModel,
+          clientAmount: new Prisma.Decimal(input.clientSharePln),
+          status: SettlementStatus.RECEIVED,
+          airlinePaymentAmount: new Prisma.Decimal(input.airlineAmountEur),
+          clientPaymentAmount: new Prisma.Decimal(input.clientSharePln),
+          courtCosts:
+            input.courtCosts === undefined || input.courtCosts === null
+              ? null
+              : new Prisma.Decimal(input.courtCosts),
+          courtCostsPaid: input.courtCostsPaid ?? false,
+          eurPlnRate: new Prisma.Decimal(input.eurPlnRate),
+          companyShare: new Prisma.Decimal(input.companySharePln),
+          clientShare: new Prisma.Decimal(input.clientSharePln),
+          calculatedAt: new Date(),
+        },
       });
     }),
 

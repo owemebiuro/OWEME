@@ -10,12 +10,13 @@ import {
   taskStatusLabels,
 } from "@/lib/claims/detail-labels";
 import { formatDate } from "@/lib/claims/format";
-import type { ClaimsOwnerOption } from "@/lib/claims/types";
+import type { ClaimsCurrentUser, ClaimsOwnerOption } from "@/lib/claims/types";
 import { api } from "@/lib/trpc/hooks";
 
 type ClaimTasksProps = {
   claim: ClaimDetailData;
   owners: ClaimsOwnerOption[];
+  currentUser: ClaimsCurrentUser;
   onChanged: () => void;
 };
 
@@ -25,17 +26,23 @@ function isOverdue(value: string | null) {
   return value ? new Date(value).getTime() < Date.now() : false;
 }
 
-export function ClaimTasks({ claim, owners, onChanged }: ClaimTasksProps) {
+export function ClaimTasks({
+  claim,
+  owners,
+  currentUser,
+  onChanged,
+}: ClaimTasksProps) {
+  const defaultAssigneeId = claim.ownerId ?? currentUser.id;
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [assigneeId, setAssigneeId] = useState("");
+  const [assigneeId, setAssigneeId] = useState(defaultAssigneeId);
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
 
   const createTask = api.tasks.create.useMutation({
     onSuccess: () => {
       setTitle("");
       setDueDate("");
-      setAssigneeId("");
+      setAssigneeId(defaultAssigneeId);
       setPriority("MEDIUM");
       onChanged();
     },
@@ -164,7 +171,7 @@ export function ClaimTasks({ claim, owners, onChanged }: ClaimTasksProps) {
                       </span>
                     ) : null}
                     <span className="mt-2 block text-sm text-neutral-500">
-                      Assignee: {task.assignee?.name ?? "brak"} · Status:{" "}
+                      Pracownik: {task.assignee?.name ?? "brak"} · Status:{" "}
                       {taskStatusLabels[task.status]}
                     </span>
                   </span>

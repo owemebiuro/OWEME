@@ -35,6 +35,15 @@ export const tasksRouter = router({
         },
         select: {
           id: true,
+          claimNumber: true,
+          ownerId: true,
+          clientId: true,
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
         },
       });
 
@@ -45,10 +54,12 @@ export const tasksRouter = router({
         });
       }
 
-      if (input.assigneeId) {
+      const assigneeId = input.assigneeId ?? claim.ownerId ?? ctx.appUser.id;
+
+      if (assigneeId) {
         const assignee = await ctx.prisma.user.findFirst({
           where: {
-            id: input.assigneeId,
+            id: assigneeId,
             isActive: true,
           },
           select: {
@@ -64,18 +75,37 @@ export const tasksRouter = router({
         }
       }
 
-      return ctx.prisma.task.create({
-        data: {
-          claimId: input.claimId,
-          creatorId: ctx.appUser.id,
-          assigneeId: input.assigneeId ?? null,
-          title: input.title,
-          dueDate: input.dueDate,
-          priority: input.priority,
-        },
-        include: {
-          assignee: true,
-        },
+      return ctx.prisma.$transaction(async (tx) => {
+        const task = await tx.task.create({
+          data: {
+            claimId: input.claimId,
+            clientId: claim.clientId,
+            creatorId: ctx.appUser.id,
+            assigneeId,
+            title: input.title,
+            dueDate: input.dueDate,
+            priority: input.priority,
+          },
+          include: {
+            assignee: true,
+          },
+        });
+
+        if (assigneeId) {
+          await tx.notification.create({
+            data: {
+              userId: assigneeId,
+              type: "task_assigned",
+              title: `Nowe zadanie: ${task.title}`,
+              body: `Klient: ${claim.client.firstName} ${claim.client.lastName} · Sprawa: ${claim.claimNumber} · Priorytet: ${task.priority}`,
+              taskId: task.id,
+              claimId: claim.id,
+              priority: task.priority,
+            },
+          });
+        }
+
+        return task;
       });
     }),
 

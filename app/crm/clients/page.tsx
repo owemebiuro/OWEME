@@ -29,8 +29,10 @@ function serializeClientsList(data: ClientsListResult): ClientsListData {
       lastName: client.lastName,
       email: client.email,
       phone: client.phone,
+      pesel: client.pesel,
       city: client.city,
       country: client.country,
+      countryCode: client.countryCode,
       status: client.status,
       createdAt:
         client.createdAt instanceof Date
@@ -44,12 +46,12 @@ function serializeClientsList(data: ClientsListResult): ClientsListData {
 function AppUserMissingState({ email }: { email: string | undefined }) {
   return (
     <main className="min-h-screen bg-neutral-50 px-6 py-8 text-neutral-950">
-      <div className="mx-auto max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-6">
-        <p className="text-sm font-semibold text-amber-700">OWEME CRM</p>
+      <div className="mx-auto max-w-3xl rounded-lg border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] p-6">
+        <p className="text-sm font-semibold text-[var(--ember-lo)]">OWEME CRM</p>
         <h1 className="mt-2 text-2xl font-semibold">
           Brak użytkownika aplikacyjnego
         </h1>
-        <p className="mt-3 text-sm leading-6 text-amber-900">
+        <p className="mt-3 text-sm leading-6 text-[var(--ember-lo)]">
           Sesja Supabase jest aktywna{email ? ` dla ${email}` : ""}, ale lista
           klientów wymaga powiązanego użytkownika aplikacyjnego CRM.
         </p>

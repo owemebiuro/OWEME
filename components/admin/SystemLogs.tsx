@@ -33,7 +33,7 @@ const KIND_LABELS = {
 
 const KIND_COLORS = {
   status: "bg-blue-100 text-blue-700",
-  assignment: "bg-amber-100 text-amber-700",
+  assignment: "bg-[var(--ember-bg)] text-[var(--ember-lo)]",
 } as const;
 
 export function SystemLogs({ logs }: SystemLogsProps) {
@@ -124,7 +124,6 @@ export function SystemLogs({ logs }: SystemLogsProps) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/crm/claims/${log.claimId}`}
-                        prefetch={false}
                         className="font-semibold text-neutral-950 hover:underline"
                       >
                         {log.claimNumber}

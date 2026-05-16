@@ -33,13 +33,20 @@ type RawClaimFlight = {
   arrivalAirportCode: string;
 };
 
+type RawClaimStatusHistory = {
+  id: string;
+  newStatus: ClaimsListItem["status"];
+  createdAt: RawDate;
+};
+
 type RawClaimListItem = Omit<
   ClaimsListItem,
-  "createdAt" | "potentialAmount" | "flight"
+  "createdAt" | "potentialAmount" | "flight" | "statusHistory"
 > & {
   createdAt: RawDate;
   potentialAmount: RawDecimal;
   flight: RawClaimFlight | null;
+  statusHistory: RawClaimStatusHistory[];
 };
 
 type RawClaimsListData = Omit<ClaimsListData, "items"> & {
@@ -61,7 +68,15 @@ function serializeClaimsList(data: RawClaimsListData): ClaimsListData {
       status: claim.status,
       ownerId: claim.ownerId,
       potentialAmount: claim.potentialAmount?.toString() ?? null,
+      signatureFirst: claim.signatureFirst,
+      courtName: claim.courtName,
+      isCourtStage: claim.isCourtStage,
       createdAt: serializeDate(claim.createdAt),
+      statusHistory: claim.statusHistory.map((entry) => ({
+        id: entry.id,
+        newStatus: entry.newStatus,
+        createdAt: serializeDate(entry.createdAt),
+      })),
       client: claim.client,
       flight: claim.flight
         ? {
@@ -89,13 +104,9 @@ export default async function ArchivedClaimsPage({ searchParams }: ArchivedClaim
   const listInput = { ...parseClaimsListInput(params), archived: true };
   const trpc = await createTRPCCaller();
   let claims: RawClaimsListData;
-  let owners: Awaited<ReturnType<typeof trpc.users.listActive>>;
 
   try {
-    [claims, owners] = await Promise.all([
-      trpc.claims.list(listInput),
-      trpc.users.listActive(),
-    ]);
+    claims = await trpc.claims.list(listInput);
   } catch (error) {
     if (isSchemaOutdatedError(error)) {
       return <SchemaMismatchState area="archiwum spraw" />;
@@ -109,7 +120,6 @@ export default async function ArchivedClaimsPage({ searchParams }: ArchivedClaim
       <div className="mx-auto w-full max-w-7xl">
         <ClaimsTable
           data={serializeClaimsList(claims)}
-          owners={owners}
           currentUser={currentUser.appUser}
           archived
         />

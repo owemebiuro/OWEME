@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Outfit, Manrope } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthRecoveryRedirect } from '@/components/auth/AuthRecoveryRedirect'
 import { TRPCReactProvider } from '@/components/providers/trpc-provider'
 import './globals.css'
 
@@ -43,6 +44,7 @@ export default function RootLayout({
   return (
     <html lang="pl" className={`${outfit.variable} ${manrope.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <AuthRecoveryRedirect />
         <TRPCReactProvider>{children}</TRPCReactProvider>
         <Analytics />
       </body>

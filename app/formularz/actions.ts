@@ -1,6 +1,13 @@
 "use server";
 
-import { ClaimSource, ClaimType } from "@prisma/client";
+import {
+  AttachmentType,
+  ClaimSource,
+  ClaimStatus,
+  ClaimType,
+  LeadStatus,
+  type Prisma,
+} from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -12,6 +19,7 @@ import {
 import { sendClaimRegisteredEmail } from "@/lib/email/claim-emails";
 import { sendInngestEvent } from "@/lib/inngest/events";
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
+import { uploadObject, getStorageKey } from "@/lib/storage/r2";
 
 const flightNumberPattern = /^[A-Z0-9]{2,3}\s?\d{1,4}[A-Z]?$/i;
 const airportCodePattern = /^[A-Z]{3}$/i;
@@ -25,12 +33,54 @@ const optionalString = z
   .transform((value) => (value.length ? value : undefined))
   .optional();
 
+const optionalPesel = z
+  .string()
+  .trim()
+  .transform((value) => value.replace(/\D/g, ""))
+  .refine((value) => !value || /^\d{11}$/.test(value), {
+    message: "PESEL musi zawierać 11 cyfr.",
+  })
+  .transform((value) => value || undefined)
+  .optional();
+
 function normalizeFlightNumber(value: string) {
   return value.trim().replace(/\s+/g, "").toUpperCase();
 }
 
 function normalizeAirportCode(value: string) {
   return value.trim().toUpperCase();
+}
+
+function parseDataUrl(dataUrl: string) {
+  const match = dataUrl.match(/^data:([^;,]+);base64,(.+)$/);
+
+  if (!match) {
+    throw new Error("Nieprawidłowy format załącznika.");
+  }
+
+  return {
+    contentType: match[1],
+    buffer: Buffer.from(match[2], "base64"),
+  };
+}
+
+function toJsonValue(value: unknown): Prisma.InputJsonValue | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function estimatedAmountFromPayload(payload: unknown) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+
+  const value = (payload as Record<string, unknown>).SZACOWANA_KWOTA_EUR;
+  const amount = typeof value === "string" ? Number(value) : value;
+
+  return typeof amount === "number" && Number.isFinite(amount) ? amount : null;
 }
 
 function isPastFlightDate(value: string) {
@@ -54,8 +104,27 @@ const passengerSchema = z.object({
   lastName: nonEmptyString("Podaj nazwisko pasażera."),
 });
 
+const applicationFileSchema = z.object({
+  fileName: z.string().trim().min(1),
+  mimeType: z.string().trim().min(1),
+  sizeBytes: z.number().int().positive().max(8 * 1024 * 1024),
+  dataUrl: z.string().trim().min(1),
+});
+
+const claimPayloadSchema = z
+  .object({
+    PESEL_NIP_KLIENTA: z.string().trim().optional(),
+    NR_DOK_TOZSAMOSCI: z.string().trim().optional(),
+    NUMER_KONTA_BANKOWEGO: z.string().trim().optional(),
+    KARTA_POKLADOWA: applicationFileSchema.optional(),
+    ZDJECIA_DODATKOWE: z.array(applicationFileSchema).optional(),
+  })
+  .passthrough();
+
 const publicClaimApplicationSchema = z
   .object({
+    leadId: optionalString,
+    claimPayload: claimPayloadSchema.optional(),
     flightId: optionalString,
     manual: z.boolean().default(false),
     source: z
@@ -79,6 +148,7 @@ const publicClaimApplicationSchema = z
     primaryPassenger: z.object({
       firstName: nonEmptyString("Podaj imię."),
       lastName: nonEmptyString("Podaj nazwisko."),
+      pesel: optionalPesel,
       email: z.string().trim().email("Podaj poprawny adres email."),
       phone: nonEmptyString("Podaj numer telefonu.").min(5, {
         message: "Numer telefonu jest zbyt krótki.",
@@ -150,6 +220,38 @@ export type SubmitApplicationResult =
       fieldErrors?: Record<string, string[] | undefined>;
     };
 
+type ApplicationFileInput = z.infer<typeof applicationFileSchema>;
+
+async function saveApplicationAttachments(input: {
+  claimId: string;
+  uploadedById: string;
+  files: ApplicationFileInput[];
+}) {
+  for (const [index, file] of input.files.entries()) {
+    const parsedFile = parseDataUrl(file.dataUrl);
+    const storageKey = getStorageKey(input.claimId, file.fileName);
+    const upload = await uploadObject({
+      key: storageKey,
+      body: parsedFile.buffer,
+      contentType: parsedFile.contentType,
+      allowDevelopmentLocalFallback: true,
+    });
+
+    await prisma.attachment.create({
+      data: {
+        claimId: input.claimId,
+        uploadedById: input.uploadedById,
+        type: index === 0 ? AttachmentType.BOARDING_PASS : AttachmentType.OTHER,
+        fileName: file.fileName,
+        mimeType: parsedFile.contentType,
+        sizeBytes: parsedFile.buffer.byteLength,
+        storageKey: upload.storageKey,
+        verificationStatus: "UPLOADED",
+      },
+    });
+  }
+}
+
 export async function submitPublicClaimApplication(
   input: PublicClaimApplicationInput,
 ): Promise<SubmitApplicationResult> {
@@ -172,10 +274,16 @@ export async function submitPublicClaimApplication(
   }
 
   const data = parsed.data;
+  const claimPayload = data.claimPayload;
+  const applicationFiles = [
+    ...(claimPayload?.KARTA_POKLADOWA ? [claimPayload.KARTA_POKLADOWA] : []),
+    ...(claimPayload?.ZDJECIA_DODATKOWE ?? []),
+  ];
 
   try {
-    const claim = await prisma.$transaction(async (tx) => {
+    const { claim, systemUserId } = await prisma.$transaction(async (tx) => {
       const clientEmail = data.primaryPassenger.email.toLowerCase();
+      const identityDocument = claimPayload?.NR_DOK_TOZSAMOSCI?.trim();
       const existingClient = await tx.client.findFirst({
         where: {
           email: {
@@ -198,6 +306,9 @@ export async function submitPublicClaimApplication(
               lastName: data.primaryPassenger.lastName,
               email: clientEmail,
               phone: data.primaryPassenger.phone,
+              pesel: data.primaryPassenger.pesel ?? undefined,
+              documentNumber: identityDocument || undefined,
+              idDocumentNumber: identityDocument || undefined,
               address: data.primaryPassenger.address,
               postalCode: data.primaryPassenger.postalCode,
               city: data.primaryPassenger.city,
@@ -216,6 +327,9 @@ export async function submitPublicClaimApplication(
               lastName: data.primaryPassenger.lastName,
               email: clientEmail,
               phone: data.primaryPassenger.phone,
+              pesel: data.primaryPassenger.pesel ?? null,
+              documentNumber: identityDocument || null,
+              idDocumentNumber: identityDocument || null,
               address: data.primaryPassenger.address,
               postalCode: data.primaryPassenger.postalCode,
               city: data.primaryPassenger.city,
@@ -247,19 +361,23 @@ export async function submitPublicClaimApplication(
               data.arrivalAirportCode ?? "",
             ),
             delayMinutes: data.delayMinutes ?? null,
+            estimatedAmountEur: estimatedAmountFromPayload(claimPayload),
           });
 
       if (!flight) {
         throw new Error("Nie znaleziono wskazanego lotu.");
       }
 
-      return createClaimWithHistoryInTransaction(tx, {
+      const createdClaim = await createClaimWithHistoryInTransaction(tx, {
         type: data.type,
         source: data.source,
+        initialStatus: ClaimStatus.AWAITING_VERIFICATION,
         clientId: client.id,
         creatorId: systemUser.id,
         flightId: flight.id,
         airlineId: flight.airlineId,
+        clientIban: claimPayload?.NUMER_KONTA_BANKOWEGO ?? null,
+        applicationPayload: toJsonValue(claimPayload),
         isPolishJurisdiction: true,
         passengers: [
           {
@@ -276,7 +394,40 @@ export async function submitPublicClaimApplication(
           })),
         ],
       });
+
+      if (data.leadId) {
+        await tx.lead.updateMany({
+          where: {
+            id: data.leadId,
+          },
+          data: {
+            status: LeadStatus.CONVERTED,
+            convertedClaimId: createdClaim.id,
+            convertedAt: new Date(),
+          },
+        });
+      }
+
+      return { claim: createdClaim, systemUserId: systemUser.id };
     });
+
+    if (applicationFiles.length) {
+      try {
+        await saveApplicationAttachments({
+          claimId: claim.id,
+          uploadedById: systemUserId,
+          files: applicationFiles,
+        });
+      } catch (error) {
+        console.error(
+          "[Formularz] Wniosek został utworzony, ale nie udało się zapisać załączników.",
+          {
+            claimId: claim.id,
+            error,
+          },
+        );
+      }
+    }
 
     await Promise.all([
       sendInngestEvent({
@@ -297,6 +448,8 @@ export async function submitPublicClaimApplication(
     ]);
 
     revalidatePath("/crm/claims");
+    revalidatePath("/crm/do-analizy");
+    revalidatePath("/crm/leads");
 
     return {
       ok: true,

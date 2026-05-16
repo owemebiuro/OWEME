@@ -37,6 +37,9 @@ export type ClaimDetailData = {
   isCourtStage: boolean;
   isPolishJurisdiction: boolean;
   dataCompleteness: number;
+  signatureFirst: string | null;
+  signatureSecond: string | null;
+  courtName: string | null;
   qualifiedAt: string | null;
   closedAt: string | null;
   closeReason: string | null;
@@ -55,6 +58,10 @@ export type ClaimDetailData = {
     lastName: string;
     email: string;
     phone: string | null;
+    pesel: string | null;
+    documentType: string | null;
+    documentNumber: string | null;
+    documentSeries: string | null;
     nationality: string | null;
     address: string | null;
     postalCode: string | null;
@@ -161,5 +168,13 @@ export type ClaimDetailData = {
     clientPaidAt: string | null;
     status: SettlementStatus;
     notes: string | null;
+    airlinePaymentAmount: string | null;
+    clientPaymentAmount: string | null;
+    courtCosts: string | null;
+    courtCostsPaid: boolean;
+    eurPlnRate: string | null;
+    companyShare: string | null;
+    clientShare: string | null;
+    calculatedAt: string | null;
   }>;
 };

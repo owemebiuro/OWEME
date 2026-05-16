@@ -5,6 +5,7 @@ type RoleBadgeProps = {
 };
 
 const roleClasses: Record<UserRole, string> = {
+  SUPER_ADMIN: "border-[var(--ember)] bg-[var(--ember)] text-white",
   ADMIN: "border-neutral-900 bg-neutral-900 text-white",
   EDITOR: "border-emerald-200 bg-emerald-50 text-emerald-700",
   OPERATOR: "border-blue-200 bg-blue-50 text-blue-700",
@@ -14,6 +15,7 @@ const roleClasses: Record<UserRole, string> = {
 };
 
 const roleLabels: Record<UserRole, string> = {
+  SUPER_ADMIN: "Super Admin",
   ADMIN: "Admin",
   EDITOR: "Redaktor",
   OPERATOR: "Operator",

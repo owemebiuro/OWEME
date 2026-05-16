@@ -7,6 +7,11 @@ export type ClientsListQueryInput = {
   page: number;
   pageSize: number;
   search?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  pesel?: string;
 };
 
 const defaultPage = 1;
@@ -36,6 +41,11 @@ export function parseClientsListInput(
   searchParams: ClientsRouteSearchParams,
 ): ClientsListQueryInput {
   const search = firstParam(searchParams, "q")?.trim();
+  const firstName = firstParam(searchParams, "firstName")?.trim();
+  const lastName = firstParam(searchParams, "lastName")?.trim();
+  const email = firstParam(searchParams, "email")?.trim();
+  const phone = firstParam(searchParams, "phone")?.trim();
+  const pesel = firstParam(searchParams, "pesel")?.trim();
 
   return {
     page: parseNumberParam(firstParam(searchParams, "page"), defaultPage),
@@ -44,6 +54,11 @@ export function parseClientsListInput(
       maxPageSize,
     ),
     ...(search ? { search } : {}),
+    ...(firstName ? { firstName } : {}),
+    ...(lastName ? { lastName } : {}),
+    ...(email ? { email } : {}),
+    ...(phone ? { phone } : {}),
+    ...(pesel ? { pesel } : {}),
   };
 }
 

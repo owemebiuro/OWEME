@@ -1,21 +1,32 @@
 import Link from "next/link";
 
+import styles from "./DashboardMetricCard.module.css";
+
 type DashboardMetricCardProps = {
   label: string;
   value: string | number;
   href?: string;
   description?: string;
   tone?: "neutral" | "blue" | "amber" | "red" | "green" | "purple";
+  variant?: "kpi" | "pipeline";
 };
 
-const toneClasses: Record<NonNullable<DashboardMetricCardProps["tone"]>, string> = {
-  neutral: "border-neutral-200 bg-white text-neutral-950",
-  blue: "border-blue-200 bg-blue-50 text-blue-950",
-  amber: "border-amber-200 bg-amber-50 text-amber-950",
-  red: "border-red-200 bg-red-50 text-red-950",
-  green: "border-green-200 bg-green-50 text-green-950",
-  purple: "border-purple-200 bg-purple-50 text-purple-950",
-};
+function MetricIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-3.5 w-3.5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19V5m0 14h16M8 16V9m4 7V6m4 10v-4" />
+    </svg>
+  );
+}
+
+function toneClass(tone: NonNullable<DashboardMetricCardProps["tone"]>) {
+  if (tone === "amber") return styles.accent;
+  if (tone === "green") return styles.green;
+  if (tone === "red") return styles.red;
+  if (tone === "blue") return styles.blue;
+  if (tone === "purple") return styles.purple;
+  return "";
+}
 
 export function DashboardMetricCard({
   label,
@@ -23,23 +34,49 @@ export function DashboardMetricCard({
   href,
   description,
   tone = "neutral",
+  variant = "kpi",
 }: DashboardMetricCardProps) {
-  const content = (
-    <>
-      <p className="text-sm font-medium text-neutral-500">{label}</p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-      {description ? (
-        <p className="mt-2 text-sm leading-5 text-neutral-600">{description}</p>
-      ) : null}
-    </>
-  );
-  const className = `block rounded-lg border p-5 shadow-sm transition ${toneClasses[tone]} ${
-    href ? "hover:-translate-y-0.5 hover:shadow-md" : ""
-  }`;
+  const className = [
+    styles.card,
+    toneClass(tone),
+    variant === "pipeline" ? styles.compact : "",
+    href ? styles.clickable : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const content =
+    variant === "pipeline" ? (
+      <>
+        <span className={styles.symbol}>
+          <MetricIcon />
+        </span>
+        <div>
+          <p className={styles.value}>{value}</p>
+          <p className={styles.description}>{label}</p>
+        </div>
+      </>
+    ) : (
+      <>
+        <div className={styles.top}>
+          <p className={styles.label}>{label}</p>
+          <span className={styles.symbol}>
+            <MetricIcon />
+          </span>
+        </div>
+        <div>
+          <p className={styles.value}>{value}</p>
+          {description ? (
+            <p className={styles.description}>{description}</p>
+          ) : (
+            <span className={styles.tag}>aktywnie</span>
+          )}
+        </div>
+      </>
+    );
 
   if (href) {
     return (
-      <Link href={href} prefetch={false} className={className}>
+      <Link href={href} className={className}>
         {content}
       </Link>
     );

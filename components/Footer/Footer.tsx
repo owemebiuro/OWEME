@@ -5,19 +5,19 @@ const NAV_COLS = [
   {
     title: 'Serwis',
     links: [
-      { href: '#checker', label: 'Sprawdź odszkodowanie' },
+      { href: '/#checker', label: 'Sprawdź odszkodowanie' },
       { href: '/formularz', label: 'Złóż wniosek' },
-      { href: '#jak-dziala', label: 'Jak działamy' },
-      { href: '#faq', label: 'FAQ' },
+      { href: '/#jak-dziala', label: 'Jak działamy' },
+      { href: '/#faq', label: 'FAQ' },
     ],
   },
   {
     title: 'Prawo',
     links: [
-      { href: '/wiedza/ec-261-2004', label: 'EC 261/2004' },
-      { href: '/wiedza/odszkodowanie-za-lot', label: 'Kiedy przysługuje odszkodowanie' },
-      { href: '/wiedza/sila-wyzsza', label: 'Siła wyższa — kiedy linia ma rację' },
-      { href: '/wiedza', label: 'Baza wiedzy' },
+      { href: '/wiedza/we-261-2004-przewodnik', label: 'EC 261/2004' },
+      { href: '/wiedza/przedawnienie-roszczenia', label: 'Przedawnienie roszczenia' },
+      { href: '/wiedza/nadzwyczajne-okolicznosci', label: 'Siła wyższa — kiedy linia ma rację' },
+      { href: '/wiedza', label: 'Twoje prawa' },
     ],
   },
   {

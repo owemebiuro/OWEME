@@ -66,7 +66,11 @@ export async function ensureBootstrapAdminUser(
     },
   });
 
-  if (existingUser?.isActive && existingUser.role === UserRole.ADMIN) {
+  if (
+    existingUser?.isActive &&
+    (existingUser.role === UserRole.ADMIN ||
+      existingUser.role === UserRole.SUPER_ADMIN)
+  ) {
     return existingUser;
   }
 
@@ -114,7 +118,11 @@ export async function resolveBootstrapAdminUser(
   authUser: Pick<SupabaseUser, "id" | "email" | "user_metadata">,
   currentAppUser: AppUser | null,
 ) {
-  if (currentAppUser?.isActive && currentAppUser.role === UserRole.ADMIN) {
+  if (
+    currentAppUser?.isActive &&
+    (currentAppUser.role === UserRole.ADMIN ||
+      currentAppUser.role === UserRole.SUPER_ADMIN)
+  ) {
     return currentAppUser;
   }
 

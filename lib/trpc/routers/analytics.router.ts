@@ -146,6 +146,7 @@ export const analyticsRouter = router({
       return result
         .filter((r) => r.airlineId)
         .map((r) => ({
+          airlineId: r.airlineId!,
           airline: nameById.get(r.airlineId!) ?? r.airlineId!,
           iata: iataById.get(r.airlineId!) ?? "",
           count: (r._count as { id: number }).id,

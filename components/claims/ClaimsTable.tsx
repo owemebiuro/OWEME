@@ -1,25 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import {
   ClaimStatusBadge,
   ClaimTypeBadge,
 } from "@/components/claims/ClaimStatusBadge";
+import { LimitationBadge } from "@/components/LimitationBadge/LimitationBadge";
 import { ClaimsFilters } from "@/components/claims/ClaimsFilters";
 import { ClaimsPagination } from "@/components/claims/ClaimsPagination";
 import { ClaimsSavedViews } from "@/components/claims/ClaimsSavedViews";
 import { QuickActions } from "@/components/claims/QuickActions";
+import { computeLimitation, extractComplaintDates } from "@/lib/limitation/limitation";
 import type {
   ClaimsCurrentUser,
   ClaimsListData,
-  ClaimsOwnerOption,
+  ClaimsListItem,
 } from "@/lib/claims/types";
-import { claimSourceLabels } from "@/lib/claims/status-colors";
 
 type ClaimsTableProps = {
   data: ClaimsListData;
-  owners: ClaimsOwnerOption[];
   currentUser: ClaimsCurrentUser;
   archived?: boolean;
 };
@@ -61,7 +62,25 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function ClaimsTable({ data, owners, currentUser, archived = false }: ClaimsTableProps) {
+function computeClaimLimitation(claim: ClaimsListItem) {
+  const flightDate = new Date(claim.flight?.flightDate ?? claim.createdAt);
+  const { complaintFiledAt, complaintAnsweredAt } = extractComplaintDates(
+    claim.statusHistory.map((entry) => ({
+      status: entry.newStatus,
+      createdAt: new Date(entry.createdAt),
+    })),
+  );
+
+  return computeLimitation(flightDate, complaintFiledAt, complaintAnsweredAt);
+}
+
+export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTableProps) {
+  const searchParams = useSearchParams();
+  const isJudicialView = searchParams.get("view") === "judicial";
+  const tableClassName = isJudicialView
+    ? "w-full min-w-[2250px] table-fixed border-collapse text-left"
+    : "w-full min-w-[1910px] table-fixed border-collapse text-left";
+
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -83,28 +102,38 @@ export function ClaimsTable({ data, owners, currentUser, archived = false }: Cla
       </header>
 
       {!archived && <ClaimsSavedViews currentUserId={currentUser.id} />}
-      <ClaimsFilters owners={owners} />
+      <ClaimsFilters />
 
       <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1180px] border-collapse text-left">
+          <table className={tableClassName}>
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
-                <th className="px-4 py-3">Numer</th>
-                <th className="px-4 py-3">Klient</th>
-                <th className="px-4 py-3">Lot</th>
-                <th className="px-4 py-3">Linia</th>
-                <th className="px-4 py-3">Typ</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Kwota</th>
-                <th className="px-4 py-3">Owner</th>
-                <th className="px-4 py-3">Utworzono</th>
-                <th className="px-4 py-3">Akcje</th>
+                <th className="w-[130px] px-4 py-3">Numer</th>
+                <th className="w-[210px] px-4 py-3">Klient</th>
+                <th className="w-[170px] px-4 py-3">Lot</th>
+                <th className="w-[170px] px-4 py-3">Linia</th>
+                <th className="w-[110px] px-4 py-3">Typ</th>
+                <th className="w-[170px] px-4 py-3">Status</th>
+                <th className="w-[330px] px-4 py-3">Przedawnienie</th>
+                {isJudicialView ? (
+                  <>
+                    <th className="w-[150px] px-4 py-3">Sygnatura I</th>
+                    <th className="w-[12%] px-4 py-3">Sąd</th>
+                  </>
+                ) : null}
+                <th className="w-[100px] px-4 py-3">Kwota</th>
+                <th className="w-[230px] px-4 py-3">Pracownik</th>
+                <th className="w-[130px] px-4 py-3">Utworzono</th>
+                <th className="w-[160px] px-4 py-3">Akcje</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 text-sm">
               {data.items.length ? (
-                data.items.map((claim) => (
+                data.items.map((claim) => {
+                  const limitation = computeClaimLimitation(claim);
+
+                  return (
                   <tr
                     key={claim.id}
                     className="align-top transition hover:bg-neutral-50"
@@ -112,14 +141,10 @@ export function ClaimsTable({ data, owners, currentUser, archived = false }: Cla
                     <td className="px-4 py-4">
                       <Link
                         href={`/crm/claims/${claim.id}`}
-                        prefetch={false}
                         className="font-semibold text-neutral-950 underline-offset-4 hover:underline"
                       >
                         {claim.claimNumber}
                       </Link>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        {claimSourceLabels[claim.source]}
-                      </p>
                     </td>
                     <td className="px-4 py-4">
                       <p className="font-semibold text-neutral-950">
@@ -162,9 +187,24 @@ export function ClaimsTable({ data, owners, currentUser, archived = false }: Cla
                     <td className="px-4 py-4">
                       <ClaimTypeBadge type={claim.type} />
                     </td>
-                    <td className="px-4 py-4">
-                      <ClaimStatusBadge status={claim.status} />
+                    <td className="max-w-[160px] overflow-hidden px-4 py-4">
+                      <span title={claim.status} className="block truncate">
+                        <ClaimStatusBadge status={claim.status} />
+                      </span>
                     </td>
+                    <td className="overflow-hidden px-4 py-4">
+                      <LimitationBadge data={limitation} variant="compact" />
+                    </td>
+                    {isJudicialView ? (
+                      <>
+                        <td className="truncate px-4 py-4 text-neutral-600">
+                          {claim.signatureFirst ?? "Brak"}
+                        </td>
+                        <td className="truncate px-4 py-4 text-neutral-600">
+                          {claim.courtName ?? "Brak"}
+                        </td>
+                      </>
+                    ) : null}
                     <td className="px-4 py-4 font-semibold text-neutral-950">
                       {formatAmount(claim.potentialAmount)}
                     </td>
@@ -184,7 +224,7 @@ export function ClaimsTable({ data, owners, currentUser, archived = false }: Cla
                           </div>
                         </div>
                       ) : (
-                        <span className="inline-flex rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                        <span className="inline-flex rounded-md border border-[rgba(27,111,212,0.22)] bg-[var(--ember-bg)] px-2 py-1 text-xs font-semibold text-[var(--ember-lo)]">
                           Nieprzypisana
                         </span>
                       )}
@@ -196,10 +236,14 @@ export function ClaimsTable({ data, owners, currentUser, archived = false }: Cla
                       <QuickActions claim={claim} currentUser={currentUser} />
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={10} className="px-4 py-14 text-center">
+                  <td
+                    colSpan={isJudicialView ? 13 : 11}
+                    className="px-4 py-14 text-center"
+                  >
                     <p className="text-base font-semibold text-neutral-950">
                       Brak spraw w tym widoku
                     </p>

@@ -158,7 +158,7 @@
   border: 1px solid var(--c-line);
   border-radius: var(--r-xl);
   padding: 32px 28px;
-  box-shadow: 0 2px 20px rgba(28, 23, 18, 0.05);
+  box-shadow: 0 2px 20px rgba(13, 17, 23, 0.05);
 }
 
 .noRiskHeader {

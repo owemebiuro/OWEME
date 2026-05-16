@@ -53,6 +53,10 @@ export function SearchCommand() {
   }, []);
 
   useEffect(() => {
+    function openFromChrome() {
+      setOpen(true);
+    }
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         closeCommand();
@@ -78,8 +82,12 @@ export function SearchCommand() {
       }
     }
 
+    window.addEventListener("crm-search-open", openFromChrome);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("crm-search-open", openFromChrome);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [closeCommand]);
 
   useEffect(() => {
@@ -98,7 +106,7 @@ export function SearchCommand() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-40 hidden rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-400 lg:inline-flex"
+        className="fixed bottom-5 right-5 z-40 hidden rounded-full border border-white/60 bg-white/75 px-4 py-2 text-sm font-semibold text-neutral-700 shadow-[0_10px_30px_rgba(13,17,23,0.12)] backdrop-blur-2xl transition hover:bg-white/90 lg:inline-flex"
       >
         Szukaj Ctrl+K
       </button>
@@ -107,7 +115,7 @@ export function SearchCommand() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-neutral-950/35 px-4 py-16"
+      className="crm-modal-backdrop fixed inset-0 z-50 px-4 py-16"
       role="dialog"
       aria-modal="true"
       aria-label="Globalna wyszukiwarka CRM"
@@ -117,8 +125,8 @@ export function SearchCommand() {
         }
       }}
     >
-      <div className="mx-auto max-w-2xl overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl">
-        <div className="border-b border-neutral-100 p-4">
+      <div className="crm-modal-surface mx-auto max-w-2xl overflow-hidden">
+        <div className="border-b border-white/50 p-4">
           <input
             ref={inputRef}
             value={query}

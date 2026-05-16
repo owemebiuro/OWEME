@@ -39,9 +39,9 @@ export function ClaimHistory({ claim, owners }: ClaimHistoryProps) {
     ...claim.assignmentHistory.map((entry) => ({
       id: `assignment-${entry.id}`,
       kind: "assignment" as const,
-      title: "Zmiana ownera",
-      description: `${entry.previousOwnerId ? ownerNames.get(entry.previousOwnerId) ?? "Poprzedni owner" : "Nieprzypisana"} → ${
-        entry.newOwnerId ? ownerNames.get(entry.newOwnerId) ?? "Nowy owner" : "Nieprzypisana"
+      title: "Zmiana pracownika",
+      description: `${entry.previousOwnerId ? ownerNames.get(entry.previousOwnerId) ?? "Poprzedni pracownik" : "Nieprzypisana"} → ${
+        entry.newOwnerId ? ownerNames.get(entry.newOwnerId) ?? "Nowy pracownik" : "Nieprzypisana"
       }`,
       author: entry.changedBy.name,
       createdAt: entry.createdAt,

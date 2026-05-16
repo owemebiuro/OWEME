@@ -1,0 +1,729 @@
+.dashboard {
+  --ember: #1b6fd4;
+  --ember-hi: #2a82e8;
+  --ember-lo: #1259a8;
+  --sage: #1e8a6e;
+  --glass: rgba(250, 252, 255, 0.76);
+  --glass-border: rgba(212, 222, 240, 0.7);
+  --shadow-sm: 0 0.5px 0 rgba(255, 255, 255, 0.85) inset,
+    0 4px 16px rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 0.5px 0 rgba(255, 255, 255, 0.85) inset,
+    0 12px 40px rgba(0, 0, 0, 0.1);
+  --lbl: #0d1117;
+  --lbl2: rgba(13, 17, 23, 0.6);
+  --lbl3: rgba(13, 17, 23, 0.36);
+  --sys-fill: rgba(120, 120, 128, 0.12);
+  --sys-sep-op: rgba(60, 60, 67, 0.08);
+
+  display: grid;
+  gap: 10px;
+  color: var(--lbl);
+  font-family: var(--font-inter), Inter, var(--font-manrope), sans-serif;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 0.5px solid var(--glass-border);
+  border-radius: 18px;
+  background: var(--glass);
+  box-shadow: var(--shadow-sm);
+  padding: 12px;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.toolbarTitle {
+  min-width: 150px;
+}
+
+.eyebrow {
+  margin: 0 0 3px;
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 0;
+  color: var(--lbl);
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.toolbarControls {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.segment {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 12px;
+  background: var(--sys-fill);
+  padding: 3px;
+}
+
+.periodButton {
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--lbl2);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 10px;
+  transition:
+    background 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease;
+}
+
+.periodButtonActive {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--lbl);
+  box-shadow:
+    0 0.5px 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customDates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dateInput {
+  width: 132px;
+  height: 32px;
+  border: 0.5px solid var(--sys-sep-op);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--lbl);
+  font-size: 12px;
+  font-weight: 650;
+  padding: 0 9px;
+}
+
+.exportButton {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--ember-hi), var(--ember));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 13px;
+  box-shadow:
+    0 0.5px 0 rgba(255, 255, 255, 0.32) inset,
+    0 7px 18px rgba(27, 111, 212, 0.28);
+}
+
+.kpiStrip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kpiCard,
+.panel {
+  position: relative;
+  overflow: hidden;
+  border: 0.5px solid var(--glass-border);
+  border-radius: 18px;
+  background: var(--glass);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.kpiCard::before,
+.panel::before,
+.toolbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.94),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.kpiCard {
+  min-height: 116px;
+  padding: 14px;
+}
+
+.kpiTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kpiLabel {
+  margin: 0;
+  color: var(--lbl2);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.kpiIcon {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--sys-fill);
+  color: var(--lbl3);
+}
+
+.kpiIconEmber {
+  background: rgba(27, 111, 212, 0.12);
+  color: var(--ember);
+}
+
+.kpiIconSage {
+  background: rgba(30, 138, 110, 0.12);
+  color: var(--sage);
+}
+
+.kpiValue {
+  margin-top: 14px;
+  color: var(--lbl);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.kpiDelta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  color: var(--lbl3);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.deltaUp {
+  color: var(--sage);
+}
+
+.deltaDown {
+  color: #b23b2c;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.panel {
+  min-height: 310px;
+  padding: 14px;
+}
+
+.panelRevenue {
+  grid-column: span 8;
+}
+
+.panelDonut {
+  grid-column: span 4;
+}
+
+.panelBar {
+  grid-column: span 5;
+}
+
+.panelFunnel {
+  grid-column: span 4;
+}
+
+.panelEmployees {
+  grid-column: span 3;
+}
+
+.panelHalf {
+  grid-column: span 6;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panelTitle {
+  margin: 0;
+  color: var(--lbl);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.panelSub {
+  margin: 3px 0 0;
+  color: var(--lbl3);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chartBody {
+  height: 224px;
+  min-width: 0;
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.summaryItem {
+  border-radius: 12px;
+  background: var(--sys-fill);
+  padding: 9px;
+}
+
+.summaryLabel {
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.summaryValue {
+  margin-top: 4px;
+  color: var(--lbl);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.donutWrap {
+  display: grid;
+  grid-template-columns: minmax(132px, 0.86fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.donutChart {
+  position: relative;
+  height: 176px;
+}
+
+.donutCenter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.donutTotal {
+  color: var(--lbl);
+  font-size: 27px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.donutCaption {
+  margin-top: 3px;
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.legend {
+  display: grid;
+  gap: 8px;
+}
+
+.legendRow,
+.rankingRow,
+.pipelineRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.legendDot,
+.pipelineDot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.legendLabel,
+.employeeMeta,
+.pipelineMeta {
+  min-width: 0;
+  color: var(--lbl2);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.legendValue {
+  margin-left: auto;
+  color: var(--lbl);
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.funnel {
+  display: grid;
+  gap: 8px;
+}
+
+.funnelStep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 8px;
+}
+
+.funnelBarShell {
+  overflow: hidden;
+  border-radius: 11px;
+  background: var(--sys-fill);
+}
+
+.funnelBar {
+  display: flex;
+  min-width: 72px;
+  height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 11px;
+  color: #fff;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+  transition: width 180ms ease;
+}
+
+.funnelCount {
+  color: var(--lbl);
+  font-size: 12px;
+  font-weight: 850;
+  text-align: right;
+}
+
+.miniStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ranking {
+  display: grid;
+  gap: 12px;
+}
+
+.rankingRow {
+  align-items: flex-start;
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  box-shadow: 0 3px 9px rgba(13, 17, 23, 0.12);
+}
+
+.employeeMain,
+.pipelineMain {
+  min-width: 0;
+  flex: 1;
+}
+
+.employeeName,
+.pipelineName {
+  overflow: hidden;
+  color: var(--lbl);
+  font-size: 12px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progressShell {
+  overflow: hidden;
+  height: 6px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: var(--sys-fill);
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ember), var(--ember-hi));
+}
+
+.rankingNumber,
+.pipelineValue {
+  color: var(--lbl);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pipeline {
+  display: grid;
+  gap: 12px;
+}
+
+.pipelineTrack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.pipelineTrack .progressShell {
+  flex: 1;
+  margin: 0;
+}
+
+.pipelineCount {
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.pipelineSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+}
+
+.heatMonths {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+  min-height: 14px;
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.heatDays {
+  display: grid;
+  grid-template-rows: repeat(7, 15px);
+  gap: 4px;
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.heatGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.heatWeek {
+  display: grid;
+  grid-template-rows: repeat(7, 15px);
+  gap: 4px;
+}
+
+.heatCell {
+  width: 100%;
+  height: 15px;
+  border: 0;
+  border-radius: 4px;
+}
+
+.heatLegend {
+  display: flex;
+  grid-column: 2;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 10px;
+  color: var(--lbl3);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.legendSquare {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.emptyState {
+  display: grid;
+  min-height: 190px;
+  place-items: center;
+  color: var(--lbl3);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.07) 50%,
+    rgba(0, 0, 0, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeletonLine {
+  height: 12px;
+}
+
+.skeletonValue {
+  width: 62%;
+  height: 26px;
+  margin-top: 18px;
+}
+
+.skeletonChart {
+  height: 224px;
+}
+
+.skeletonRows {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.currentBar {
+  filter: drop-shadow(0 4px 12px rgba(27, 111, 212, 0.35));
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  .toolbar,
+  .toolbarControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbarControls {
+    width: 100%;
+  }
+
+  .segment,
+  .customDates,
+  .exportButton {
+    width: 100%;
+  }
+
+  .periodButton,
+  .dateInput {
+    flex: 1;
+  }
+
+  .kpiStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panelRevenue,
+  .panelDonut,
+  .panelBar,
+  .panelFunnel,
+  .panelEmployees,
+  .panelHalf {
+    grid-column: span 1;
+  }
+
+  .panelRevenue,
+  .panelHalf {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpiStrip,
+  .grid,
+  .summaryRow,
+  .miniStats,
+  .pipelineSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .panelRevenue,
+  .panelHalf {
+    grid-column: span 1;
+  }
+
+  .donutWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .customDates {
+    flex-direction: column;
+  }
+
+  .heatmap {
+    overflow-x: auto;
+    grid-template-columns: 24px minmax(520px, 1fr);
+  }
+}

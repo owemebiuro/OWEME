@@ -9,6 +9,7 @@ export type Context = {
   prisma: typeof prisma;
   authUser: SupabaseUser | null;
   appUser: AppUser | null;
+  realAppUser: AppUser | null;
 };
 
 type CreateContextOptions = {
@@ -25,5 +26,6 @@ export async function createTRPCContext(
     prisma,
     authUser: currentUser?.authUser ?? null,
     appUser: currentUser?.appUser ?? null,
+    realAppUser: currentUser?.realAppUser ?? null,
   };
 }

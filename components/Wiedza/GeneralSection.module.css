@@ -1,0 +1,248 @@
+.section {
+  display: grid;
+  gap: 18px;
+}
+
+.sectionHeader {
+  max-width: 720px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--ember);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.genFeatured {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--ink) 6%, transparent);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.genFeatured:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.gfBody {
+  padding: 28px;
+}
+
+.gfTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--ember);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.gfTag span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ember);
+}
+
+.gfBody h3 {
+  max-width: 720px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.24;
+}
+
+.gfExcerpt {
+  max-width: 680px;
+  margin: 12px 0 22px;
+  color: var(--mist);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.gfMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--mist);
+  font-size: 12px;
+}
+
+.gfAvatar {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.gfAuthor {
+  display: grid;
+  gap: 1px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.gfAuthor small {
+  color: var(--mist);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.gfDate::before,
+.gfRead::before {
+  margin-right: 12px;
+  color: var(--line);
+  content: '·';
+}
+
+.gfRead {
+  color: var(--ember);
+  font-weight: 800;
+}
+
+.gfVisual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--ink2), var(--ink));
+}
+
+.gfVisual::before {
+  position: absolute;
+  inset: auto -40px -70px auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ember) 36%, transparent), transparent 62%);
+  content: '';
+}
+
+.gfNumber {
+  color: color-mix(in srgb, var(--white) 8%, transparent);
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.gfPill {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  border: 0.5px solid color-mix(in srgb, var(--ember) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ember) 15%, transparent);
+  color: var(--ember-hi);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.genGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.articleCard {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  min-height: 158px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: inherit;
+  padding: 20px;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.articleCard:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--ember) 30%, var(--line));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.articleTag {
+  color: var(--ember);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.articleTitle {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.38;
+}
+
+.articleFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--mist);
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .genFeatured {
+    grid-template-columns: 1fr;
+  }
+
+  .gfVisual {
+    display: none;
+  }
+
+  .genGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .gfBody {
+    padding: 22px;
+  }
+
+  .genGrid {
+    grid-template-columns: 1fr;
+  }
+}

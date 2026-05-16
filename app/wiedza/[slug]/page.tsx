@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import SiteNav from "@/components/SiteNav";
+import { Footer } from "@/components/Footer/Footer";
+import { Nav } from "@/components/Nav/Nav";
 import ReadingProgress from "@/components/ReadingProgress";
 import { ARTICLES, getArticleBySlug } from "@/lib/articles";
 import { createTRPCCaller } from "@/lib/trpc/server";
 import styles from "../wiedza.module.css";
-import navStyles from "@/app/landing.module.css";
 
 export const revalidate = 60;
 
@@ -26,14 +25,14 @@ export async function generateMetadata({
     const trpc = await createTRPCCaller();
     const post = await trpc.blog.getPublishedBySlug({ slug });
     return {
-      title: `${post.metaTitle || post.title} – ClaimAir`,
+      title: `${post.metaTitle || post.title} – oweme.`,
       description: post.metaDescription || post.excerpt,
     };
   } catch {
     const article = getArticleBySlug(slug);
     if (!article) return {};
     return {
-      title: `${article.title} – ClaimAir`,
+      title: `${article.title} – oweme.`,
       description: article.excerpt,
     };
   }
@@ -42,7 +41,7 @@ export async function generateMetadata({
 function ChevronIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M4 2l4 4-4 4" stroke="#9e8e7e" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M4 2l4 4-4 4" stroke="var(--mist)" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -75,13 +74,11 @@ function DbArticleView({ post }: { post: DbPost }) {
   return (
     <>
       <ReadingProgress />
-      <Suspense fallback={null}>
-        <SiteNav />
-      </Suspense>
+      <Nav />
 
       <div className={styles.articleHeader}>
         <div className={styles.articleBc}>
-          <Link href="/wiedza">Wiedza</Link>
+          <Link href="/wiedza">Twoje prawa</Link>
           <ChevronIcon />
           <Link href="/wiedza">{post.category}</Link>
           <ChevronIcon />
@@ -98,8 +95,8 @@ function DbArticleView({ post }: { post: DbPost }) {
               fill="none"
               style={{ verticalAlign: "middle" }}
             >
-              <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
-              <path d="M6 3.5v3l2 1" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" />
+              <circle cx="6" cy="6" r="5" stroke="var(--mist)" strokeWidth="1" />
+              <path d="M6 3.5v3l2 1" stroke="var(--mist)" strokeWidth="1" strokeLinecap="round" />
             </svg>
             {post.readTime} minut czytania
           </span>
@@ -120,10 +117,10 @@ function DbArticleView({ post }: { post: DbPost }) {
           <div className={styles.bylineShare}>
             <button className={styles.shareBtn} title="Kopiuj link">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="11" cy="3" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
-                <circle cx="11" cy="11" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
-                <circle cx="3" cy="7" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
-                <path d="M4.3 6.3l5.4-2.7M4.3 7.7l5.4 2.7" stroke="#5c4f42" strokeWidth="1.2" />
+                <circle cx="11" cy="3" r="1.5" stroke="var(--mist2)" strokeWidth="1.2" />
+                <circle cx="11" cy="11" r="1.5" stroke="var(--mist2)" strokeWidth="1.2" />
+                <circle cx="3" cy="7" r="1.5" stroke="var(--mist2)" strokeWidth="1.2" />
+                <path d="M4.3 6.3l5.4-2.7M4.3 7.7l5.4 2.7" stroke="var(--mist2)" strokeWidth="1.2" />
               </svg>
             </button>
           </div>
@@ -139,7 +136,7 @@ function DbArticleView({ post }: { post: DbPost }) {
           </div>
           <div className={styles.heroStripDivider} />
           <svg width="100" height="100" viewBox="0 0 100 100" fill="none" opacity="0.22">
-            <path d="M10 50L50 5l40 45H75v40H25V50H10z" fill="#c96a2a" />
+            <path d="M10 50L50 5l40 45H75v40H25V50H10z" fill="var(--ember)" />
           </svg>
           <div className={styles.heroStripDivider} />
           <div className={styles.heroStripStat}>
@@ -205,11 +202,11 @@ function DbArticleView({ post }: { post: DbPost }) {
               href={`/wiedza/${rel.slug}`}
               className={styles.articleCard}
             >
-              <div className={styles.cardThumb} style={{ background: "#fdf0e6", height: 120 }}>
+              <div className={styles.cardThumb} style={{ background: "var(--ember-bg)", height: 120 }}>
                 <div className={styles.thumbBg} />
                 <div className={styles.thumbIcon}>
                   <svg width="44" height="44" viewBox="0 0 56 56" fill="none" opacity="0.3">
-                    <circle cx="28" cy="28" r="18" stroke="#c96a2a" strokeWidth="2" />
+                    <circle cx="28" cy="28" r="18" stroke="var(--ember)" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
@@ -234,16 +231,7 @@ function DbArticleView({ post }: { post: DbPost }) {
         </div>
       </div>
 
-      <footer className={navStyles.footer}>
-        <p className={navStyles.footerCopy}>
-          © 2025 ClaimAir sp. z o.o. · Wszelkie prawa zastrzeżone
-        </p>
-        <div className={navStyles.footerLinks}>
-          <a href="#">Polityka prywatności</a>
-          <a href="#">Regulamin</a>
-          <a href="#">Kontakt</a>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
@@ -275,15 +263,12 @@ export default async function ArticlePage({
   return (
     <>
       <ReadingProgress />
-
-      <Suspense fallback={null}>
-        <SiteNav />
-      </Suspense>
+      <Nav />
 
       {/* Article header */}
       <div className={styles.articleHeader}>
         <div className={styles.articleBc}>
-          <Link href="/wiedza">Wiedza</Link>
+          <Link href="/wiedza">Twoje prawa</Link>
           <ChevronIcon />
           <Link href="/wiedza">{article.category}</Link>
           <ChevronIcon />
@@ -300,8 +285,8 @@ export default async function ArticlePage({
               fill="none"
               style={{ verticalAlign: "middle" }}
             >
-              <circle cx="6" cy="6" r="5" stroke="#9e8e7e" strokeWidth="1" />
-              <path d="M6 3.5v3l2 1" stroke="#9e8e7e" strokeWidth="1" strokeLinecap="round" />
+              <circle cx="6" cy="6" r="5" stroke="var(--mist)" strokeWidth="1" />
+              <path d="M6 3.5v3l2 1" stroke="var(--mist)" strokeWidth="1" strokeLinecap="round" />
             </svg>
             {article.readTime} minut czytania
           </span>
@@ -320,7 +305,7 @@ export default async function ArticlePage({
           <div>
             <div className={styles.bylineName}>{article.author.name}</div>
             <div className={styles.bylineMeta}>
-              {article.author.role ?? "Redakcja ClaimAir"} · {article.date}
+              {article.author.role ?? "Redakcja oweme."} · {article.date}
               {article.dateUpdated && ` · Zaktualizowano: ${article.dateUpdated}`}
             </div>
           </div>
@@ -328,23 +313,23 @@ export default async function ArticlePage({
           <div className={styles.bylineShare}>
             <button className={styles.shareBtn} title="Kopiuj link">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="11" cy="3" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
-                <circle cx="11" cy="11" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
-                <circle cx="3" cy="7" r="1.5" stroke="#5c4f42" strokeWidth="1.2" />
-                <path d="M4.3 6.3l5.4-2.7M4.3 7.7l5.4 2.7" stroke="#5c4f42" strokeWidth="1.2" />
+                <circle cx="11" cy="3" r="1.5" stroke="var(--mist2)" strokeWidth="1.2" />
+                <circle cx="11" cy="11" r="1.5" stroke="var(--mist2)" strokeWidth="1.2" />
+                <circle cx="3" cy="7" r="1.5" stroke="var(--mist2)" strokeWidth="1.2" />
+                <path d="M4.3 6.3l5.4-2.7M4.3 7.7l5.4 2.7" stroke="var(--mist2)" strokeWidth="1.2" />
               </svg>
             </button>
             <button className={styles.shareBtn} title="Twitter / X">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2l10 10M2 12L12 2" stroke="#5c4f42" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M2 2l10 10M2 12L12 2" stroke="var(--mist2)" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
             <button className={styles.shareBtn} title="LinkedIn">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="2" y="2" width="10" height="10" rx="2" stroke="#5c4f42" strokeWidth="1.2" />
+                <rect x="2" y="2" width="10" height="10" rx="2" stroke="var(--mist2)" strokeWidth="1.2" />
                 <path
                   d="M5 6v4M5 4.5v.1M7 10V7.5c0-1 .5-1.5 1.5-1.5s1.5.5 1.5 1.5V10"
-                  stroke="#5c4f42"
+                  stroke="var(--mist2)"
                   strokeWidth="1.2"
                   strokeLinecap="round"
                 />
@@ -364,8 +349,8 @@ export default async function ArticlePage({
           </div>
           <div className={styles.heroStripDivider} />
           <svg width="100" height="100" viewBox="0 0 100 100" fill="none" opacity="0.22">
-            <path d="M10 50L50 5l40 45H75v40H25V50H10z" fill="#c96a2a" />
-            <path d="M35 65h30M42 50h16" stroke="#c96a2a" strokeWidth="3" strokeLinecap="round" />
+            <path d="M10 50L50 5l40 45H75v40H25V50H10z" fill="var(--ember)" />
+            <path d="M35 65h30M42 50h16" stroke="var(--ember)" strokeWidth="3" strokeLinecap="round" />
           </svg>
           <div className={styles.heroStripDivider} />
           <div className={styles.heroStripStat}>
@@ -573,15 +558,15 @@ export default async function ArticlePage({
             <Link key={rel.slug} href={`/wiedza/${rel.slug}`} className={styles.articleCard}>
               <div
                 className={styles.cardThumb}
-                style={{ background: "#fdf0e6", height: 120 }}
+                style={{ background: "var(--ember-bg)", height: 120 }}
               >
                 <div className={styles.thumbBg} />
                 <div className={styles.thumbIcon}>
                   <svg width="44" height="44" viewBox="0 0 56 56" fill="none" opacity="0.3">
-                    <circle cx="28" cy="28" r="18" stroke="#c96a2a" strokeWidth="2" />
+                    <circle cx="28" cy="28" r="18" stroke="var(--ember)" strokeWidth="2" />
                     <path
                       d="M28 20v8.5l5 3"
-                      stroke="#c96a2a"
+                      stroke="var(--ember)"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                     />
@@ -609,17 +594,7 @@ export default async function ArticlePage({
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className={navStyles.footer}>
-        <p className={navStyles.footerCopy}>
-          © 2025 ClaimAir sp. z o.o. · Wszelkie prawa zastrzeżone
-        </p>
-        <div className={navStyles.footerLinks}>
-          <a href="#">Polityka prywatności</a>
-          <a href="#">Regulamin</a>
-          <a href="#">Kontakt</a>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }

@@ -595,6 +595,107 @@
   text-decoration: none;
 }
 
+.resultCta:disabled {
+  background: var(--line);
+  color: color-mix(in srgb, var(--mist) 75%, var(--card));
+  cursor: wait;
+}
+
+.submitError {
+  border: 1px solid color-mix(in srgb, var(--danger) 18%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--card));
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+}
+
+.submissionSuccess {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 6%, transparent);
+  display: grid;
+  justify-items: center;
+  outline: none;
+  padding: 42px 28px;
+  text-align: center;
+}
+
+.submissionIcon {
+  width: 82px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--ember);
+  color: var(--card);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--ember) 24%, transparent);
+  margin-bottom: 24px;
+}
+
+.submissionIcon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.submissionSuccess h2 {
+  color: var(--ink);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin: 0;
+}
+
+.submissionSuccess p {
+  color: var(--mist);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.7;
+  margin: 14px auto 26px;
+  max-width: 440px;
+}
+
+.homeReturn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1.5px solid var(--ember);
+  border-radius: 999px;
+  color: var(--ember);
+  font-size: 14px;
+  font-weight: 900;
+  min-height: 48px;
+  padding: 0 20px;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s, transform 0.18s;
+}
+
+.homeReturn:hover {
+  background: var(--ember);
+  color: var(--card);
+  transform: translateY(-1px);
+}
+
+.homeIcon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homeIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
 .resources {
   display: grid;
   gap: 10px;

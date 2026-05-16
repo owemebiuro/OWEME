@@ -53,7 +53,7 @@ export const ARTICLES: Article[] = [
     title: "Overbooking — jak linie lotnicze obchodzą prawo i jak się bronić",
     excerpt:
       "Linie celowo sprzedają więcej biletów niż miejsc. Masz nie tylko prawo do odszkodowania, ale też do opieki na miejscu.",
-    author: { initials: "AJ", name: "Anna Jabłońska", color: "#d97c3a" },
+    author: { initials: "AJ", name: "Anna Jabłońska", color: "#2a82e8" },
     date: "28 kwietnia 2025",
     readTime: 6,
   },
@@ -73,7 +73,7 @@ export const ARTICLES: Article[] = [
     title: "Jak odzyskaliśmy 4 800 € dla rodziny czteroosobowej z Warszawy",
     excerpt:
       "Lot do Cancún, opóźnienie 11 godzin. Linia odmawiała przez 8 miesięcy. Skończyło się wyrokiem sądu i pełną wypłatą.",
-    author: { initials: "RL", name: "Redakcja ClaimAir", color: "#a8521c" },
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
     date: "14 kwietnia 2025",
     readTime: 4,
   },
@@ -94,10 +94,90 @@ export const ARTICLES: Article[] = [
     title: "Ranking linii lotniczych: które najczęściej płacą bez walki?",
     excerpt:
       "Przeanalizowaliśmy 14 000 spraw. Ryanair, Wizz Air, LOT — kto płaci od ręki, a kto ciągnie sprawę latami?",
-    author: { initials: "AJ", name: "Anna Jabłońska", color: "#d97c3a" },
+    author: { initials: "AJ", name: "Anna Jabłońska", color: "#2a82e8" },
     date: "1 kwietnia 2025",
     readTime: 9,
     views: "18k",
+  },
+  {
+    slug: "odszkodowanie-za-opozniony-lot",
+    category: "Opóźnienie",
+    title: "Odszkodowanie za opóźniony lot",
+    excerpt:
+      "Kiedy opóźnienie daje prawo do 250, 400 albo 600 euro i jak liczyć czas dotarcia do miejsca docelowego.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 7,
+  },
+  {
+    slug: "odszkodowanie-za-odwolany-lot",
+    category: "Odwołanie",
+    title: "Odszkodowanie za odwołany lot",
+    excerpt:
+      "Sprawdź, kiedy linia lotnicza musi wypłacić odszkodowanie za anulowany lot i kiedy może odmówić.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 6,
+  },
+  {
+    slug: "overbooking",
+    category: "Overbooking",
+    title: "Overbooking",
+    excerpt:
+      "Co zrobić, gdy linia sprzedała więcej biletów niż miejsc i nie wpuszcza pasażera na pokład.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 6,
+  },
+  {
+    slug: "strajk-linii-lotniczych",
+    category: "Strajk",
+    title: "Strajk linii lotniczych",
+    excerpt:
+      "Kiedy strajk nadal pozwala dochodzić odszkodowania, a kiedy linia może powołać się na nadzwyczajne okoliczności.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 7,
+  },
+  {
+    slug: "odszkodowanie-za-lot-przesiadkowy",
+    category: "Przesiadki",
+    title: "Odszkodowanie za lot przesiadkowy",
+    excerpt:
+      "Jak liczyć opóźnienie przy przesiadkach i kiedy jedna rezerwacja obejmuje całą trasę.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 7,
+  },
+  {
+    slug: "odszkodowanie-za-lot-czarterowy",
+    category: "Czarter",
+    title: "Odszkodowanie za lot czarterowy",
+    excerpt:
+      "Prawa pasażera przy lotach wakacyjnych i czarterowych: biuro podróży, przewoźnik i odpowiedzialność za zakłócenie.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 6,
+  },
+  {
+    slug: "zwrot-za-lot",
+    category: "Zwrot",
+    title: "Zwrot za lot",
+    excerpt:
+      "Kiedy przysługuje zwrot ceny biletu, zmiana trasy albo dodatkowe odszkodowanie.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 5,
+  },
+  {
+    slug: "odszkodowanie-za-niewpuszczenie-na-poklad",
+    category: "Odmowa wejścia",
+    title: "Odszkodowanie za niewpuszczenie na pokład samolotu",
+    excerpt:
+      "Twoje prawa przy odmowie wejścia na pokład, overbookingu i nieuzasadnionej odmowie odprawy.",
+    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
+    date: "14 maja 2026",
+    readTime: 6,
   },
 ];
 

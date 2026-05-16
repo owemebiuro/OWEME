@@ -73,7 +73,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           type="email"
           autoComplete="email"
           required
-          className="mt-2 w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-4 focus:ring-neutral-950/10"
+          className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition placeholder:text-neutral-400 focus:border-[var(--ember)] focus:ring-4 focus:ring-[rgba(27,111,212,0.12)]"
           placeholder="adres@email.pl"
         />
       </div>
@@ -91,7 +91,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           type="password"
           autoComplete="current-password"
           required
-          className="mt-2 w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950 focus:ring-4 focus:ring-neutral-950/10"
+          className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition placeholder:text-neutral-400 focus:border-[var(--ember)] focus:ring-4 focus:ring-[rgba(27,111,212,0.12)]"
           placeholder="Wpisz hasło"
         />
       </div>
@@ -105,7 +105,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="flex h-12 w-full items-center justify-center rounded-lg bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
+        className="flex h-12 w-full items-center justify-center rounded-lg bg-[var(--ember)] px-4 text-sm font-semibold text-white transition hover:bg-[var(--ember-hi)] disabled:cursor-not-allowed disabled:bg-neutral-400"
       >
         {isLoading ? "Logowanie..." : "Zaloguj się"}
       </button>

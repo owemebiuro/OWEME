@@ -22,7 +22,10 @@ interface AirportInputProps {
   placeholder: string;
   value: Airport | null;
   onChange: (airport: Airport | null) => void;
+  variant?: "default" | "prominent" | "card";
 }
+
+const MAX_AIRPORT_RESULTS = 3;
 
 function PlaneIcon() {
   return (
@@ -35,15 +38,62 @@ function PlaneIcon() {
   );
 }
 
+function countryCodeFromFlag(flag: string) {
+  const trimmed = flag.trim();
+
+  if (/^[a-z]{2}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
+  const letters = Array.from(trimmed)
+    .slice(0, 2)
+    .map((char) => {
+      const codePoint = char.codePointAt(0);
+
+      if (
+        typeof codePoint === "number" &&
+        codePoint >= 0x1f1e6 &&
+        codePoint <= 0x1f1ff
+      ) {
+        return String.fromCharCode(65 + codePoint - 0x1f1e6);
+      }
+
+      return "";
+    })
+    .join("");
+
+  return /^[A-Z]{2}$/.test(letters) ? letters.toLowerCase() : null;
+}
+
+function AirportFlag({ airport }: { airport: Airport }) {
+  const countryCode = countryCodeFromFlag(airport.flag);
+
+  if (!countryCode) {
+    return <span className={styles.dropdownFlagText}>{airport.flag}</span>;
+  }
+
+  return (
+    <span
+      className={styles.countryFlag}
+      role="img"
+      aria-label={`Flaga: ${airport.country}`}
+      style={{
+        backgroundImage: `url("https://flagcdn.com/w40/${countryCode}.png")`,
+      }}
+    />
+  );
+}
+
 export function AirportInput({
   label,
   placeholder,
   value,
   onChange,
+  variant = "default",
 }: AirportInputProps) {
   const listId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const selectedLabel = value ? `${value.name} (${value.iata})` : "";
+  const selectedLabel = value ? value.iata : "";
   const [draft, setDraft] = useState<string | null>(null);
   const query = draft ?? selectedLabel;
   const [results, setResults] = useState<Airport[]>([]);
@@ -63,8 +113,10 @@ export function AirportInput({
           signal: controller.signal,
         })
         .then((response) => {
-          setResults(response.data.airports);
-          setActiveIndex(response.data.airports.length ? 0 : -1);
+          const airports = response.data.airports.slice(0, MAX_AIRPORT_RESULTS);
+
+          setResults(airports);
+          setActiveIndex(airports.length ? 0 : -1);
         })
         .catch(() => {
           if (!controller.signal.aborted) {
@@ -126,7 +178,17 @@ export function AirportInput({
   }
 
   return (
-    <div className={styles.searchField} ref={wrapperRef}>
+    <div
+      className={`${styles.searchField} ${
+        variant === "prominent" ? styles.searchFieldProminent : ""
+      } ${
+        variant === "card" ? styles.searchFieldCard : ""
+      }`}
+      ref={wrapperRef}
+    >
+      {variant === "prominent" || variant === "card" ? (
+        <span className={styles.fieldLabel}>{label}</span>
+      ) : null}
       <div className={styles.fieldControl}>
         <span className={styles.fieldIcon}>
           <PlaneIcon />
@@ -167,6 +229,14 @@ export function AirportInput({
           </button>
         ) : null}
       </div>
+      {value ? (
+        <div className={styles.selectedAirport}>
+          <AirportFlag airport={value} />
+          <span>
+            {value.name} · {value.city}, {value.country}
+          </span>
+        </div>
+      ) : null}
       {isOpen && results.length ? (
         <div id={listId} role="listbox" className={styles.dropdown}>
           {results.map((airport, index) => (
@@ -182,11 +252,16 @@ export function AirportInput({
               onMouseEnter={() => setActiveIndex(index)}
               onClick={() => selectAirport(airport)}
             >
-              <span className={styles.dropdownFlag}>{airport.flag}</span>
-              <span>
-                <span className={styles.dropdownName}>{airport.name}</span>
+              <span className={styles.dropdownCode}>
+                <strong>{airport.iata}</strong>
+              </span>
+              <span className={styles.dropdownCopy}>
+                <span className={styles.dropdownName}>
+                  <AirportFlag airport={airport} />
+                  <span>{airport.name}</span>
+                </span>
                 <span className={styles.dropdownMeta}>
-                  {airport.city}, {airport.country} · {airport.iata}
+                  {airport.city}, {airport.country}
                 </span>
               </span>
             </button>
