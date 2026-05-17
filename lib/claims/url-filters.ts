@@ -28,6 +28,7 @@ export type ClaimsListQueryInput = {
   airlineId?: string;
   source?: ClaimSource[];
   archived?: boolean;
+  limitationSort?: "asc" | "desc";
 };
 
 type SearchParamUpdate =
@@ -126,6 +127,11 @@ export function parseClaimsListInput(
     splitParam(firstParam(searchParams, "source")),
     CLAIM_SOURCES,
   );
+  const limitationSortParam = firstParam(searchParams, "limitationSort");
+  const limitationSort =
+    limitationSortParam === "asc" || limitationSortParam === "desc"
+      ? limitationSortParam
+      : undefined;
 
   const viewParam = firstParam(searchParams, "view");
   const view =
@@ -166,6 +172,7 @@ export function parseClaimsListInput(
       : {}),
     ...(airlineId ? { airlineId } : {}),
     ...(source.length ? { source } : {}),
+    ...(limitationSort ? { limitationSort } : {}),
   };
 }
 

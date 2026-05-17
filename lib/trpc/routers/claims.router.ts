@@ -23,6 +23,7 @@ import {
 } from "@/lib/claims/create-claim";
 import { JUDICIAL_STATUSES } from "@/lib/constants/statuses";
 import { sendInngestEvent } from "@/lib/inngest/events";
+import { computeLimitation, extractComplaintDates } from "@/lib/limitation/limitation";
 import type { Context } from "@/lib/trpc/context";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
 import { router } from "@/lib/trpc/trpc";
@@ -85,6 +86,7 @@ const listInputSchema = z
     airlineId: z.string().optional(),
     source: z.array(claimSourceSchema).optional(),
     archived: z.boolean().default(false),
+    limitationSort: z.enum(["asc", "desc"]).optional(),
   })
   .default({
     page: 1,
@@ -330,6 +332,39 @@ function buildListWhere(
   return where;
 }
 
+function computeClaimListLimitation(
+  claim: Prisma.ClaimGetPayload<{ include: typeof claimListInclude }>,
+) {
+  const flightDate = new Date(claim.flight?.flightDate ?? claim.createdAt);
+  const { complaintFiledAt, complaintAnsweredAt } = extractComplaintDates(
+    claim.statusHistory.map((entry) => ({
+      status: entry.newStatus,
+      createdAt: entry.createdAt,
+    })),
+  );
+
+  return computeLimitation(flightDate, complaintFiledAt, complaintAnsweredAt);
+}
+
+function sortClaimsByLimitation(
+  claims: Array<Prisma.ClaimGetPayload<{ include: typeof claimListInclude }>>,
+  direction: "asc" | "desc",
+) {
+  return [...claims].sort((first, second) => {
+    const firstLimitation = computeClaimListLimitation(first);
+    const secondLimitation = computeClaimListLimitation(second);
+    const byExpiry =
+      firstLimitation.finalExpiryDate.getTime() -
+      secondLimitation.finalExpiryDate.getTime();
+
+    if (byExpiry !== 0) {
+      return direction === "asc" ? byExpiry : -byExpiry;
+    }
+
+    return second.createdAt.getTime() - first.createdAt.getTime();
+  });
+}
+
 async function validateStatusTransition(
   ctx: Context,
   claim: Prisma.ClaimGetPayload<{
@@ -433,6 +468,33 @@ export const claimsRouter = router({
     const page = input.page;
     const pageSize = input.pageSize;
     const where = buildListWhere(input);
+
+    if (input.limitationSort) {
+      const [allItems, total] = await ctx.prisma.$transaction([
+        ctx.prisma.claim.findMany({
+          where,
+          include: claimListInclude,
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+        ctx.prisma.claim.count({ where }),
+      ]);
+      const sortedItems = sortClaimsByLimitation(
+        allItems,
+        input.limitationSort,
+      );
+      const start = (page - 1) * pageSize;
+
+      return {
+        items: sortedItems.slice(start, start + pageSize),
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      };
+    }
+
     const [items, total] = await ctx.prisma.$transaction([
       ctx.prisma.claim.findMany({
         where,

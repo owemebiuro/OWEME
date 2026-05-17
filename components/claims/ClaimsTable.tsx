@@ -107,29 +107,10 @@ function getAirlineOptions(items: ClaimsListItem[]) {
 export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTableProps) {
   const searchParams = useSearchParams();
   const isJudicialView = searchParams.get("view") === "judicial";
-  const limitationSort = searchParams.get("limitationSort");
   const rows = data.items.map((claim) => ({
     claim,
     limitation: computeClaimLimitation(claim),
   }));
-  const sortedRows = [...rows].sort((first, second) => {
-    const firstPriority = getLimitationPriority(first.limitation);
-    const secondPriority = getLimitationPriority(second.limitation);
-
-    if (firstPriority !== secondPriority) {
-      return firstPriority - secondPriority;
-    }
-
-    if (limitationSort === "asc") {
-      return first.limitation.finalExpiryDate.getTime() - second.limitation.finalExpiryDate.getTime();
-    }
-
-    if (limitationSort === "desc") {
-      return second.limitation.finalExpiryDate.getTime() - first.limitation.finalExpiryDate.getTime();
-    }
-
-    return 0;
-  });
   const airlineOptions = getAirlineOptions(data.items);
   const tableClassName = `${styles.table} ${isJudicialView ? styles.tableJudicial : ""}`;
 
@@ -181,8 +162,8 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 text-sm">
-              {sortedRows.length ? (
-                sortedRows.map(({ claim, limitation }) => {
+              {rows.length ? (
+                rows.map(({ claim, limitation }) => {
                   const isDanger = getLimitationPriority(limitation) === 0;
 
                   return (
