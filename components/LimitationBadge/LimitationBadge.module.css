@@ -12,8 +12,19 @@
   border: 1px solid transparent;
 }
 
+.badge.compact {
+  gap: 4px;
+  max-width: 132px;
+  padding: 3px 7px;
+  font-size: 11px;
+  line-height: 1.25;
+  opacity: 0.86;
+}
+
 .badge span:last-child {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .badge.expired {
@@ -47,6 +58,24 @@
   background: var(--sage-bg);
   color: var(--sage);
   border-color: rgba(30, 138, 110, 0.2);
+}
+
+.badge.compact.expired,
+.badge.compact.urgent {
+  background: rgba(192, 57, 43, 0.08);
+  border-color: rgba(192, 57, 43, 0.16);
+}
+
+.badge.compact.warning {
+  background: rgba(245, 166, 35, 0.08);
+  border-color: rgba(245, 166, 35, 0.18);
+}
+
+.badge.compact.safe,
+.badge.compact.suspended {
+  background: rgba(27, 111, 212, 0.05);
+  color: var(--mist);
+  border-color: rgba(212, 222, 240, 0.9);
 }
 
 .panel {

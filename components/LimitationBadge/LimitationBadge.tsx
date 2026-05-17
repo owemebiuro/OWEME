@@ -39,6 +39,14 @@ function compactDays(days: number) {
   return `${days} dni`;
 }
 
+function compactTableLabel(days: number) {
+  if (days < 0) {
+    return `${Math.abs(days)} dni po term.`;
+  }
+
+  return compactDays(days);
+}
+
 function getMainStatus(data: LimitationData) {
   if (data.status === "expired") {
     return "PRZEDAWNIONE";
@@ -100,14 +108,16 @@ export function LimitationBadge({
   const icon = statusIcons[badgeVariant];
 
   if (variant === "compact") {
-    const compactLabel = `Przedawnienie: ${compactDays(
+    const compactTitle = `Przedawnienie: ${compactDays(
       data.daysRemaining,
     )} (${formatShortLimitationDate(data.finalExpiryDate)})`;
+    const compactLabel = compactTableLabel(data.daysRemaining);
 
     return (
       <span
-        className={[styles.badge, styles[badgeVariant]].join(" ")}
-        title={compactLabel}
+        className={[styles.badge, styles.compact, styles[badgeVariant]].join(" ")}
+        title={compactTitle}
+        aria-label={compactTitle}
       >
         <span aria-hidden="true">{icon}</span>
         <span>{compactLabel}</span>

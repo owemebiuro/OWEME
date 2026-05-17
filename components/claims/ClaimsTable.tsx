@@ -148,7 +148,7 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
                 <th className="w-[170px] px-4 py-3">Linia</th>
                 <th className="w-[110px] px-4 py-3">Typ</th>
                 <th className="w-[170px] px-4 py-3">Status</th>
-                <th className="w-[330px] px-4 py-3">Przedawnienie</th>
+                <th className="w-[150px] px-3 py-3">Przedawnienie</th>
                 {isJudicialView ? (
                   <>
                     <th className="w-[150px] px-4 py-3">Sygnatura I</th>
@@ -227,7 +227,7 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
                         <ClaimStatusBadge status={claim.status} />
                       </span>
                     </td>
-                    <td className="overflow-hidden px-4 py-4">
+                    <td className="overflow-hidden px-3 py-4">
                       <LimitationBadge data={limitation} variant="compact" />
                     </td>
                     {isJudicialView ? (
