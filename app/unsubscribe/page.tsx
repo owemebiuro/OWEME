@@ -34,10 +34,10 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
             jeśli nadal otrzymujesz wiadomości.
           </p>
           <Link
-            href="/wiedza"
+            href="/"
             className="mt-5 inline-flex items-center justify-center rounded-md bg-neutral-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800"
           >
-            Przejdź do bloga
+            Wróć na stronę główną
           </Link>
         </section>
       </main>
@@ -81,10 +81,10 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
           natychmiast dla kolejnych kampanii.
         </p>
         <Link
-          href="/wiedza"
+          href="/"
           className="mt-5 inline-flex items-center justify-center rounded-md bg-neutral-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800"
         >
-          Przejdź do bloga
+          Wróć na stronę główną
         </Link>
       </section>
     </main>

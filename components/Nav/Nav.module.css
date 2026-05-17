@@ -59,12 +59,17 @@
   gap: 4px;
 }
 
-.links a {
+.links a,
+.links button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  border: 0;
   border-radius: 9px;
+  background: transparent;
   color: var(--mist);
+  cursor: pointer;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 800;
   line-height: 1;
@@ -73,7 +78,8 @@
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.links a:hover {
+.links a:hover,
+.links button:hover {
   background: var(--parchment);
   color: var(--ink);
 }
@@ -85,6 +91,7 @@
 }
 
 .links .dropdownTrigger {
+  cursor: default;
   gap: 6px;
 }
 
@@ -227,7 +234,8 @@
     transform: translateY(0);
   }
 
-  .links a {
+  .links a,
+  .links button {
     font-size: 18px;
     padding: 14px 18px;
   }

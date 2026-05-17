@@ -34,12 +34,12 @@ export default function SiteNav() {
         </span>
       </Link>
       <div className={styles.navLinks}>
-        <Link
-          href="/wiedza"
+        <button
+          type="button"
           className={isWiedza ? styles.navActive : undefined}
         >
           Twoje prawa
-        </Link>
+        </button>
         <Link href="/#jak-dziala">Jak działa</Link>
         <Link href="/#kwoty">Odszkodowania</Link>
         <Link href="/#faq">FAQ</Link>

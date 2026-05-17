@@ -16,7 +16,6 @@ const RIGHTS_LINKS = [
   { href: '/wiedza/odszkodowanie-za-opozniony-lot', label: 'Odszkodowanie za opóźniony lot' },
   { href: '/wiedza/odszkodowanie-za-odwolany-lot', label: 'Odszkodowanie za odwołany lot' },
   { href: '/wiedza/overbooking', label: 'Overbooking' },
-  { href: '/wiedza#linie-lotnicze', label: 'Linie lotnicze' },
   { href: '/wiedza/strajk-linii-lotniczych', label: 'Strajk linii lotniczych' },
   { href: '/wiedza/odszkodowanie-za-lot-przesiadkowy', label: 'Odszkodowanie za lot przesiadkowy' },
   { href: '/wiedza/odszkodowanie-za-lot-czarterowy', label: 'Odszkodowanie za lot czarterowy' },
@@ -112,10 +111,10 @@ export function Nav() {
           ))}
 
           <div className={styles.dropdownWrap}>
-            <Link href="/wiedza" className={styles.dropdownTrigger} aria-haspopup="true" onClick={closeMenu}>
+            <button type="button" className={styles.dropdownTrigger} aria-haspopup="true">
               Twoje prawa
               <ChevronIcon />
-            </Link>
+            </button>
             <div className={styles.dropdown} aria-label="Artykuły: Twoje prawa">
               {RIGHTS_LINKS.map((link) => (
                 <Link key={link.href} href={link.href} className={styles.dropdownItem} onClick={closeMenu}>

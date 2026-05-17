@@ -318,7 +318,7 @@ export function Step6Result() {
       {submitError ? <p className={styles.submitError}>{submitError}</p> : null}
 
       <div className={styles.resources}>
-        <Link className={styles.resourceLink} href="/wiedza">
+        <Link className={styles.resourceLink} href="/wiedza/odszkodowanie-za-opozniony-lot">
           <span className={styles.resourceIcon}>
             <ResourceIcon type="law" />
           </span>

@@ -50,13 +50,23 @@
   align-items: center;
 }
 
-.navLinks a {
+.navLinks a,
+.navLinks button {
+  border: 0;
+  background: transparent;
   font-size: 14px;
   color: var(--text-2);
+  cursor: default;
   text-decoration: none;
 }
 
-.navLinks a:hover {
+.navLinks button {
+  font-family: inherit;
+  padding: 0;
+}
+
+.navLinks a:hover,
+.navLinks button:hover {
   color: var(--text);
 }
 
@@ -1590,7 +1600,8 @@
     height: 28px;
   }
 
-  .navLinks a:not(.navCta) {
+  .navLinks a:not(.navCta),
+  .navLinks button {
     display: none;
   }
 

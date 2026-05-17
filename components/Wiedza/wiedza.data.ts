@@ -57,9 +57,12 @@ export const GENERAL_ARTICLES: Article[] = [
     slug: 'odszkodowanie-za-lot-czarterowy',
     tag: 'Czarter',
     title: 'Odszkodowanie za lot czarterowy',
-    date: '14 maja 2026',
-    readMin: 6,
+    excerpt:
+      'Kupiłeś wycieczkę all-inclusive i lot czarterowy był opóźniony lub odwołany? Sprawdź, kto wypłaca odszkodowanie i jak je odzyskać.',
+    date: '17 maja 2026',
+    readMin: 9,
     featured: false,
+    author: { initials: 'ZP', name: 'Zespół prawny oweme.', role: 'Adwokaci i radcowie prawni' },
   },
   {
     slug: 'zwrot-za-lot',

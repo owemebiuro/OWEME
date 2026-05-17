@@ -152,12 +152,19 @@ export const ARTICLES: Article[] = [
   {
     slug: "odszkodowanie-za-lot-czarterowy",
     category: "Czarter",
-    title: "Odszkodowanie za lot czarterowy",
+    title: "Odszkodowanie za lot czarterowy — czy mi przysługuje i jak je dostać?",
     excerpt:
-      "Prawa pasażera przy lotach wakacyjnych i czarterowych: biuro podróży, przewoźnik i odpowiedzialność za zakłócenie.",
-    author: { initials: "OW", name: "Redakcja oweme.", color: "#a8521c" },
-    date: "14 maja 2026",
-    readTime: 6,
+      "Kupiłeś wycieczkę all-inclusive i lot czarterowy był opóźniony lub odwołany? Sprawdź, kiedy przysługuje Ci odszkodowanie, kto je wypłaca i jak je odzyskać.",
+    author: {
+      initials: "ZP",
+      name: "Zespół prawny oweme.",
+      color: "#a8521c",
+      role: "Adwokaci i radcowie prawni",
+      bio: "Specjalizacja: prawa pasażerów lotniczych, EC 261/2004.",
+    },
+    date: "17 maja 2026",
+    dateUpdated: "17 maja 2026",
+    readTime: 9,
   },
   {
     slug: "zwrot-za-lot",

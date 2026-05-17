@@ -9,6 +9,7 @@ import { createTRPCCaller } from "@/lib/trpc/server";
 import styles from "../wiedza.module.css";
 
 export const revalidate = 60;
+const CHARTER_ARTICLE_SLUG = "odszkodowanie-za-lot-czarterowy";
 
 export async function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
@@ -21,21 +22,54 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  try {
-    const trpc = await createTRPCCaller();
-    const post = await trpc.blog.getPublishedBySlug({ slug });
-    return {
-      title: `${post.metaTitle || post.title} – oweme.`,
-      description: post.metaDescription || post.excerpt,
-    };
-  } catch {
-    const article = getArticleBySlug(slug);
-    if (!article) return {};
-    return {
-      title: `${article.title} – oweme.`,
-      description: article.excerpt,
-    };
+  if (slug !== CHARTER_ARTICLE_SLUG) {
+    try {
+      const trpc = await createTRPCCaller();
+      const post = await trpc.blog.getPublishedBySlug({ slug });
+      const title = `${post.metaTitle || post.title} – oweme.`;
+      const description = post.metaDescription || post.excerpt;
+      const canonical = `https://oweme.pl/wiedza/${slug}`;
+
+      return {
+        title,
+        description,
+        alternates: { canonical },
+        openGraph: {
+          title,
+          description,
+          url: canonical,
+          type: "article",
+        },
+        twitter: {
+          title,
+          description,
+        },
+      };
+    } catch {
+      // Static fallback below.
+    }
   }
+
+  const article = getArticleBySlug(slug);
+  if (!article) return {};
+  const title = `${article.title} – oweme.`;
+  const canonical = `https://oweme.pl/wiedza/${article.slug}`;
+
+  return {
+    title,
+    description: article.excerpt,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description: article.excerpt,
+      url: canonical,
+      type: "article",
+    },
+    twitter: {
+      title,
+      description: article.excerpt,
+    },
+  };
 }
 
 function ChevronIcon() {
@@ -56,6 +90,285 @@ function initials(name: string) {
 }
 
 const related = ARTICLES.filter((a) => !a.featured).slice(0, 3);
+
+const defaultTocItems = [
+  { id: "kiedy", label: "Kiedy przysługuje odszkodowanie?" },
+  { id: "ile", label: "Ile możesz dostać?" },
+  { id: "jak", label: "Jak złożyć wniosek?" },
+  { id: "okolicznosci", label: "Nadzwyczajne okoliczności" },
+  { id: "przedawnienie", label: "Przedawnienie" },
+];
+
+const charterTocItems = [
+  { id: "czarter-a-prawo", label: "Lot czarterowy a EC 261/2004" },
+  { id: "kiedy-przysluguje", label: "Kiedy przysługuje odszkodowanie" },
+  { id: "ile", label: "Ile wynosi odszkodowanie" },
+  { id: "kto-placi", label: "Kto wypłaca odszkodowanie" },
+  { id: "odwolana-wycieczka", label: "Odwołana wycieczka a lot" },
+  { id: "jak-zlozyc", label: "Jak złożyć wniosek" },
+  { id: "przedawnienie", label: "Jak długo masz czas" },
+  { id: "faq", label: "Najczęstsze pytania" },
+];
+
+function getTocItems(slug: string) {
+  return slug === CHARTER_ARTICLE_SLUG ? charterTocItems : defaultTocItems;
+}
+
+function CharterArticleBody() {
+  return (
+    <>
+      <p>
+        Wykupiłeś wycieczkę, lot był opóźniony o kilka godzin albo w ogóle go odwołano.
+        Zastanawiasz się, czy linia czarterowa podlega tym samym przepisom co Ryanair czy
+        LOT. Odpowiedź jest jasna: tak. Tutaj wyjaśniamy wszystko, co powinieneś wiedzieć.
+      </p>
+
+      <div className={styles.callout}>
+        <p>
+          <strong>Najważniejsza odpowiedź:</strong> pasażerom lotów czarterowych przysługuje
+          odszkodowanie na podstawie Rozporządzenia (WE) nr 261/2004. Ochrona obejmuje loty
+          regularne i nieregularne, także te stanowiące część zorganizowanych wycieczek.
+          Za opóźniony, odwołany lot lub odmowę wejścia na pokład możesz dostać od 250 do
+          600 euro na osobę.
+        </p>
+      </div>
+
+      <h2 id="czarter-a-prawo">Lot czarterowy a Rozporządzenie 261/2004</h2>
+      <p>
+        Wiele osób błędnie uważa, że Rozporządzenie (WE) nr 261/2004 chroni wyłącznie
+        pasażerów lotów regularnych kupowanych bezpośrednio od linii lotniczych. To nieprawda
+        i warto to powiedzieć wprost, bo ta pomyłka kosztuje pasażerów miliony euro
+        niezłożonych roszczeń każdego roku.
+      </p>
+      <p>
+        Motyw 5 preambuły rozporządzenia jasno wskazuje, że ochrona powinna obejmować nie
+        tylko pasażerów lotów regularnych, ale również pasażerów lotów nieregularnych, w tym
+        loty stanowiące część zorganizowanych wycieczek. Ustawodawca unijny przewidział tę
+        sytuację celowo i świadomie.
+      </p>
+      <p>
+        Art. 3 ust. 1 rozporządzenia stosuje się do pasażerów odlatujących z lotniska na
+        terytorium państwa członkowskiego UE i nie różnicuje lotów regularnych oraz
+        czarterowych. Art. 3 ust. 5 precyzuje natomiast, że gdy pasażer ma umowę z
+        organizatorem wycieczki, obsługujący przewoźnik wykonuje obowiązki wynikające z
+        rozporządzenia w imieniu organizatora.
+      </p>
+      <p>
+        Krótko: nieważne, czy leciałeś Ryanairem kupionym samodzielnie, czy samolotem
+        czarterowym w ramach wakacji all-inclusive. Jeśli samolot startował z lotniska w
+        Polsce lub innym kraju UE, masz pełne prawa pasażerskie wynikające z rozporządzenia.
+      </p>
+
+      <h2 id="kiedy-przysluguje">Kiedy przysługuje odszkodowanie za lot czarterowy</h2>
+      <p>
+        Warunki są identyczne jak w przypadku lotów regularnych. Rozporządzenie wyróżnia trzy
+        sytuacje, w których masz prawo do odszkodowania pieniężnego.
+      </p>
+      <ul>
+        <li>
+          <strong>Opóźnienie powyżej 3 godzin w miejscu docelowym.</strong> Liczy się czas
+          przylotu do miejsca docelowego, nie czas odlotu z lotniska wyjazdu.
+        </li>
+        <li>
+          <strong>Odwołanie lotu bez odpowiedniego wyprzedzenia.</strong> Odszkodowanie nie
+          przysługuje, jeśli linia poinformowała Cię co najmniej 14 dni przed odlotem albo
+          zaproponowała odpowiednią zmianę trasy w krótszym terminie.
+        </li>
+        <li>
+          <strong>Odmowa przyjęcia na pokład, czyli overbooking.</strong> W czarterach zdarza
+          się rzadziej niż w lotach regularnych, ale nadal jest możliwa.
+        </li>
+      </ul>
+      <div className={styles.callout}>
+        <p>
+          <strong>Warunek formalny:</strong> musisz mieć potwierdzoną rezerwację i stawić się
+          do odprawy w czasie wskazanym przez przewoźnika, organizatora wycieczki lub biuro
+          podróży. Jeśli czas nie został podany na piśmie, obowiązuje zasada: nie później niż
+          45 minut przed planowaną godziną odlotu.
+        </p>
+      </div>
+
+      <h2 id="ile">Ile wynosi odszkodowanie</h2>
+      <p>
+        Kwoty są identyczne jak dla lotów regularnych i wynikają z art. 7 ust. 1
+        rozporządzenia. Zależą od odległości trasy mierzonej metodą ortodromy, a nie od ceny
+        biletu ani pakietu wakacyjnego.
+      </p>
+      <table className={styles.compTable}>
+        <thead>
+          <tr>
+            <th>Długość trasy</th>
+            <th>Przykłady tras wakacyjnych</th>
+            <th>Kwota</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Do 1 500 km</td>
+            <td>Polska - Chorwacja, Bułgaria, Włochy, Grecja kontynentalna</td>
+            <td className={styles.compAmount}>250 euro</td>
+          </tr>
+          <tr>
+            <td>1 500 - 3 500 km</td>
+            <td>Polska - Wyspy Kanaryjskie, Turcja, Egipt, Tunezja</td>
+            <td className={styles.compAmount}>400 euro</td>
+          </tr>
+          <tr>
+            <td>Powyżej 3 500 km</td>
+            <td>Polska - Dominikana, Tajlandia, Meksyk, ZEA</td>
+            <td className={styles.compAmount}>600 euro</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Kwota przysługuje każdemu pasażerowi z osobna. Jeśli lecieliście we czwórkę i lot był
+        opóźniony o 4 godziny na trasie Kraków - Hurghada, łączna kwota odszkodowania dla
+        rodziny może wynosić 4 x 600 euro, czyli 2400 euro.
+      </p>
+      <p>
+        Jeśli linia zaoferowała lot zastępczy, który dotarł do celu z opóźnieniem
+        nieprzekraczającym ustawowych limitów, przewoźnik może obniżyć kwotę o 50%. Przy braku
+        alternatywy lub przy większym opóźnieniu odszkodowanie przysługuje w pełnej wysokości.
+      </p>
+
+      <h2 id="kto-placi">Kto wypłaca odszkodowanie: linia czy biuro podróży?</h2>
+      <p>
+        To jedno z najczęstszych pytań przy lotach czarterowych. W locie czarterowym masz
+        zazwyczaj umowę z biurem podróży lub organizatorem wycieczki, a nie bezpośrednio z
+        linią lotniczą. Mimo to roszczenie o ryczałtowe odszkodowanie kierujesz do
+        obsługującego przewoźnika lotniczego.
+      </p>
+      <p>
+        Obsługujący przewoźnik to linia, której samolot faktycznie wykonał lot albo miał go
+        wykonać. Biuro podróży może dochodzić od linii zwrotu kosztów, które poniosło na Twoją
+        rzecz, ale to jego wewnętrzna sprawa. Dla pasażera kluczowe jest ustalenie nazwy
+        przewoźnika z karty pokładowej, potwierdzenia rezerwacji albo numeru lotu.
+      </p>
+      <p>
+        Wyjątek dotyczy zwrotu ceny biletu w ramach imprezy turystycznej. Takie roszczenie może
+        wynikać z przepisów o imprezach turystycznych i wtedy dochodzi się go od biura podróży.
+        Odszkodowanie ryczałtowe z art. 7 rozporządzenia należy się jednak od linii.
+      </p>
+
+      <h2 id="odwolana-wycieczka">Odwołana wycieczka a odwołany lot: ważna różnica</h2>
+      <p>
+        Art. 3 ust. 6 rozporządzenia zawiera istotny wyjątek: EC 261/2004 nie ma zastosowania,
+        gdy zorganizowana wycieczka jest odwołana z przyczyn innych niż odwołanie samego lotu.
+      </p>
+      <h3>EC 261/2004 ma zastosowanie, gdy:</h3>
+      <ul>
+        <li>wycieczka została odwołana, bo linia lotnicza odwołała lot,</li>
+        <li>lot został odwołany lub opóźniony, mimo że reszta wycieczki doszła do skutku,</li>
+        <li>lot powrotny opóźnił się i wróciłeś do Polski kilka godzin później,</li>
+        <li>linia odmówiła przyjęcia na pokład na lotnisku.</li>
+      </ul>
+      <h3>EC 261/2004 nie ma zastosowania, gdy:</h3>
+      <ul>
+        <li>biuro podróży odwołało wycieczkę z własnej decyzji biznesowej,</li>
+        <li>wycieczka została odwołana z powodu sytuacji w hotelu lub w miejscu docelowym,</li>
+        <li>organizator zmienił trasę wycieczki, ale lot jednak się odbył.</li>
+      </ul>
+      <p>
+        Gdy problem leży po stronie biura podróży, Twoje roszczenia reguluje ustawa o imprezach
+        turystycznych i powiązanych usługach turystycznych. Możesz żądać zwrotu kosztów lub
+        odszkodowania od organizatora, ale na innej podstawie prawnej niż EC 261/2004.
+      </p>
+
+      <h2 id="jak-zlozyc">Jak złożyć wniosek o odszkodowanie</h2>
+      <ol>
+        <li>
+          <strong>Ustal obsługującego przewoźnika.</strong> Sprawdź kartę pokładową,
+          potwierdzenie rezerwacji albo numer lotu. Szukasz nazwy linii, nie nazwy biura.
+        </li>
+        <li>
+          <strong>Zbierz dokumenty.</strong> Przydadzą się karta pokładowa, potwierdzenie
+          rezerwacji, komunikaty SMS lub e-mail oraz paragony za wydatki na lotnisku.
+        </li>
+        <li>
+          <strong>Sprawdź roszczenie bezpłatnie.</strong> Na oweme.pl podajesz numer lotu i
+          datę. System weryfikuje, czy lot podlegał rozporządzeniu i jaką kwotę możesz odzyskać.
+        </li>
+        <li>
+          <strong>Złóż reklamację do linii.</strong> Pismo kierujesz do obsługującego
+          przewoźnika, powołując się na Rozporządzenie (WE) nr 261/2004 i art. 7.
+        </li>
+        <li>
+          <strong>Przy odmowie: sąd albo cesja wierzytelności.</strong> Jeśli linia milczy lub
+          odmawia, możesz działać samodzielnie albo powierzyć sprawę kancelarii.
+        </li>
+      </ol>
+
+      <div className={styles.articleCtaInline}>
+        <div>
+          <h3>Sprawdź swoje odszkodowanie</h3>
+          <p>Wpisz numer lotu i datę. Weryfikacja jest bezpłatna i do niczego nie zobowiązuje.</p>
+        </div>
+        <Link href="/#checker" className={styles.articleCtaBtn}>
+          Sprawdź lot →
+        </Link>
+      </div>
+
+      <h2 id="przedawnienie">Jak długo masz czas na roszczenie</h2>
+      <p>
+        W Polsce roszczenia pasażerów wynikające z Rozporządzenia (WE) nr 261/2004 przedawniają
+        się z upływem 1 roku od dnia wykonania przewozu, a gdy przewóz nie został wykonany, od
+        dnia, w którym miał być wykonany. Wynika to z art. 205c ust. 7 Prawa lotniczego.
+      </p>
+      <p>
+        Bieg przedawnienia zawiesza się na okres od dnia złożenia reklamacji do dnia udzielenia
+        odpowiedzi albo do dnia, w którym upłynął termin na jej rozpatrzenie. Termin na
+        rozpatrzenie reklamacji wynosi 30 dni. Milczenie przewoźnika przez 30 dni oznacza
+        uznanie reklamacji.
+      </p>
+      <div className={styles.callout}>
+        <p>
+          <strong>Działaj od razu:</strong> 1 rok od daty lotu to krótki termin. Złóż reklamację
+          jak najszybciej po locie, zwłaszcza jeśli przewoźnik czarterowy odpowiada wolno albo
+          odsyła Cię do biura podróży.
+        </p>
+      </div>
+
+      <h2 id="faq">Najczęstsze pytania</h2>
+      <h3>Mam tylko vouchery z biura podróży, nie kartę pokładową. Czy mogę złożyć wniosek?</h3>
+      <p>
+        Tak. Potwierdzenie rezerwacji od biura podróży zwykle wystarcza do złożenia roszczenia.
+        Kartę pokładową często da się odtworzyć, kontaktując się z linią lotniczą albo biurem.
+      </p>
+      <h3>Linia czarterowa już nie istnieje. Czy mogę dochodzić odszkodowania?</h3>
+      <p>
+        Jeśli linia ogłosiła upadłość lub zakończyła działalność, dochodzenie roszczenia od niej
+        jest bardzo trudne. W części spraw możliwe są roszczenia wobec organizatora wycieczki,
+        ale wymaga to indywidualnej oceny.
+      </p>
+      <h3>Lot powrotny był opóźniony o 4 godziny. Czy mam prawo do odszkodowania za obie strony?</h3>
+      <p>
+        Każdy lot to odrębne zdarzenie. Jeśli opóźniony był tylko lot powrotny, odszkodowanie
+        przysługuje za lot powrotny. Kwota zależy od odległości tej trasy.
+      </p>
+      <h3>Linia powołuje się na złą pogodę. Czy to zamyka sprawę?</h3>
+      <p>
+        Nie zawsze. Linia musi udowodnić, że warunki faktycznie uniemożliwiały lot i że nie dało
+        się uniknąć skutków zakłócenia. Samo ogólne powołanie się na pogodę nie wystarcza.
+      </p>
+      <h3>Leciałem z Niemiec na wakacje all-inclusive. Czy rozporządzenie mnie chroni?</h3>
+      <p>
+        Tak. EC 261/2004 stosuje się do lotów startujących z lotnisk w każdym państwie UE, nie
+        tylko w Polsce. Możesz dochodzić roszczenia w dogodnej jurysdykcji, zależnie od sprawy.
+      </p>
+
+      <div className={styles.articleTagsRow}>
+        <span className={styles.articleTagsLabel}>Tematy:</span>
+        {["Lot czarterowy", "EC 261/2004", "Biuro podróży", "Opóźnienie", "Odwołany lot"].map(
+          (tag) => (
+            <span key={tag} className={styles.artTag}>
+              {tag}
+            </span>
+          ),
+        )}
+      </div>
+    </>
+  );
+}
 
 type DbPost = Awaited<
   ReturnType<Awaited<ReturnType<typeof createTRPCCaller>>["blog"]["getPublishedBySlug"]>
@@ -78,9 +391,9 @@ function DbArticleView({ post }: { post: DbPost }) {
 
       <div className={styles.articleHeader}>
         <div className={styles.articleBc}>
-          <Link href="/wiedza">Twoje prawa</Link>
+          <span>Twoje prawa</span>
           <ChevronIcon />
-          <Link href="/wiedza">{post.category}</Link>
+          <span>{post.category}</span>
           <ChevronIcon />
           <span style={{ color: "var(--text-3)" }}>{post.slug}</span>
         </div>
@@ -140,8 +453,12 @@ function DbArticleView({ post }: { post: DbPost }) {
           </svg>
           <div className={styles.heroStripDivider} />
           <div className={styles.heroStripStat}>
-            <div className={styles.heroStripBig}>3</div>
-            <div className={styles.heroStripTiny}>LATA na roszczenie</div>
+            <div className={styles.heroStripBig}>
+              {post.slug === CHARTER_ARTICLE_SLUG ? "1" : "3"}
+            </div>
+            <div className={styles.heroStripTiny}>
+              {post.slug === CHARTER_ARTICLE_SLUG ? "ROK w Polsce" : "LATA na roszczenie"}
+            </div>
           </div>
         </div>
       </div>
@@ -245,11 +562,13 @@ export default async function ArticlePage({
 
   // Fetch from DB first (data only — no JSX inside the try block)
   let dbPost: DbPost | null = null;
-  try {
-    const trpc = await createTRPCCaller();
-    dbPost = await trpc.blog.getPublishedBySlug({ slug });
-  } catch {
-    // Not in DB — fall through to static fallback
+  if (slug !== CHARTER_ARTICLE_SLUG) {
+    try {
+      const trpc = await createTRPCCaller();
+      dbPost = await trpc.blog.getPublishedBySlug({ slug });
+    } catch {
+      // Not in DB — fall through to static fallback
+    }
   }
 
   if (dbPost) {
@@ -268,9 +587,9 @@ export default async function ArticlePage({
       {/* Article header */}
       <div className={styles.articleHeader}>
         <div className={styles.articleBc}>
-          <Link href="/wiedza">Twoje prawa</Link>
+          <span>Twoje prawa</span>
           <ChevronIcon />
-          <Link href="/wiedza">{article.category}</Link>
+          <span>{article.category}</span>
           <ChevronIcon />
           <span style={{ color: "var(--text-3)" }}>{article.slug}</span>
         </div>
@@ -354,8 +673,12 @@ export default async function ArticlePage({
           </svg>
           <div className={styles.heroStripDivider} />
           <div className={styles.heroStripStat}>
-            <div className={styles.heroStripBig}>3</div>
-            <div className={styles.heroStripTiny}>LATA na roszczenie</div>
+            <div className={styles.heroStripBig}>
+              {article.slug === CHARTER_ARTICLE_SLUG ? "1" : "3"}
+            </div>
+            <div className={styles.heroStripTiny}>
+              {article.slug === CHARTER_ARTICLE_SLUG ? "ROK w Polsce" : "LATA na roszczenie"}
+            </div>
           </div>
           <div className={styles.heroStripDivider} />
           <div className={styles.heroStripStat}>
@@ -369,6 +692,10 @@ export default async function ArticlePage({
       <div className={styles.articleBodyWrap}>
         <div className={styles.articleContent}>
           <div className={styles.prose} id="article-prose">
+            {article.slug === CHARTER_ARTICLE_SLUG ? (
+              <CharterArticleBody />
+            ) : (
+              <>
             <p>
               Każdego roku miliony Europejczyków doświadczają opóźnionych, odwołanych lub
               przepełnionych lotów. Większość z nich nie wie, że przysługuje im konkretne,
@@ -497,6 +824,8 @@ export default async function ArticlePage({
                 ),
               )}
             </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -505,13 +834,7 @@ export default async function ArticlePage({
           {/* TOC */}
           <div className={styles.toc}>
             <div className={styles.tocLabel}>Spis treści</div>
-            {[
-              { id: "kiedy", label: "Kiedy przysługuje odszkodowanie?" },
-              { id: "ile", label: "Ile możesz dostać?" },
-              { id: "jak", label: "Jak złożyć wniosek?" },
-              { id: "okolicznosci", label: "Nadzwyczajne okoliczności" },
-              { id: "przedawnienie", label: "Przedawnienie" },
-            ].map((item) => (
+            {getTocItems(article.slug).map((item) => (
               <a key={item.id} href={`#${item.id}`} className={styles.tocItem}>
                 <span className={styles.tocDot} />
                 <span className={styles.tocText}>{item.label}</span>
