@@ -603,6 +603,18 @@
   text-align: left;
 }
 
+@media (max-width: 900px) and (min-width: 768px) {
+  .searchLandingCard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .searchLandingCard .submit {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 767px) {
   .hero {
     padding: 92px 16px 42px;
@@ -627,6 +639,31 @@
 
   .searchFieldCard .fieldControl {
     min-height: 52px;
+  }
+
+  .searchFieldCard .input {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .searchFieldCard .dropdown {
+    position: static;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 8px;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(13, 17, 23, 0.12);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .searchFieldCard .dropdownItem {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .searchFieldCard .dropdownCode {
+    min-width: 58px;
   }
 
   .searchLandingCard .submit {
@@ -719,6 +756,10 @@
 
   .input {
     font-size: 19px;
+  }
+
+  .searchFieldCard .input {
+    font-size: 16px;
   }
 
   .searchFieldProminent .input {

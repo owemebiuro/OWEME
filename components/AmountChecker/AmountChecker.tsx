@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 
+import type { Airport } from "@/lib/flight-checker-data";
+
 import { AirportField } from "./AirportField";
 import { DisruptionCard } from "./DisruptionCard";
 import { DistanceSlider } from "./DistanceSlider";
@@ -1931,12 +1933,14 @@ export function AmountChecker() {
   const router = useRouter();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [fromAirport, setFromAirport] = useState<Airport | null>(null);
+  const [toAirport, setToAirport] = useState<Airport | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
   const [activeDisId, setActiveDisId] = useState<DisruptionId>("delay");
 
   useEffect(() => {
     if (from.length >= 3 && to.length >= 3) {
-      const distance = getDistance(from, to);
+      const distance = getDistance(fromAirport, toAirport);
 
       if (distance !== null) {
         const nextValue = kmToSlider(distance);
@@ -1949,10 +1953,13 @@ export function AmountChecker() {
     }
 
     return undefined;
-  }, [from, to]);
+  }, [from, fromAirport, to, toAirport]);
 
   const currentTier = tierFromSlider(sliderValue);
-  const hint = useMemo(() => computeHint(from, to), [from, to]);
+  const hint = useMemo(
+    () => computeHint(from, to, fromAirport, toAirport),
+    [from, fromAirport, to, toAirport],
+  );
   const activeDisruption = DISRUPTIONS.find((item) => item.id === activeDisId) ?? DISRUPTIONS[0];
   const detailTitle =
     activeDisId === "delay"
@@ -2001,6 +2008,7 @@ export function AmountChecker() {
                   placeholder="np. WAW"
                   value={from}
                   onChange={setFrom}
+                  onAirportChange={setFromAirport}
                 />
                 <div className={styles.airportsConnectorWrap} aria-hidden="true">
                   <span className={styles.airportsConnector}>
@@ -2013,6 +2021,7 @@ export function AmountChecker() {
                   placeholder="np. LHR"
                   value={to}
                   onChange={setTo}
+                  onAirportChange={setToAirport}
                 />
               </div>
             </div>

@@ -22,6 +22,7 @@ interface AirportFieldProps {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  onAirportChange?: (airport: Airport | null) => void;
 }
 
 const MAX_AIRPORT_RESULTS = 3;
@@ -89,6 +90,7 @@ export function AirportField({
   placeholder,
   value,
   onChange,
+  onAirportChange,
 }: AirportFieldProps) {
   const listId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -130,14 +132,26 @@ export function AirportField({
         })
         .then((data) => {
           const airports = data.airports.slice(0, MAX_AIRPORT_RESULTS);
+          const normalizedCode = query.trim().toUpperCase();
 
           setResults(airports);
           setActiveIndex(airports.length ? 0 : -1);
+
+          if (/^[A-Z]{3}$/.test(normalizedCode) && value === normalizedCode) {
+            onAirportChange?.(
+              airports.find((airport) => airport.iata === normalizedCode) ??
+                null,
+            );
+          }
         })
         .catch(() => {
           if (!controller.signal.aborted) {
             setResults([]);
             setActiveIndex(-1);
+
+            if (/^[A-Z]{3}$/.test(query.trim().toUpperCase())) {
+              onAirportChange?.(null);
+            }
           }
         });
     }, 220);
@@ -146,7 +160,7 @@ export function AirportField({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [isOpen, query]);
+  }, [isOpen, onAirportChange, query, value]);
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -165,6 +179,7 @@ export function AirportField({
 
   function selectAirport(airport: Airport) {
     onChange(airport.iata);
+    onAirportChange?.(airport);
     setDraft(null);
     setIsOpen(false);
     setIsFocused(false);
@@ -176,6 +191,7 @@ export function AirportField({
 
     const normalizedCode = nextValue.trim().toUpperCase();
     onChange(/^[A-Z]{3}$/.test(normalizedCode) ? normalizedCode : "");
+    onAirportChange?.(null);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {

@@ -1,39 +1,4 @@
-export const ROUTES: Record<string, number> = {
-  "WAW-BER": 559,
-  "WAW-VIE": 523,
-  "WAW-PRG": 516,
-  "WAW-BUD": 542,
-  "WAW-WRO": 270,
-  "WAW-KRK": 252,
-  "WAW-GDN": 294,
-  "WAW-POZ": 308,
-  "WAW-LHR": 1447,
-  "WAW-CDG": 1365,
-  "WAW-AMS": 1145,
-  "WAW-MUC": 879,
-  "WAW-FCO": 1329,
-  "WAW-MAD": 2298,
-  "WAW-BCN": 2009,
-  "WAW-ATH": 1733,
-  "WAW-IST": 1581,
-  "WAW-LIS": 2863,
-  "WAW-DXB": 4227,
-  "WAW-DOH": 3979,
-  "WAW-BKK": 8317,
-  "WAW-SIN": 9280,
-  "WAW-JFK": 7041,
-  "WAW-ORD": 7680,
-  "WAW-LAX": 9793,
-  "WAW-YYZ": 7221,
-  "WAW-NRT": 8919,
-  "WAW-SYD": 15978,
-  "KRK-LHR": 1556,
-  "KRK-CDG": 1472,
-  "KRK-AMS": 1248,
-  "KRK-DXB": 4086,
-  "GDN-LHR": 1290,
-  "GDN-CDG": 1198,
-};
+import type { Airport } from "@/lib/flight-checker-data";
 
 export const TIERS = [
   { threshold: 33, maxKm: 1500, label: "do 1 500 km", amt: 250 },
@@ -44,13 +9,46 @@ export const TIERS = [
 export type Tier = (typeof TIERS)[number];
 export type HintState = "idle" | "qualified" | "no-data";
 
-export function getDistance(from: string, to: string): number | null {
-  const normalizedFrom = from.trim().toUpperCase();
-  const normalizedTo = to.trim().toUpperCase();
-  const key = `${normalizedFrom}-${normalizedTo}`;
-  const reverseKey = `${normalizedTo}-${normalizedFrom}`;
+function normalizeAirportCode(value: string) {
+  return value.trim().toUpperCase();
+}
 
-  return ROUTES[key] ?? ROUTES[reverseKey] ?? null;
+function toRadians(value: number) {
+  return (value * Math.PI) / 180;
+}
+
+function hasCoordinates(airport: Airport | null): airport is Airport {
+  return Boolean(
+    airport &&
+      Number.isFinite(airport.lat) &&
+      Number.isFinite(airport.lon),
+  );
+}
+
+export function getDistance(
+  fromAirport: Airport | null,
+  toAirport: Airport | null,
+): number | null {
+  if (
+    !hasCoordinates(fromAirport) ||
+    !hasCoordinates(toAirport) ||
+    fromAirport.iata === toAirport.iata
+  ) {
+    return null;
+  }
+
+  const earthRadiusKm = 6371;
+  const deltaLat = toRadians(toAirport.lat - fromAirport.lat);
+  const deltaLon = toRadians(toAirport.lon - fromAirport.lon);
+  const fromLat = toRadians(fromAirport.lat);
+  const toLat = toRadians(toAirport.lat);
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(deltaLon / 2) ** 2;
+
+  return Math.round(
+    earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+  );
 }
 
 export function tierFromSlider(value: number): Tier {
@@ -68,20 +66,35 @@ export function kmToSlider(km: number): number {
   return Math.round(67 + Math.min(((km - 3500) / 6500) * 33, 33));
 }
 
-export function computeHint(from: string, to: string) {
-  if (from.length < 3 || to.length < 3) {
+export function computeHint(
+  from: string,
+  to: string,
+  fromAirport: Airport | null,
+  toAirport: Airport | null,
+) {
+  const normalizedFrom = normalizeAirportCode(from);
+  const normalizedTo = normalizeAirportCode(to);
+
+  if (normalizedFrom.length < 3 || normalizedTo.length < 3) {
     return {
       state: "idle" as const,
       text: "Wpisz lotniska, a przeliczymy dystans i próg odszkodowania.",
     };
   }
 
-  const distance = getDistance(from, to);
+  if (normalizedFrom === normalizedTo) {
+    return {
+      state: "no-data" as const,
+      text: "Wybierz dwa różne lotniska, żeby policzyć trasę.",
+    };
+  }
+
+  const distance = getDistance(fromAirport, toAirport);
 
   if (distance === null) {
     return {
       state: "no-data" as const,
-      text: "Nie mamy tej trasy w kalkulatorze MVP. Możesz nadal użyć suwaka.",
+      text: "Wybierz lotniska z listy lub wpisz poprawne kody IATA, a przeliczymy dystans.",
     };
   }
 

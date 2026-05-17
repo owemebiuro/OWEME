@@ -1713,6 +1713,47 @@
     grid-template-columns: 1fr;
   }
 
+  .airportField {
+    min-height: 76px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 16px;
+  }
+
+  .airportField input {
+    flex: 1 1 0;
+    font-size: 20px;
+  }
+
+  .airportField input::placeholder {
+    font-size: 18px;
+  }
+
+  .afDropdown {
+    position: static;
+    flex: 0 0 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 12%, transparent);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .afDropdownItem {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .afDropdownCode {
+    width: 58px;
+  }
+
+  .afDropdownName span:last-child {
+    white-space: normal;
+  }
+
   .airportsConnectorWrap {
     top: 50%;
     margin-top: 0;
