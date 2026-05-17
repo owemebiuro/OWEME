@@ -10,6 +10,7 @@ import {
   CLAIM_STATUSES,
   claimStatusLabels,
 } from "@/lib/claims/status-colors";
+import styles from "./QuickActions.module.css";
 
 type QuickActionsProps = {
   claim: Pick<ClaimsListItem, "id" | "ownerId" | "status">;
@@ -72,6 +73,7 @@ export function QuickActions({ claim, currentUser }: QuickActionsProps) {
   });
 
   const isLoading = assignOwner.isPending || updateStatus.isPending;
+  const canTakeClaim = claim.ownerId === null;
 
   function handleStatusChange(status: string) {
     setSelectedStatus(status);
@@ -87,15 +89,15 @@ export function QuickActions({ claim, currentUser }: QuickActionsProps) {
   }
 
   return (
-    <div className="flex min-w-40 flex-col gap-2">
-      {claim.ownerId === null ? (
+    <div className={styles.actions}>
+      {canTakeClaim ? (
         <button
           type="button"
           onClick={() =>
             assignOwner.mutate({ id: claim.id, ownerId: currentUser.id })
           }
           disabled={isLoading}
-          className="inline-flex h-9 items-center justify-center rounded-md border border-teal-200 bg-teal-50 px-3 text-xs font-semibold text-teal-700 transition hover:border-teal-400 disabled:cursor-wait disabled:opacity-50"
+          className={styles.takeButton}
         >
           Weź sprawę
         </button>
@@ -105,7 +107,7 @@ export function QuickActions({ claim, currentUser }: QuickActionsProps) {
         value={selectedStatus}
         onChange={(event) => handleStatusChange(event.target.value)}
         disabled={isLoading}
-        className="h-9 rounded-md border border-neutral-200 bg-white px-2 text-xs font-semibold text-neutral-700 outline-none transition focus:border-neutral-950 disabled:cursor-wait disabled:opacity-50"
+        className={styles.statusSelect}
       >
         <option value="">Zmień status</option>
         {CLAIM_STATUSES.filter((status) => status !== claim.status).map(
@@ -117,9 +119,7 @@ export function QuickActions({ claim, currentUser }: QuickActionsProps) {
         )}
       </select>
 
-      {error ? (
-        <p className="max-w-52 text-xs leading-5 text-red-600">{error}</p>
-      ) : null}
+      {error ? <p className={styles.error}>{error}</p> : null}
     </div>
   );
 }

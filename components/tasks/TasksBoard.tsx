@@ -1,9 +1,10 @@
 "use client";
 
 import type { TaskPriority, TaskStatus } from "@prisma/client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/trpc/hooks";
+import styles from "./TasksBoard.module.css";
 
 export type TaskBoardItem = {
   id: string;
@@ -11,6 +12,7 @@ export type TaskBoardItem = {
   dueDate: string | null;
   priority: TaskPriority;
   status: TaskStatus;
+  closedAt: string | null;
   assignee: {
     name: string;
   } | null;
@@ -28,14 +30,22 @@ type TasksBoardProps = {
   tasks: TaskBoardItem[];
 };
 
-const priorityStyles: Record<
-  TaskPriority,
-  { label: string; color: string; bg: string }
-> = {
-  URGENT: { label: "Pilne", color: "#d04040", bg: "#fee2e2" },
-  HIGH: { label: "Wysoki", color: "#1259a8", bg: "#ebf3fe" },
-  MEDIUM: { label: "Średni", color: "#1e8a6e", bg: "#e4f5f1" },
-  LOW: { label: "Niski", color: "#6b7a94", bg: "#f0f4fa" },
+type TaskSegment = "pending" | "done";
+
+const completedTasksStorageKey = "oweme_completed_tasks";
+
+const priorityLabels: Record<TaskPriority, string> = {
+  URGENT: "Pilne",
+  HIGH: "Wysoki",
+  MEDIUM: "Średni",
+  LOW: "Niski",
+};
+
+const priorityClassNames: Record<TaskPriority, string> = {
+  URGENT: styles.priorityUrgent,
+  HIGH: styles.priorityHigh,
+  MEDIUM: styles.priorityMedium,
+  LOW: styles.priorityLow,
 };
 
 const groupOrder = [
@@ -139,122 +149,306 @@ function buildCalendar(month: Date, tasks: TaskBoardItem[], selectedDate: string
   }));
 }
 
+function readStoredCompletedIds() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(
+      window.localStorage.getItem(completedTasksStorageKey) ?? "[]",
+    );
+
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function uniqueIds(ids: string[]) {
+  return Array.from(new Set(ids));
+}
+
+function getInitialCompletedIds(tasks: TaskBoardItem[]) {
+  return uniqueIds([
+    ...readStoredCompletedIds(),
+    ...tasks.filter((task) => task.status === "DONE").map((task) => task.id),
+  ]);
+}
+
+function RestoreIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path
+        d="M5.2 7.2A5.5 5.5 0 1 1 4.5 10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5.2 4.2v3h3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function TasksBoard({ tasks }: TasksBoardProps) {
   const [items, setItems] = useState(tasks);
   const [month, setMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const closeTask = api.tasks.close.useMutation({
-    onSuccess: (_data, variables) => {
+  const [activeSegment, setActiveSegment] = useState<TaskSegment>("pending");
+  const [closingTaskIds, setClosingTaskIds] = useState<string[]>([]);
+  const [completedIds, setCompletedIds] = useState(() =>
+    getInitialCompletedIds(tasks),
+  );
+  const closeTask = api.tasks.close.useMutation();
+  const reopenTask = api.tasks.reopen.useMutation();
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      completedTasksStorageKey,
+      JSON.stringify(completedIds),
+    );
+  }, [completedIds]);
+
+  function isCompleted(task: TaskBoardItem) {
+    return task.status === "DONE" || completedIds.includes(task.id);
+  }
+
+  function completeTask(taskId: string) {
+    setClosingTaskIds((current) => uniqueIds([taskId, ...current]));
+
+    window.setTimeout(() => {
       setItems((current) =>
         current.map((task) =>
-          task.id === variables.id ? { ...task, status: "DONE" } : task,
+          task.id === taskId
+            ? { ...task, status: "DONE", closedAt: new Date().toISOString() }
+            : task,
         ),
       );
-    },
-  });
+      setCompletedIds((current) =>
+        uniqueIds([taskId, ...current.filter((id) => id !== taskId)]),
+      );
+      setClosingTaskIds((current) => current.filter((id) => id !== taskId));
+      closeTask.mutate({ id: taskId });
+    }, 300);
+  }
 
-  const visibleTasks = selectedDate
-    ? items.filter((task) => task.dueDate?.slice(0, 10) === selectedDate)
-    : items;
+  function restoreTask(taskId: string) {
+    setItems((current) =>
+      current.map((task) =>
+        task.id === taskId ? { ...task, status: "OPEN", closedAt: null } : task,
+      ),
+    );
+    setCompletedIds((current) => current.filter((id) => id !== taskId));
+    reopenTask.mutate({ id: taskId });
+  }
+
+  const pendingTasks = items.filter((task) => !isCompleted(task));
+  const completedTasks = items
+    .filter((task) => isCompleted(task))
+    .sort((first, second) => {
+      const firstIndex = completedIds.indexOf(first.id);
+      const secondIndex = completedIds.indexOf(second.id);
+
+      if (firstIndex !== -1 || secondIndex !== -1) {
+        return (firstIndex === -1 ? Number.MAX_SAFE_INTEGER : firstIndex) -
+          (secondIndex === -1 ? Number.MAX_SAFE_INTEGER : secondIndex);
+      }
+
+      return (
+        new Date(second.closedAt ?? 0).getTime() -
+        new Date(first.closedAt ?? 0).getTime()
+      );
+    });
+
+  const visiblePendingTasks = selectedDate
+    ? pendingTasks.filter((task) => task.dueDate?.slice(0, 10) === selectedDate)
+    : pendingTasks;
   const grouped = useMemo(() => {
     const map = new Map<string, TaskBoardItem[]>();
 
-    for (const task of visibleTasks) {
+    for (const task of visiblePendingTasks) {
       const group = groupTask(task);
       map.set(group, [...(map.get(group) ?? []), task]);
     }
 
     return map;
-  }, [visibleTasks]);
-  const calendar = buildCalendar(month, items, selectedDate ?? "");
-  const urgentTasks = visibleTasks.filter((task) =>
+  }, [visiblePendingTasks]);
+  const calendar = buildCalendar(month, pendingTasks, selectedDate ?? "");
+  const urgentTasks = visiblePendingTasks.filter((task) =>
     ["URGENT", "HIGH"].includes(task.priority),
   );
 
   return (
     <div className="space-y-5">
-      <header>
-        <p className="text-sm font-semibold text-neutral-500">OWEME CRM</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
-          Zadania
-        </h1>
+      <header className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-neutral-500">OWEME CRM</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
+            Zadania
+          </h1>
+        </div>
+        <div className={styles.segments} aria-label="Widok zadań">
+          <button
+            type="button"
+            onClick={() => setActiveSegment("pending")}
+            className={`${styles.segmentButton} ${
+              activeSegment === "pending" ? styles.segmentButtonActive : ""
+            }`}
+          >
+            Do wykonania
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSegment("done")}
+            className={`${styles.segmentButton} ${
+              activeSegment === "done" ? styles.segmentButtonActive : ""
+            }`}
+          >
+            Wykonane
+          </button>
+        </div>
       </header>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,0.6fr)_minmax(320px,0.4fr)]">
         <div className="space-y-4">
-          {groupOrder.map((group) => {
-            const groupTasks = grouped.get(group) ?? [];
+          {activeSegment === "pending" ? (
+            <>
+              {groupOrder.map((group) => {
+                const groupTasks = grouped.get(group) ?? [];
 
-            if (!groupTasks.length) {
-              return null;
-            }
+                if (!groupTasks.length) {
+                  return null;
+                }
 
-            return (
-              <section
-                key={group}
-                className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-neutral-950">
-                    {group}
-                  </h2>
-                  <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-600">
-                    {groupTasks.length}
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {groupTasks.map((task) => {
-                    const style = priorityStyles[task.priority];
-
-                    return (
-                      <article
-                        key={task.id}
-                        className="rounded-lg border border-neutral-200 bg-neutral-50 p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-neutral-950">
-                              {task.title}
-                            </p>
-                            <p className="mt-1 text-sm text-neutral-500">
-                              Sprawa: {task.claim.claimNumber} ·{" "}
-                              {task.claim.client.firstName}{" "}
-                              {task.claim.client.lastName}
-                            </p>
-                            <p className="mt-1 text-sm text-neutral-500">
-                              Przypisany: {task.assignee?.name ?? "brak"} · Do:{" "}
-                              {formatDate(task.dueDate)}
-                            </p>
-                          </div>
-                          <span
-                            className="rounded-md px-2 py-1 text-xs font-semibold"
-                            style={{
-                              background: style.bg,
-                              color: style.color,
-                            }}
-                          >
-                            {style.label}
-                          </span>
-                        </div>
-                        {task.status !== "DONE" ? (
-                          <div className="mt-3 flex justify-end">
+                return (
+                  <section
+                    key={group}
+                    className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-sm font-semibold text-neutral-950">
+                        {group}
+                      </h2>
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-600">
+                        {groupTasks.length}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {groupTasks.map((task) => (
+                        <article
+                          key={task.id}
+                          className={`${styles.taskCard} ${
+                            closingTaskIds.includes(task.id)
+                              ? styles.taskCardClosing
+                              : ""
+                          }`}
+                        >
+                          <div className={styles.taskBody}>
                             <button
                               type="button"
-                              onClick={() => closeTask.mutate({ id: task.id })}
-                              disabled={closeTask.isPending}
-                              className="h-9 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400 disabled:cursor-wait disabled:opacity-50"
+                              role="checkbox"
+                              aria-checked="false"
+                              aria-label={`Oznacz zadanie "${task.title}" jako wykonane`}
+                              onClick={() => completeTask(task.id)}
+                              disabled={closingTaskIds.includes(task.id)}
+                              className={styles.checkbox}
                             >
-                              ✓ Zakończ
+                              ✓
                             </button>
+                            <div className={styles.taskContent}>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className={styles.taskTitle}>
+                                    {task.title}
+                                  </p>
+                                  <p className={styles.taskMeta}>
+                                    Sprawa: {task.claim.claimNumber} ·{" "}
+                                    {task.claim.client.firstName}{" "}
+                                    {task.claim.client.lastName}
+                                  </p>
+                                  <p className={styles.taskMeta}>
+                                    Przypisany: {task.assignee?.name ?? "brak"} · Do:{" "}
+                                    {formatDate(task.dueDate)}
+                                  </p>
+                                </div>
+                                <span
+                                  className={`${styles.priority} ${
+                                    priorityClassNames[task.priority]
+                                  }`}
+                                >
+                                  {priorityLabels[task.priority]}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        ) : null}
-                      </article>
-                    );
-                  })}
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+              {!visiblePendingTasks.length ? (
+                <p className={styles.emptyDone}>Brak zadań do wykonania</p>
+              ) : null}
+            </>
+          ) : (
+            <section className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              {completedTasks.length ? (
+                <div className="space-y-3">
+                  {completedTasks.map((task) => (
+                    <article key={task.id} className={styles.taskCard}>
+                      <div className={styles.taskBody}>
+                        <span
+                          role="checkbox"
+                          aria-checked="true"
+                          aria-disabled="true"
+                          className={`${styles.checkbox} ${styles.checkboxChecked}`}
+                        >
+                          ✓
+                        </span>
+                        <div className={styles.taskContent}>
+                          <p className={`${styles.taskTitle} ${styles.taskTitleDone}`}>
+                            {task.title}
+                          </p>
+                          <p className={styles.taskMeta}>
+                            Sprawa: {task.claim.claimNumber} ·{" "}
+                            {task.claim.client.firstName} {task.claim.client.lastName}
+                          </p>
+                          <p className={styles.taskMeta}>
+                            Wykonano: {formatDate(task.closedAt)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => restoreTask(task.id)}
+                          disabled={reopenTask.isPending}
+                          className={styles.restoreButton}
+                          aria-label={`Przywróć zadanie "${task.title}"`}
+                          title="Przywróć"
+                        >
+                          <RestoreIcon />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-              </section>
-            );
-          })}
+              ) : (
+                <p className={styles.emptyDone}>Brak wykonanych zadań</p>
+              )}
+            </section>
+          )}
         </div>
 
         <aside className="space-y-4">
@@ -327,26 +521,26 @@ export function TasksBoard({ tasks }: TasksBoardProps) {
             <h2 className="text-sm font-semibold text-neutral-950">Pilne</h2>
             <div className="mt-3 space-y-2">
               {urgentTasks.length ? (
-                urgentTasks.map((task) => {
-                  const style = priorityStyles[task.priority];
-
-                  return (
-                    <div
-                      key={task.id}
-                      className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2"
-                    >
-                      <p className="text-sm font-semibold text-neutral-950">
-                        {task.title}
-                      </p>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        {formatDate(task.dueDate)} ·{" "}
-                        <span style={{ color: style.color }}>
-                          {style.label}
-                        </span>
-                      </p>
-                    </div>
-                  );
-                })
+                urgentTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2"
+                  >
+                    <p className="text-sm font-semibold text-neutral-950">
+                      {task.title}
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {formatDate(task.dueDate)} ·{" "}
+                      <span
+                        className={`${styles.priority} ${
+                          priorityClassNames[task.priority]
+                        }`}
+                      >
+                        {priorityLabels[task.priority]}
+                      </span>
+                    </p>
+                  </div>
+                ))
               ) : (
                 <p className="text-sm text-neutral-500">Brak pilnych zadań.</p>
               )}

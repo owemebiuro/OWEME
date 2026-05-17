@@ -1,0 +1,168 @@
+.segments {
+  display: inline-flex;
+  gap: 4px;
+  width: fit-content;
+  border-radius: 10px;
+  background: var(--parchment);
+  padding: 4px;
+}
+
+.segmentButton {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  font-family: var(--font-manrope);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  transition: all 0.15s ease;
+}
+
+.segmentButton:hover {
+  background: rgba(27, 111, 212, 0.08);
+  color: var(--ember);
+}
+
+.segmentButtonActive {
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(13, 17, 23, 0.1);
+  font-weight: 700;
+}
+
+.taskCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 14px;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease,
+    border-color 150ms ease;
+}
+
+.taskCardClosing {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+.taskBody {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.taskContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.taskTitle {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.taskTitleDone {
+  color: var(--mist);
+  text-decoration: line-through;
+}
+
+.taskMeta {
+  margin-top: 4px;
+  color: var(--mist);
+  font-size: 14px;
+}
+
+.checkbox {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--line);
+  border-radius: 5px;
+  background: #ffffff;
+  color: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  margin-top: 2px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.checkbox:hover {
+  border-color: var(--ember);
+}
+
+.checkboxChecked {
+  border-color: var(--ember);
+  background: var(--ember);
+  color: #ffffff;
+  cursor: default;
+}
+
+.restoreButton {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--mist);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.restoreButton:hover {
+  background: var(--ember-bg);
+  color: var(--ember);
+}
+
+.priority {
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
+}
+
+.priorityUrgent {
+  background: #fee2e2;
+  color: #d04040;
+}
+
+.priorityHigh {
+  background: var(--ember-bg);
+  color: var(--ember-lo);
+}
+
+.priorityMedium {
+  background: var(--sage-bg);
+  color: var(--sage);
+}
+
+.priorityLow {
+  background: var(--parchment);
+  color: var(--mist);
+}
+
+.emptyDone {
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: rgba(250, 252, 255, 0.65);
+  color: var(--mist);
+  font-size: 14px;
+  padding: 42px 16px;
+  text-align: center;
+}

@@ -58,6 +58,7 @@ export default async function TasksPage() {
     dueDate: serializeDate(task.dueDate),
     priority: task.priority,
     status: task.status,
+    closedAt: serializeDate(task.closedAt),
     assignee: task.assignee,
     claim: task.claim,
   }));

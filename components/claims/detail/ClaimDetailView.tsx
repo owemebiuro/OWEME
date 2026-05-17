@@ -13,6 +13,7 @@ import type {
   ClaimsOwnerOption,
 } from "@/lib/claims/types";
 import { api } from "@/lib/trpc/hooks";
+import styles from "./ClaimDetailView.module.css";
 
 type ClaimDetailViewProps = {
   claim: ClaimDetailData;
@@ -187,10 +188,10 @@ export function ClaimDetailView({
         onOpenTasks={() => selectTab("tasks")}
       />
 
-      <div className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(260px,0.32fr)_1fr] lg:px-8">
+      <div className={styles.detailGrid}>
         <ClaimSidebar claim={claim} onChanged={refreshClaim} />
 
-        <section className="min-w-0 space-y-4">
+        <section className={styles.detailMain}>
           <nav className="overflow-x-auto rounded-lg border border-neutral-200 bg-white p-1 shadow-sm">
             <div className="flex min-w-max gap-1">
               {tabs.map((tab) => (

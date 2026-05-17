@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
 import { buildClaimsSearchParams } from "@/lib/claims/url-filters";
+import styles from "./ClaimsSavedViews.module.css";
 
 type ClaimsSavedViewsProps = {
   currentUserId: string;
@@ -67,18 +68,14 @@ export function ClaimsSavedViews({ currentUserId }: ClaimsSavedViewsProps) {
   ];
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className={styles.tabs}>
       {presets.map((preset) => (
         <button
           key={preset.label}
           type="button"
           onClick={preset.onClick}
           disabled={isPending}
-          className={`shrink-0 rounded-md border px-3 py-2 text-sm font-semibold transition ${
-            preset.active
-              ? "border-neutral-950 bg-neutral-950 text-white"
-              : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400"
-          }`}
+          className={`${styles.button} ${preset.active ? styles.buttonActive : ""}`}
         >
           {preset.label}
         </button>

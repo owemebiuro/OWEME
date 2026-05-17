@@ -93,14 +93,22 @@
 
 .pageContent {
   min-width: 0;
+  width: 100%;
 }
 
 .pageContent :global(main) {
   background: transparent !important;
+  width: 100%;
 }
 
 .pageContent :global(main.min-h-screen) {
   min-height: auto;
+}
+
+.pageContent :global(main > .mx-auto) {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 .pageContent :global(.rounded-lg.border.border-neutral-200.bg-white),

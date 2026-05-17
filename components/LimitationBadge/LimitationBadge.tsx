@@ -17,8 +17,8 @@ type LimitationBadgeProps = {
 
 const statusIcons = {
   expired: "⚠",
-  urgent: "⏰",
-  warning: "📅",
+  urgent: "⚠",
+  warning: "⚠",
   suspended: "⏸",
   safe: "✓",
 } as const;
@@ -48,7 +48,7 @@ function getMainStatus(data: LimitationData) {
     return "BIEG ZAWIESZONY";
   }
 
-  if (data.daysRemaining <= 90) {
+  if (data.daysRemaining <= 60) {
     return `KOŃCZY SIĘ ${formatDaysRemaining(data.daysRemaining).toUpperCase()}`;
   }
 

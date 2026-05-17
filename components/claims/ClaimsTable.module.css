@@ -1,0 +1,34 @@
+.table {
+  width: 100%;
+  min-width: 1500px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.tableJudicial {
+  min-width: 1740px;
+}
+
+.tableShell {
+  overflow: hidden;
+  border: 1px solid rgba(212, 222, 240, 0.72);
+  border-radius: 18px;
+  background: rgba(250, 252, 255, 0.74);
+  box-shadow:
+    0 0.5px 0 rgba(255, 255, 255, 0.86) inset,
+    0 8px 24px rgba(13, 17, 23, 0.08),
+    0 1px 2px rgba(13, 17, 23, 0.06);
+}
+
+.dangerRow {
+  border-left: 3px solid var(--danger);
+}
+
+.dangerRow td:first-child {
+  padding-left: 13px;
+}
+
+.actionCell {
+  padding: 8px 12px;
+}

@@ -1,10 +1,21 @@
 "use client";
 
+import { ClaimStatus, ClaimType } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
 
 import { buildClaimsSearchParams } from "@/lib/claims/url-filters";
 import type { CaseView } from "@/lib/constants/statuses";
+import styles from "./ClaimsFilters.module.css";
+
+export type ClaimAirlineFilterOption = {
+  id: string;
+  name: string;
+};
+
+type ClaimsFiltersProps = {
+  airlineOptions: ClaimAirlineFilterOption[];
+};
 
 const filterFields = [
   { key: "flightNumber", label: "Numer lotu", type: "text", placeholder: "LO231" },
@@ -22,7 +33,98 @@ const views: Array<{ value: CaseView; label: string }> = [
   { value: "judicial", label: "Sądowe" },
 ];
 
-export function ClaimsFilters() {
+const typeOptions = [
+  { value: "", label: "Wszystkie typy" },
+  { value: ClaimType.DELAY, label: "Opóźnienie" },
+  { value: ClaimType.CANCELLATION, label: "Odwołanie" },
+  { value: ClaimType.DENIED_BOARDING, label: "Overbooking" },
+] as const;
+
+const statusOptions = [
+  { value: "", label: "Wszystkie statusy", statuses: [] },
+  { value: "new", label: "Nowa", statuses: [ClaimStatus.NEW] },
+  {
+    value: "in_progress",
+    label: "W toku",
+    statuses: [
+      ClaimStatus.AWAITING_VERIFICATION,
+      ClaimStatus.MISSING_DATA,
+      ClaimStatus.QUALIFIED,
+      ClaimStatus.DOCUMENTS_GENERATED,
+      ClaimStatus.ASSIGNMENT_SIGNED,
+      ClaimStatus.DEMAND_LETTER_PREPARED,
+      ClaimStatus.DEMAND_LETTER_SENT,
+      ClaimStatus.AWAITING_AIRLINE_RESPONSE,
+      ClaimStatus.NEGATIVE_RESPONSE,
+    ],
+  },
+  {
+    value: "court_submitted",
+    label: "Złożona do sądu",
+    statuses: [ClaimStatus.COURT_DECISION_PENDING],
+  },
+  {
+    value: "court_pending",
+    label: "Oczekuje na wyrok",
+    statuses: [ClaimStatus.COURT_STAGE],
+  },
+  {
+    value: "won",
+    label: "Wygrana",
+    statuses: [ClaimStatus.WON, ClaimStatus.SETTLEMENT, ClaimStatus.CLOSED_PAID],
+  },
+  {
+    value: "lost",
+    label: "Przegrana",
+    statuses: [ClaimStatus.REJECTED, ClaimStatus.DISMISSED],
+  },
+  {
+    value: "archive",
+    label: "Archiwum",
+    statuses: [
+      ClaimStatus.WON,
+      ClaimStatus.SETTLEMENT,
+      ClaimStatus.CLOSED_PAID,
+      ClaimStatus.REJECTED,
+      ClaimStatus.DISMISSED,
+    ],
+  },
+] as const;
+
+function getStatusSelectValue(statusParam: string | null) {
+  const normalized = statusParam ?? "";
+
+  return (
+    statusOptions.find((option) => option.statuses.join(",") === normalized)
+      ?.value ?? ""
+  );
+}
+
+function getNextLimitationSort(current: string | null) {
+  if (current === "asc") {
+    return "desc";
+  }
+
+  if (current === "desc") {
+    return null;
+  }
+
+  return "asc";
+}
+
+function getSortLabel(current: string | null) {
+  if (current === "asc") {
+    return "Przedawnienie ↑";
+  }
+
+  if (current === "desc") {
+    return "Przedawnienie ↓";
+  }
+
+  return "Przedawnienie ↕";
+}
+
+export function ClaimsFilters({ airlineOptions }: ClaimsFiltersProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -64,10 +166,12 @@ export function ClaimsFilters() {
   }, []);
 
   const currentView = (searchParams.get("view") ?? "all") as CaseView;
+  const currentSort = searchParams.get("limitationSort");
+  const statusValue = getStatusSelectValue(searchParams.get("status"));
 
   return (
-    <section className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="inline-flex rounded-md border border-neutral-200 bg-neutral-50 p-1">
+    <section className={styles.panel}>
+      <div className={styles.segment}>
         {views.map((view) => (
           <button
             key={view.value}
@@ -75,10 +179,8 @@ export function ClaimsFilters() {
             onClick={() =>
               replaceParams({ view: view.value === "all" ? null : view.value })
             }
-            className={`rounded px-3 py-2 text-sm font-semibold transition ${
-              currentView === view.value
-                ? "bg-neutral-950 text-white shadow-sm"
-                : "text-neutral-600 hover:bg-white hover:text-neutral-950"
+            className={`${styles.segmentButton} ${
+              currentView === view.value ? styles.segmentButtonActive : ""
             }`}
           >
             {view.label}
@@ -86,12 +188,15 @@ export function ClaimsFilters() {
         ))}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[repeat(7,minmax(0,1fr))_auto] xl:items-end">
+      <div className={styles.filters}>
         {filterFields.map((field) => (
-          <label key={field.key} className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              {field.label}
-            </span>
+          <label
+            key={field.key}
+            className={`${styles.field} ${
+              field.type === "date" ? styles.dateField : ""
+            }`}
+          >
+            <span className={styles.label}>{field.label}</span>
             <input
               type={field.type}
               key={searchParams.get(field.key) ?? ""}
@@ -100,10 +205,78 @@ export function ClaimsFilters() {
                 handleFilterChange(field.key, event.target.value)
               }
               placeholder={field.placeholder}
-              className="mt-1 h-11 w-full cursor-text rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 hover:border-neutral-300 focus:border-neutral-950"
+              className={styles.input}
             />
           </label>
         ))}
+
+        <label className={`${styles.field} ${styles.selectField}`}>
+          <span className={styles.label}>Linia lotnicza</span>
+          <select
+            value={searchParams.get("airlineId") ?? ""}
+            onChange={(event) =>
+              replaceParams({ airlineId: event.target.value || null })
+            }
+            className={styles.select}
+          >
+            <option value="">Wszystkie linie</option>
+            {airlineOptions.map((airline) => (
+              <option key={airline.id} value={airline.id}>
+                {airline.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className={`${styles.field} ${styles.selectField}`}>
+          <span className={styles.label}>Typ sprawy</span>
+          <select
+            value={searchParams.get("type") ?? ""}
+            onChange={(event) =>
+              replaceParams({ type: event.target.value || null })
+            }
+            className={styles.select}
+          >
+            {typeOptions.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className={`${styles.field} ${styles.selectField}`}>
+          <span className={styles.label}>Status</span>
+          <select
+            value={statusValue}
+            onChange={(event) => {
+              const option = statusOptions.find(
+                (item) => item.value === event.target.value,
+              );
+
+              replaceParams({ status: option?.statuses ?? null });
+            }}
+            className={styles.select}
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="button"
+          onClick={() =>
+            replaceParams({ limitationSort: getNextLimitationSort(currentSort) })
+          }
+          className={`${styles.sortButton} ${
+            currentSort ? styles.sortButtonActive : ""
+          }`}
+        >
+          {getSortLabel(currentSort)}
+        </button>
 
         <button
           type="button"
@@ -112,16 +285,14 @@ export function ClaimsFilters() {
               router.replace(pathname);
             });
           }}
-          className="h-11 rounded-md border border-neutral-200 bg-neutral-50 px-4 text-sm font-semibold text-neutral-700 transition hover:border-neutral-400"
+          className={styles.resetButton}
         >
-          Reset
+          Resetuj filtry
         </button>
       </div>
 
       {isPending ? (
-        <p className="text-xs font-medium text-neutral-500">
-          Odświeżam listę spraw...
-        </p>
+        <p className={styles.pending}>Odświeżam listę spraw...</p>
       ) : null}
     </section>
   );

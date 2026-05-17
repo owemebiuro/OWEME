@@ -42,11 +42,11 @@ export function getLimitationBadgeVariant(
     return "suspended";
   }
 
-  if (daysRemaining <= 30) {
+  if (daysRemaining < 15) {
     return "urgent";
   }
 
-  if (daysRemaining <= 90) {
+  if (daysRemaining <= 60) {
     return "warning";
   }
 

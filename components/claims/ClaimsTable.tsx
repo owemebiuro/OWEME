@@ -13,11 +13,13 @@ import { ClaimsPagination } from "@/components/claims/ClaimsPagination";
 import { ClaimsSavedViews } from "@/components/claims/ClaimsSavedViews";
 import { QuickActions } from "@/components/claims/QuickActions";
 import { computeLimitation, extractComplaintDates } from "@/lib/limitation/limitation";
+import type { LimitationData } from "@/lib/limitation/limitation.types";
 import type {
   ClaimsCurrentUser,
   ClaimsListData,
   ClaimsListItem,
 } from "@/lib/claims/types";
+import styles from "./ClaimsTable.module.css";
 
 type ClaimsTableProps = {
   data: ClaimsListData;
@@ -74,12 +76,62 @@ function computeClaimLimitation(claim: ClaimsListItem) {
   return computeLimitation(flightDate, complaintFiledAt, complaintAnsweredAt);
 }
 
+function getLimitationPriority(limitation: LimitationData) {
+  if (limitation.daysRemaining < 15 || limitation.status === "expired") {
+    return 0;
+  }
+
+  if (limitation.daysRemaining <= 60) {
+    return 1;
+  }
+
+  return 2;
+}
+
+function getAirlineOptions(items: ClaimsListItem[]) {
+  return Array.from(
+    new Map(
+      items
+        .filter((claim) => claim.airline)
+        .map((claim) => [
+          claim.airline?.id ?? "",
+          {
+            id: claim.airline?.id ?? "",
+            name: claim.airline?.name ?? "",
+          },
+        ]),
+    ).values(),
+  ).sort((first, second) => first.name.localeCompare(second.name, "pl"));
+}
+
 export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTableProps) {
   const searchParams = useSearchParams();
   const isJudicialView = searchParams.get("view") === "judicial";
-  const tableClassName = isJudicialView
-    ? "w-full min-w-[2250px] table-fixed border-collapse text-left"
-    : "w-full min-w-[1910px] table-fixed border-collapse text-left";
+  const limitationSort = searchParams.get("limitationSort");
+  const rows = data.items.map((claim) => ({
+    claim,
+    limitation: computeClaimLimitation(claim),
+  }));
+  const sortedRows = [...rows].sort((first, second) => {
+    const firstPriority = getLimitationPriority(first.limitation);
+    const secondPriority = getLimitationPriority(second.limitation);
+
+    if (firstPriority !== secondPriority) {
+      return firstPriority - secondPriority;
+    }
+
+    if (limitationSort === "asc") {
+      return first.limitation.finalExpiryDate.getTime() - second.limitation.finalExpiryDate.getTime();
+    }
+
+    if (limitationSort === "desc") {
+      return second.limitation.finalExpiryDate.getTime() - first.limitation.finalExpiryDate.getTime();
+    }
+
+    return 0;
+  });
+  const airlineOptions = getAirlineOptions(data.items);
+  const tableClassName = `${styles.table} ${isJudicialView ? styles.tableJudicial : ""}`;
 
   return (
     <div className="space-y-5">
@@ -102,9 +154,9 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
       </header>
 
       {!archived && <ClaimsSavedViews currentUserId={currentUser.id} />}
-      <ClaimsFilters />
+      <ClaimsFilters airlineOptions={airlineOptions} />
 
-      <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <section className={styles.tableShell}>
         <div className="overflow-x-auto">
           <table className={tableClassName}>
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
@@ -129,14 +181,16 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 text-sm">
-              {data.items.length ? (
-                data.items.map((claim) => {
-                  const limitation = computeClaimLimitation(claim);
+              {sortedRows.length ? (
+                sortedRows.map(({ claim, limitation }) => {
+                  const isDanger = getLimitationPriority(limitation) === 0;
 
                   return (
                   <tr
                     key={claim.id}
-                    className="align-top transition hover:bg-neutral-50"
+                    className={`align-top transition hover:bg-neutral-50 ${
+                      isDanger ? styles.dangerRow : ""
+                    }`}
                   >
                     <td className="px-4 py-4">
                       <Link
@@ -232,7 +286,7 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
                     <td className="px-4 py-4 text-neutral-600">
                       {formatDate(claim.createdAt)}
                     </td>
-                    <td className="px-4 py-4">
+                    <td className={styles.actionCell}>
                       <QuickActions claim={claim} currentUser={currentUser} />
                     </td>
                   </tr>

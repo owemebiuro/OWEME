@@ -48,8 +48,7 @@ export default async function AdminBlogPage() {
           </div>
           <Link
             href="/crm/admin/blog/editor"
-            className="inline-flex h-10 items-center rounded-md bg-[#0b4fb3] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#093f8f]"
-            style={{ color: "#ffffff" }}
+            className="inline-flex h-10 items-center rounded-md bg-[#0b4fb3] px-4 text-sm font-semibold !text-white shadow-sm transition hover:bg-[#093f8f]"
           >
             Nowy artykuł
           </Link>

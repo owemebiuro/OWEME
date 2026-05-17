@@ -151,4 +151,45 @@ export const tasksRouter = router({
         },
       });
     }),
+
+  reopen: permissionProcedure(PERMISSIONS.TASK_CLOSE)
+    .input(closeTaskInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.appUser) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Brak aktywnego użytkownika aplikacyjnego OWEME.",
+        });
+      }
+
+      const task = await ctx.prisma.task.findFirst({
+        where: {
+          id: input.id,
+          status: TaskStatus.DONE,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!task) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Nie znaleziono wykonanego zadania.",
+        });
+      }
+
+      return ctx.prisma.task.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          status: TaskStatus.OPEN,
+          closedAt: null,
+        },
+        include: {
+          assignee: true,
+        },
+      });
+    }),
 });

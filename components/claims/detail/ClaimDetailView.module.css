@@ -1,0 +1,20 @@
+.detailGrid {
+  display: grid;
+  width: 100%;
+  gap: 20px;
+  padding: 20px 16px;
+}
+
+.detailMain {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .detailGrid {
+    grid-template-columns: 320px minmax(0, 1fr);
+    padding-inline: 24px;
+  }
+}
