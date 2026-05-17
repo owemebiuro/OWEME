@@ -675,6 +675,7 @@ export const claimsRouter = router({
       }
 
       if (
+        appUser.role !== UserRole.SUPER_ADMIN &&
         appUser.role !== UserRole.ADMIN &&
         appUser.role !== UserRole.OPERATOR
       ) {

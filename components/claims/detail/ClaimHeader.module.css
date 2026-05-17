@@ -1,0 +1,234 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid rgba(212, 222, 240, 0.78);
+  background:
+    linear-gradient(180deg, rgba(250, 252, 255, 0.97), rgba(244, 247, 253, 0.92)),
+    var(--white);
+  padding: 16px 20px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.86) inset,
+    0 10px 26px rgba(13, 17, 23, 0.08);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.shell {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(300px, 1.2fr) minmax(440px, 1.45fr) minmax(240px, auto);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.identity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.kickerRow,
+.titleRow,
+.summaryRow,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.kickerRow {
+  gap: 8px;
+}
+
+.kicker {
+  color: var(--mist);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.priorityPill,
+.summaryPill {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--mist2);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.priorityPill {
+  padding: 4px 8px;
+}
+
+.titleRow {
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.statusButton {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.summaryRow {
+  gap: 6px;
+}
+
+.summaryPill {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 5px 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metrics {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(240px, 1.35fr) repeat(2, minmax(124px, 0.65fr));
+  gap: 10px;
+}
+
+.metricCard {
+  min-width: 0;
+  border: 1px solid rgba(212, 222, 240, 0.86);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.76);
+  padding: 11px 12px;
+  box-shadow: 0 4px 14px rgba(13, 17, 23, 0.04);
+}
+
+.ownerCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.avatar {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.metricLabel {
+  margin: 0;
+  color: var(--mist);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metricValue {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ownerSelect {
+  margin-top: 5px;
+  width: 100%;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  padding: 0 9px;
+}
+
+.ownerSelect:focus {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px rgba(27, 111, 212, 0.12);
+}
+
+.ownerSelect:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.actions {
+  min-width: 0;
+  align-content: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.actionButton {
+  white-space: nowrap;
+}
+
+.error {
+  margin: 12px 0 0;
+  border: 1px solid rgba(192, 57, 43, 0.18);
+  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 1420px) {
+  .shell {
+    grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    position: relative;
+    padding: 14px 16px;
+  }
+
+  .shell,
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actionButton {
+    width: 100%;
+  }
+}

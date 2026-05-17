@@ -203,8 +203,8 @@ export function ClaimDetailView({
                   onClick={() => selectTab(tab.id)}
                   className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                     requestedTab === tab.id
-                      ? "bg-neutral-950 text-white"
-                      : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
+                      ? "bg-[var(--ember)] text-white shadow-sm"
+                      : "text-[var(--mist)] hover:bg-[var(--ember-bg)] hover:text-[var(--ember-lo)]"
                   }`}
                 >
                   {tab.label}

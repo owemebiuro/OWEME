@@ -12,8 +12,10 @@ import {
 } from "@/lib/documents/generator";
 import {
   StorageConfigurationError,
+  StorageDeleteError,
   StorageDownloadError,
   StorageUploadError,
+  deleteObject,
   generateDownloadUrl,
 } from "@/lib/storage/r2";
 import type { Context } from "@/lib/trpc/context";
@@ -57,7 +59,7 @@ function requireAppUser(ctx: Context): AppUser {
 }
 
 function canReadClaim(appUser: AppUser, ownerId: string | null) {
-  if (appUser.role === UserRole.ADMIN) {
+  if (appUser.role === UserRole.ADMIN || appUser.role === UserRole.SUPER_ADMIN) {
     return true;
   }
 
@@ -69,15 +71,23 @@ function canReadClaim(appUser: AppUser, ownerId: string | null) {
 }
 
 function canWriteClaim(appUser: AppUser, ownerId: string | null) {
-  if (appUser.role === UserRole.ADMIN) {
+  if (appUser.role === UserRole.ADMIN || appUser.role === UserRole.SUPER_ADMIN) {
     return true;
   }
 
-  return ownerId === appUser.id && hasPermission(appUser, "crm:write");
+  if (ownerId === appUser.id && hasPermission(appUser, "crm:write")) {
+    return true;
+  }
+
+  return (
+    ownerId === null &&
+    appUser.role === UserRole.OPERATOR &&
+    hasPermission(appUser, "crm:write")
+  );
 }
 
 function canGenerateDocument(appUser: AppUser, documentType: DocumentType) {
-  if (appUser.role === UserRole.ADMIN) {
+  if (appUser.role === UserRole.ADMIN || appUser.role === UserRole.SUPER_ADMIN) {
     return true;
   }
 
@@ -122,7 +132,8 @@ function toStorageTrpcError(error: unknown) {
   if (
     error instanceof StorageConfigurationError ||
     error instanceof StorageUploadError ||
-    error instanceof StorageDownloadError
+    error instanceof StorageDownloadError ||
+    error instanceof StorageDeleteError
   ) {
     console.error("[Documents] Błąd warstwy storage.", error);
 
@@ -282,6 +293,52 @@ export const documentsRouter = router({
 
         return updatedDocument;
       });
+    }),
+
+  delete: permissionProcedure(PERMISSIONS.DOCUMENT_DELETE)
+    .input(documentIdInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const appUser = requireAppUser(ctx);
+      const document = await getDocumentForAccess(ctx, input.documentId);
+
+      if (!canWriteClaim(appUser, document.claim.ownerId)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Brak uprawnień do usuwania dokumentu.",
+        });
+      }
+
+      try {
+        await deleteObject(document.storageKey);
+      } catch (error) {
+        const storageError = toStorageTrpcError(error);
+
+        if (storageError) {
+          throw storageError;
+        }
+
+        throw error;
+      }
+
+      await ctx.prisma.$transaction([
+        ctx.prisma.document.delete({
+          where: {
+            id: input.documentId,
+          },
+        }),
+        ctx.prisma.note.create({
+          data: {
+            claimId: document.claimId,
+            authorId: appUser.id,
+            type: NoteType.INTERNAL,
+            content: `Usunięto dokument: ${document.fileName}`,
+          },
+        }),
+      ]);
+
+      return {
+        ok: true,
+      };
     }),
 
   listByClaimId: permissionProcedure(PERMISSIONS.DOCUMENT_DOWNLOAD)
