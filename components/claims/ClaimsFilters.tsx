@@ -23,6 +23,7 @@ const filterFields = [
   { key: "lastName", label: "Nazwisko", type: "text", placeholder: "Kowalski" },
   { key: "phone", label: "Telefon", type: "text", placeholder: "+48 123" },
   { key: "email", label: "Email", type: "text", placeholder: "jan@example.com" },
+  { key: "signature", label: "Sygnatura", type: "text", placeholder: "I C 123/26" },
   { key: "dateFrom", label: "Data dodania od", type: "date", placeholder: "" },
   { key: "dateTo", label: "Data dodania do", type: "date", placeholder: "" },
 ] as const;

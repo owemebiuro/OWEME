@@ -17,6 +17,7 @@ export type ClaimsListQueryInput = {
   lastName?: string;
   phone?: string;
   email?: string;
+  signature?: string;
   status?: ClaimStatus[];
   ownerId?: string;
   dateFrom?: Date;
@@ -113,6 +114,7 @@ export function parseClaimsListInput(
   const lastName = firstParam(searchParams, "lastName")?.trim();
   const phone = firstParam(searchParams, "phone")?.trim();
   const email = firstParam(searchParams, "email")?.trim();
+  const signature = firstParam(searchParams, "signature")?.trim();
   const ownerId = firstParam(searchParams, "ownerId")?.trim();
   const airlineId = firstParam(searchParams, "airlineId")?.trim();
   const status = filterKnownValues(
@@ -154,6 +156,7 @@ export function parseClaimsListInput(
     ...(lastName ? { lastName } : {}),
     ...(phone ? { phone } : {}),
     ...(email ? { email } : {}),
+    ...(signature ? { signature } : {}),
     ...(view ? { view } : {}),
     ...(status.length ? { status } : {}),
     ...(ownerId ? { ownerId } : {}),

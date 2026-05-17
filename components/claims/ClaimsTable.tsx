@@ -104,6 +104,10 @@ function getAirlineOptions(items: ClaimsListItem[]) {
   ).sort((first, second) => first.name.localeCompare(second.name, "pl"));
 }
 
+function getDisplaySignature(claim: ClaimsListItem) {
+  return claim.signatureSecond?.trim() || claim.signatureFirst?.trim() || "Brak";
+}
+
 export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTableProps) {
   const searchParams = useSearchParams();
   const isJudicialView = searchParams.get("view") === "judicial";
@@ -142,23 +146,23 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
           <table className={tableClassName}>
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
-                <th className="w-[130px] px-4 py-3">Numer</th>
-                <th className="w-[210px] px-4 py-3">Klient</th>
-                <th className="w-[170px] px-4 py-3">Lot</th>
-                <th className="w-[170px] px-4 py-3">Linia</th>
-                <th className="w-[110px] px-4 py-3">Typ</th>
-                <th className="w-[170px] px-4 py-3">Status</th>
-                <th className="w-[150px] px-3 py-3">Przedawnienie</th>
+                <th className="w-[118px] px-3 py-3">Numer</th>
+                <th className="w-[185px] px-3 py-3">Klient</th>
+                <th className="w-[155px] px-3 py-3">Lot</th>
+                <th className="w-[150px] px-3 py-3">Linia</th>
+                <th className="w-[96px] px-3 py-3">Typ</th>
+                <th className="w-[150px] px-3 py-3">Status</th>
+                <th className="w-[135px] px-3 py-3">Przedawnienie</th>
                 {isJudicialView ? (
                   <>
-                    <th className="w-[150px] px-4 py-3">Sygnatura I</th>
-                    <th className="w-[12%] px-4 py-3">Sąd</th>
+                    <th className="w-[150px] px-3 py-3">Sygnatura</th>
+                    <th className="w-[155px] px-3 py-3">Sąd</th>
                   </>
                 ) : null}
-                <th className="w-[100px] px-4 py-3">Kwota</th>
-                <th className="w-[230px] px-4 py-3">Pracownik</th>
-                <th className="w-[130px] px-4 py-3">Utworzono</th>
-                <th className="w-[160px] px-4 py-3">Akcje</th>
+                <th className="w-[90px] px-3 py-3">Kwota</th>
+                <th className="w-[200px] px-3 py-3">Pracownik</th>
+                <th className="w-[115px] px-3 py-3">Utworzono</th>
+                <th className="w-[150px] px-3 py-3">Akcje</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 text-sm">
@@ -233,7 +237,7 @@ export function ClaimsTable({ data, currentUser, archived = false }: ClaimsTable
                     {isJudicialView ? (
                       <>
                         <td className="truncate px-4 py-4 text-neutral-600">
-                          {claim.signatureFirst ?? "Brak"}
+                          {getDisplaySignature(claim)}
                         </td>
                         <td className="truncate px-4 py-4 text-neutral-600">
                           {claim.courtName ?? "Brak"}

@@ -75,6 +75,7 @@ const listInputSchema = z
     lastName: z.string().trim().optional(),
     phone: z.string().trim().optional(),
     email: z.string().trim().optional(),
+    signature: z.string().trim().optional(),
     status: z.array(claimStatusSchema).optional(),
     ownerId: z.string().optional(),
     dateFrom: z.coerce.date().optional(),
@@ -189,6 +190,8 @@ function buildSearchWhere(search: string): Prisma.ClaimWhereInput {
       { client: { is: { email: contains } } },
       { client: { is: { phone: contains } } },
       { flight: { is: { flightNumber: contains } } },
+      { signatureFirst: contains },
+      { signatureSecond: contains },
     ],
   };
 }
@@ -268,6 +271,20 @@ function buildListWhere(
           },
         },
       },
+    });
+  }
+
+  if (input.signature) {
+    const signatureContains = {
+      contains: input.signature,
+      mode: "insensitive" as const,
+    };
+
+    and.push({
+      OR: [
+        { signatureFirst: signatureContains },
+        { signatureSecond: signatureContains },
+      ],
     });
   }
 

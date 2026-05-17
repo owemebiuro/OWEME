@@ -9,6 +9,7 @@ export type ClaimsListItem = {
   ownerId: string | null;
   potentialAmount: string | null;
   signatureFirst: string | null;
+  signatureSecond: string | null;
   courtName: string | null;
   isCourtStage: boolean;
   createdAt: string;

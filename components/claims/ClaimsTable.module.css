@@ -1,13 +1,22 @@
 .table {
   width: 100%;
-  min-width: 1500px;
+  min-width: 1360px;
   table-layout: fixed;
   border-collapse: collapse;
   text-align: left;
 }
 
 .tableJudicial {
-  min-width: 1740px;
+  min-width: 1500px;
+}
+
+.table th,
+.table td {
+  padding: 10px 10px;
+}
+
+.table tbody td {
+  line-height: 1.35;
 }
 
 .tableShell {
@@ -26,9 +35,9 @@
 }
 
 .dangerRow td:first-child {
-  padding-left: 13px;
+  padding-left: 7px;
 }
 
 .actionCell {
-  padding: 8px 12px;
+  padding: 8px 10px !important;
 }

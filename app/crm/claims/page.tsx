@@ -80,6 +80,7 @@ function serializeClaimsList(data: RawClaimsListData): ClaimsListData {
       ownerId: claim.ownerId,
       potentialAmount: claim.potentialAmount?.toString() ?? null,
       signatureFirst: claim.signatureFirst,
+      signatureSecond: claim.signatureSecond,
       courtName: claim.courtName,
       isCourtStage: claim.isCourtStage,
       createdAt: serializeDate(claim.createdAt),
