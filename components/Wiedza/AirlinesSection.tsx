@@ -19,7 +19,7 @@ export default function AirlinesSection() {
 
       <div className={s.popularAirlines} aria-label="Popularne linie lotnicze">
         {POPULAR_AIRLINES.map((airline) => (
-          <Link key={airline.iata} href={`/wiedza/linie/${airline.iata.toLowerCase()}`} className={s.paCard}>
+          <Link key={airline.iata} href={`/twoje-prawa/linie/${airline.iata.toLowerCase()}`} className={s.paCard}>
             <span className={s.paLogo} style={{ color: airline.color }}>
               {airline.iata}
             </span>

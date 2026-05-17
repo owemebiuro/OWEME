@@ -18,6 +18,6 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://oweme.pl/twoje-prawa' },
 }
 
-export default function WiedzaLayout({ children }: { children: React.ReactNode }) {
+export default function TwojePrawaLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

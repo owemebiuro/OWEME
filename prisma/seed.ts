@@ -482,7 +482,7 @@ Możesz samodzielnie napisać do linii lotniczej lub skorzystać z pomocy profes
       ogTitle: "Odszkodowanie za opóźniony lot — kompletny poradnik",
       ogDescription:
         "WE 261/2004 gwarantuje Ci odszkodowanie. Sprawdź, czy kwalifikujesz się w 30 sekund.",
-      canonicalUrl: "https://oweme.pl/wiedza/we-261-2004-odszkodowanie-za-opozniony-lot",
+      canonicalUrl: "https://oweme.pl/twoje-prawa/we-261-2004-odszkodowanie-za-opozniony-lot",
       noindex: false,
       readTime: 4,
       status: BlogPostStatus.PUBLISHED,
@@ -525,7 +525,7 @@ Nie podpisuj żadnych dokumentów ograniczających Twoje prawa. Poproś o pisemn
       ogTitle: "Overbooking — Twoje prawa i odszkodowanie",
       ogDescription:
         "Odmowa boardingu daje Ci prawo do odszkodowania. Sprawdź bezpłatnie, ile możesz dostać.",
-      canonicalUrl: "https://oweme.pl/wiedza/overbooking-odmowa-boardingu-odszkodowanie",
+      canonicalUrl: "https://oweme.pl/twoje-prawa/overbooking-odmowa-boardingu-odszkodowanie",
       noindex: false,
       readTime: 3,
       status: BlogPostStatus.PUBLISHED,

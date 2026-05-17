@@ -24,7 +24,7 @@ export default function WiedzaHero() {
       type: 'article',
       label: article.title,
       meta: `${article.tag} · ${article.readMin} min`,
-      href: `/wiedza/${article.slug}`,
+      href: `/twoje-prawa/${article.slug}`,
     }))
 
     const airlineResults = AIRLINES.filter((airline) =>

@@ -16,7 +16,7 @@ export default function GeneralSection() {
         <h2 id="wiedza-ogolna-title">Najważniejsze prawa pasażera w jednym miejscu</h2>
       </div>
 
-      <Link href={`/wiedza/${featured.slug}`} className={s.genFeatured}>
+      <Link href={`/twoje-prawa/${featured.slug}`} className={s.genFeatured}>
         <div className={s.gfBody}>
           <div className={s.gfTag}>
             <span />

@@ -28,7 +28,7 @@ export async function generateMetadata({
       const post = await trpc.blog.getPublishedBySlug({ slug });
       const title = `${post.metaTitle || post.title} – oweme.`;
       const description = post.metaDescription || post.excerpt;
-      const canonical = `https://oweme.pl/wiedza/${slug}`;
+      const canonical = `https://oweme.pl/twoje-prawa/${slug}`;
 
       return {
         title,
@@ -53,7 +53,7 @@ export async function generateMetadata({
   const article = getArticleBySlug(slug);
   if (!article) return {};
   const title = `${article.title} – oweme.`;
-  const canonical = `https://oweme.pl/wiedza/${article.slug}`;
+  const canonical = `https://oweme.pl/twoje-prawa/${article.slug}`;
 
   return {
     title,
@@ -516,7 +516,7 @@ function DbArticleView({ post }: { post: DbPost }) {
           {related.map((rel) => (
             <Link
               key={rel.slug}
-              href={`/wiedza/${rel.slug}`}
+              href={`/twoje-prawa/${rel.slug}`}
               className={styles.articleCard}
             >
               <div className={styles.cardThumb} style={{ background: "var(--ember-bg)", height: 120 }}>
@@ -878,7 +878,7 @@ export default async function ArticlePage({
         <h2 className={styles.relatedH2}>Powiązane artykuły</h2>
         <div className={styles.relatedGrid}>
           {related.map((rel) => (
-            <Link key={rel.slug} href={`/wiedza/${rel.slug}`} className={styles.articleCard}>
+            <Link key={rel.slug} href={`/twoje-prawa/${rel.slug}`} className={styles.articleCard}>
               <div
                 className={styles.cardThumb}
                 style={{ background: "var(--ember-bg)", height: 120 }}

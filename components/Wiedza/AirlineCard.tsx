@@ -9,7 +9,7 @@ interface AirlineCardProps {
 
 export default function AirlineCard({ airline }: AirlineCardProps) {
   return (
-    <Link href={`/wiedza/linie/${airline.iata.toLowerCase()}`} className={s.airlineCard}>
+    <Link href={`/twoje-prawa/linie/${airline.iata.toLowerCase()}`} className={s.airlineCard}>
       <div className={s.acLogo} style={{ color: airline.color }}>
         {airline.iata}
       </div>

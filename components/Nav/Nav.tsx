@@ -13,15 +13,15 @@ const LINKS = [
 ] as const
 
 const RIGHTS_LINKS = [
-  { href: '/wiedza/odszkodowanie-za-opozniony-lot', label: 'Odszkodowanie za opóźniony lot' },
-  { href: '/wiedza/odszkodowanie-za-odwolany-lot', label: 'Odszkodowanie za odwołany lot' },
-  { href: '/wiedza/overbooking', label: 'Overbooking' },
-  { href: '/wiedza/strajk-linii-lotniczych', label: 'Strajk linii lotniczych' },
-  { href: '/wiedza/odszkodowanie-za-lot-przesiadkowy', label: 'Odszkodowanie za lot przesiadkowy' },
-  { href: '/wiedza/odszkodowanie-za-lot-czarterowy', label: 'Odszkodowanie za lot czarterowy' },
-  { href: '/wiedza/zwrot-za-lot', label: 'Zwrot za lot' },
+  { href: '/twoje-prawa/odszkodowanie-za-opozniony-lot', label: 'Odszkodowanie za opóźniony lot' },
+  { href: '/twoje-prawa/odszkodowanie-za-odwolany-lot', label: 'Odszkodowanie za odwołany lot' },
+  { href: '/twoje-prawa/overbooking', label: 'Overbooking' },
+  { href: '/twoje-prawa/strajk-linii-lotniczych', label: 'Strajk linii lotniczych' },
+  { href: '/twoje-prawa/odszkodowanie-za-lot-przesiadkowy', label: 'Odszkodowanie za lot przesiadkowy' },
+  { href: '/twoje-prawa/odszkodowanie-za-lot-czarterowy', label: 'Odszkodowanie za lot czarterowy' },
+  { href: '/twoje-prawa/zwrot-za-lot', label: 'Zwrot za lot' },
   {
-    href: '/wiedza/odszkodowanie-za-niewpuszczenie-na-poklad',
+    href: '/twoje-prawa/odszkodowanie-za-niewpuszczenie-na-poklad',
     label: 'Odszkodowanie za niewpuszczenie na pokład samolotu',
   },
 ] as const

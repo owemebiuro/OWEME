@@ -21,7 +21,7 @@ function PlaneLogo() {
 
 export default function SiteNav() {
   const pathname = usePathname();
-  const isWiedza = pathname.startsWith("/wiedza");
+  const isWiedza = pathname.startsWith("/twoje-prawa") || pathname.startsWith("/wiedza");
 
   return (
     <nav className={styles.nav}>

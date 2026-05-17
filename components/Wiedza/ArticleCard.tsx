@@ -9,7 +9,7 @@ interface ArticleCardProps {
 
 export default function ArticleCard({ article }: ArticleCardProps) {
   return (
-    <Link href={`/wiedza/${article.slug}`} className={s.articleCard}>
+    <Link href={`/twoje-prawa/${article.slug}`} className={s.articleCard}>
       <span className={s.articleTag}>{article.tag}</span>
       <h3 className={s.articleTitle}>{article.title}</h3>
       <div className={s.articleFooter}>

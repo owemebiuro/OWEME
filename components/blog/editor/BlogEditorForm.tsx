@@ -144,7 +144,7 @@ function GooglePreview({ state }: { state: BlogEditorState }) {
   const description =
     state.metaDescription ||
     "Opis meta pojawi się tutaj. Powinien jasno mówić, czego użytkownik dowie się z artykułu.";
-  const path = state.slug ? `/wiedza/${state.slug}` : "/wiedza/nowy-artykul";
+  const path = state.slug ? `/twoje-prawa/${state.slug}` : "/twoje-prawa/nowy-artykul";
 
   return (
     <section className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
@@ -584,7 +584,7 @@ export function BlogEditorForm({ currentUserName, initialPost }: BlogEditorFormP
                           updateField("canonicalUrl", event.target.value)
                         }
                         className="h-11 rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-neutral-950"
-                        placeholder="https://oweme.pl/wiedza/..."
+                        placeholder="https://oweme.pl/twoje-prawa/..."
                       />
                     </label>
                   </div>

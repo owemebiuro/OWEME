@@ -12,7 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     ...ARTICLES.map((article) => ({
-      url: `https://oweme.pl/wiedza/${article.slug}`,
+      url: `https://oweme.pl/twoje-prawa/${article.slug}`,
       lastModified: now,
       changeFrequency: 'monthly' as const,
       priority: article.slug === 'odszkodowanie-za-lot-czarterowy' ? 0.9 : 0.7,

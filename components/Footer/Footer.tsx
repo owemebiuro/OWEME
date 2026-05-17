@@ -14,10 +14,10 @@ const NAV_COLS = [
   {
     title: 'Prawo',
     links: [
-      { href: '/wiedza/we-261-2004-przewodnik', label: 'EC 261/2004' },
-      { href: '/wiedza/przedawnienie-roszczenia', label: 'Przedawnienie roszczenia' },
-      { href: '/wiedza/nadzwyczajne-okolicznosci', label: 'Siła wyższa — kiedy linia ma rację' },
-      { href: '/wiedza/odszkodowanie-za-lot-czarterowy', label: 'Lot czarterowy' },
+      { href: '/twoje-prawa/we-261-2004-przewodnik', label: 'EC 261/2004' },
+      { href: '/twoje-prawa/przedawnienie-roszczenia', label: 'Przedawnienie roszczenia' },
+      { href: '/twoje-prawa/nadzwyczajne-okolicznosci', label: 'Siła wyższa — kiedy linia ma rację' },
+      { href: '/twoje-prawa/odszkodowanie-za-lot-czarterowy', label: 'Lot czarterowy' },
     ],
   },
   {
