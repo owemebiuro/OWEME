@@ -1,16 +1,15 @@
 import { UserRole } from "@prisma/client";
+import { createElement } from "react";
 
-import { sendEmail } from "@/lib/email";
-import {
-  overdueTasksEmailTemplate,
-  unassignedClaimsEmailTemplate,
-} from "@/lib/email/templates";
-import { prisma } from "@/lib/prisma";
 import { inngest } from "@/lib/inngest/client";
 import type {
   OverdueTasksNotificationData,
   UnassignedClaimsNotificationData,
 } from "@/lib/inngest/events";
+import { prisma } from "@/lib/prisma";
+import SystemNotificationEmail from "@/src/emails/system-notification-email";
+import { getAppBaseUrl } from "@/src/lib/resend";
+import { sendEmail } from "@/src/server/mail/send-email";
 
 export const sendOverdueTasksEmail = inngest.createFunction(
   {
@@ -38,25 +37,30 @@ export const sendOverdueTasksEmail = inngest.createFunction(
       return { skipped: true, reason: "assignee_not_found" };
     }
 
-    const template = overdueTasksEmailTemplate({
-      operatorName: assignee.name,
-      tasks: data.tasks.map((task) => ({
-        title: task.title,
-        dueDate: task.dueDate,
-        claimNumber: task.claimNumber,
-        clientName: task.clientName,
-      })),
-    });
+    const previewText = `Masz ${data.tasks.length} zaległych zadań w OWEME CRM.`;
 
-    const result = await step.run("Wyślij email o zaległych zadaniach", () =>
+    return step.run("Wyślij email o zaległych zadaniach", () =>
       sendEmail({
+        type: "crm.overdue_tasks",
         to: assignee.email,
-        subject: template.subject,
-        html: template.html,
+        subject: "OWEME CRM: zaległe zadania",
+        previewText,
+        react: createElement(SystemNotificationEmail, {
+          title: "Zaległe zadania",
+          intro: `${assignee.name}, w CRM są zadania po terminie wymagające reakcji.`,
+          panelUrl: `${getAppBaseUrl()}/crm/tasks`,
+          previewText,
+          items: data.tasks.map((task) => ({
+            label: task.title,
+            detail: `${task.claimNumber} - ${task.clientName} - termin: ${task.dueDate}`,
+          })),
+        }),
+        metadata: {
+          assigneeId: data.assigneeId,
+          taskCount: data.tasks.length,
+        },
       }),
     );
-
-    return result;
   },
 );
 
@@ -85,23 +89,28 @@ export const sendUnassignedClaimsEmail = inngest.createFunction(
       return { skipped: true, reason: "admins_not_found" };
     }
 
-    const template = unassignedClaimsEmailTemplate({
-      claims: data.claims.map((claim) => ({
-        claimNumber: claim.claimNumber,
-        source: claim.source,
-        createdAt: claim.createdAt,
-        clientName: claim.clientName,
-      })),
-    });
+    const previewText = `W CRM jest ${data.claims.length} spraw bez opiekuna.`;
 
-    const result = await step.run("Wyślij email do administratorów", () =>
+    return step.run("Wyślij email do administratorów", () =>
       sendEmail({
+        type: "crm.unassigned_claims",
         to: admins.map((admin) => admin.email),
-        subject: template.subject,
-        html: template.html,
+        subject: "OWEME CRM: sprawy bez opiekuna",
+        previewText,
+        react: createElement(SystemNotificationEmail, {
+          title: "Sprawy bez opiekuna",
+          intro: "W OWEME CRM są sprawy, które nie mają przypisanego opiekuna.",
+          panelUrl: `${getAppBaseUrl()}/crm/claims`,
+          previewText,
+          items: data.claims.map((claim) => ({
+            label: claim.claimNumber,
+            detail: `${claim.clientName} - ${claim.source} - ${claim.createdAt}`,
+          })),
+        }),
+        metadata: {
+          claimCount: data.claims.length,
+        },
       }),
     );
-
-    return result;
   },
 );

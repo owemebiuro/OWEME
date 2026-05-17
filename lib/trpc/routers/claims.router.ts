@@ -14,7 +14,6 @@ import {
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { sendClaimRegisteredEmail } from "@/lib/email/claim-emails";
 import { hasPermission } from "@/lib/auth-helpers";
 import {
   calculateClaimAmounts,
@@ -27,6 +26,7 @@ import { sendInngestEvent } from "@/lib/inngest/events";
 import type { Context } from "@/lib/trpc/context";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
 import { router } from "@/lib/trpc/trpc";
+import { emitEvent } from "@/src/server/events";
 import type { AppUser } from "@/types/auth";
 
 const claimListInclude = {
@@ -500,9 +500,11 @@ export const claimsRouter = router({
             claimId: claim.id,
           },
         }),
-        sendClaimRegisteredEmail(claim.id).catch((error) => {
+        emitEvent("claim.created", {
+          claimId: claim.id,
+        }).catch((error) => {
           console.error(
-            "[Email] Nie udało się wysłać potwierdzenia przyjęcia sprawy.",
+            "[MAIL_ERROR] Nie udało się obsłużyć eventu claim.created.",
             {
               claimId: claim.id,
               error,
@@ -586,6 +588,13 @@ export const claimsRouter = router({
           oldStatus: claim.status,
           newStatus: input.status,
         },
+      });
+
+      await emitEvent("claim.status.changed", {
+        claimId: input.id,
+        oldStatus: claim.status,
+        newStatus: input.status,
+        actorId: appUser.id,
       });
 
       return updatedClaim;

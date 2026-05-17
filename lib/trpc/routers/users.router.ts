@@ -2,8 +2,6 @@ import { UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { sendEmail } from "@/lib/email";
-import { passwordResetEmailTemplate } from "@/lib/email/templates";
 import {
   createSupabaseAdminClient,
   getSupabaseAdminConfigurationStatus,
@@ -11,6 +9,7 @@ import {
 } from "@/lib/supabase/admin";
 import { PERMISSIONS, permissionProcedure } from "@/lib/trpc/permissions";
 import { protectedProcedure, router } from "@/lib/trpc/trpc";
+import { emitEvent } from "@/src/server/events";
 
 const userRoleSchema = z.enum(UserRole);
 
@@ -150,7 +149,7 @@ export const usersRouter = router({
         });
       }
 
-      return ctx.prisma.user.create({
+      const user = await ctx.prisma.user.create({
         data: {
           email: input.email,
           name: input.name,
@@ -174,6 +173,16 @@ export const usersRouter = router({
           },
         },
       });
+
+      await emitEvent("auth.user.created", {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        panelUrl: `${getSiteUrl()}/login`,
+      });
+
+      return user;
     }),
 
   updateRole: permissionProcedure(PERMISSIONS.ADMIN_USERS)
@@ -394,15 +403,12 @@ export const usersRouter = router({
         });
       }
 
-      const template = passwordResetEmailTemplate({
+      const result = await emitEvent("auth.password.reset.requested", {
+        userId: input.userId,
+        email: user.email,
         name: user.name,
         resetUrl: actionLink,
-      });
-
-      const result = await sendEmail({
-        to: user.email,
-        subject: template.subject,
-        html: template.html,
+        actorId: ctx.appUser?.id,
       });
 
       return {

@@ -48,7 +48,8 @@ export default async function AdminBlogPage() {
           </div>
           <Link
             href="/crm/admin/blog/editor"
-            className="inline-flex h-10 items-center rounded-md bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800"
+            className="inline-flex h-10 items-center rounded-md bg-[#0b4fb3] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#093f8f]"
+            style={{ color: "#ffffff" }}
           >
             Nowy artykuł
           </Link>
@@ -60,7 +61,7 @@ export default async function AdminBlogPage() {
               <p className="text-sm text-neutral-500">Brak artykułów.</p>
               <Link
                 href="/crm/admin/blog/editor"
-                className="mt-3 inline-flex text-sm font-semibold text-neutral-950 underline"
+                className="mt-3 inline-flex text-sm font-semibold text-[#0b4fb3] underline hover:text-[#093f8f]"
               >
                 Utwórz pierwszy artykuł →
               </Link>

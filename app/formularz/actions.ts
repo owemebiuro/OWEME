@@ -16,10 +16,10 @@ import {
   createManualFlight,
   getOrCreateSystemUser,
 } from "@/lib/claims/create-claim";
-import { sendClaimRegisteredEmail } from "@/lib/email/claim-emails";
 import { sendInngestEvent } from "@/lib/inngest/events";
 import { hasPrismaDatabaseUrl, prisma } from "@/lib/prisma";
 import { uploadObject, getStorageKey } from "@/lib/storage/r2";
+import { emitEvent } from "@/src/server/events";
 
 const flightNumberPattern = /^[A-Z0-9]{2,3}\s?\d{1,4}[A-Z]?$/i;
 const airportCodePattern = /^[A-Z]{3}$/i;
@@ -436,9 +436,11 @@ export async function submitPublicClaimApplication(
           claimId: claim.id,
         },
       }),
-      sendClaimRegisteredEmail(claim.id).catch((error) => {
+      emitEvent("claim.created", {
+        claimId: claim.id,
+      }).catch((error) => {
         console.error(
-          "[Email] Nie udało się wysłać potwierdzenia wniosku publicznego.",
+          "[MAIL_ERROR] Nie udało się obsłużyć eventu claim.created dla wniosku publicznego.",
           {
             claimId: claim.id,
             error,
